@@ -1,5 +1,5 @@
 #Credenciales Locales (¡Súper Importante!)
-databese.properties
+database.properties
 #archivos compilados por maven(Exigido en la consigna)
 target/
 #configuraciones de IDEs (Exigido en la consigna)
