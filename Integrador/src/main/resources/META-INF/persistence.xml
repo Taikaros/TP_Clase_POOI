@@ -9,9 +9,8 @@
         
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver" />
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/veterinaria_db" />
-            <property name="jakarta.persistence.jdbc.user" value="postgres" />
-            <property name="jakarta.persistence.jdbc.password" value="TU_CONTRASEÑA" />
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://ep-quiet-snow-aqy8ns11.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require" />
+            <property name="jakarta.persistence.jdbc.user" value="neondb_owner" />
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
             
