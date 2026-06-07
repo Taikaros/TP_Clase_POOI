@@ -104,10 +104,10 @@ class Turno{
 }
 
 enum EstadoTurno{
-    PENDIENTE,
-    CONFIRMADO,
-    ATENDIDO,
-    CANCELADO
+    PENDIENTE(0, "Pendiente"),
+    CONFIRMADO(1, "Confirmado"),
+    ATENDIDO(2, "Atendido"),
+    CANCELADO(3, "Cancelado")
 }
 
 class Vacuna{
