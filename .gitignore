@@ -1,0 +1,14 @@
+#Credenciales Locales (¡Súper Importante!)
+database.properties
+#archivos compilados por maven(Exigido en la consigna)
+target/
+#configuraciones de IDEs (Exigido en la consigna)
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+
+#archivos .zip
+*.zip
