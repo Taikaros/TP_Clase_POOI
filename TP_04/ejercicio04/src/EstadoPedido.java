@@ -1,3 +1,6 @@
-public class EstadoPedido {
-    
+public enum EstadoPedido {
+    PENDIENTE,
+    ENVIADO,
+    ENTREGADO,
+    CANCELADO
 }
