@@ -20,7 +20,7 @@ public abstract class Persona {
     protected String email;
     protected Persona() {
     }
-    public Persona(String nombre, String apellido, String telefono, String email) {
+    protected Persona(String nombre, String apellido, String telefono, String email) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.telefono = telefono;
