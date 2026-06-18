@@ -3,10 +3,10 @@ package ar.edu.unam.veterinaria.model;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PersonaTest {
+class PersonaTest {
 
     @Test
-    public void testGetContactoFormateoCorrecto() {
+    void testGetContactoFormateoCorrecto() {
         // Arrange (Preparar): Instanciamos Persona usando una clase anónima agregando "{}" al final
         Persona personaDummy = new Persona("Juan", "Pérez", "3758-123456", "juan@email.com") {};
 
@@ -19,7 +19,7 @@ public class PersonaTest {
     }
 
     @Test
-    public void testSetDatosPersonalesActualizaCorrectamente() {
+    void testSetDatosPersonalesActualizaCorrectamente() {
         // Arrange
         Persona personaDummy = new Persona() {};
         

@@ -6,7 +6,7 @@ import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
-public class MascotaTest {
+ class MascotaTest {
 
     @Test
     void noDebePermitirCrearMascotaSinCliente() {
@@ -18,7 +18,8 @@ public class MascotaTest {
                 "Perro",
                 "Labrador",
                 LocalDate.of(2020, 5, 10),
-                null
+                (Cliente) null,
+                13548754550L
             )
         );
 

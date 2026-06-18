@@ -23,7 +23,7 @@ public class Mascota {
 
     public Mascota() {
     }
-    public Mascota(String nombreMascota, String especie, String raza, LocalDate fechaNacimiento, Cliente dueno) {
+    public Mascota(String nombreMascota, String especie, String raza, LocalDate fechaNacimiento, Cliente dueno, Long numeroFicha) {
         if(dueno == null) {
             throw new IllegalArgumentException("La mascota debe tener un dueño asignado.");
         }
@@ -32,24 +32,26 @@ public class Mascota {
         this.raza = raza;
         this.fechaNacimiento = fechaNacimiento;
         this.dueno = dueno;
+        this.numeroFicha = numeroFicha;
     }
 
     // getters y setters
 
     public String getDetallesMascota() {
         return "Nombre: " + this.nombreMascota + ", Especie: " + this.especie + ", Raza: " + this.raza +
-                ", Fecha de Nacimiento: " + this.fechaNacimiento;
+                ", Fecha de Nacimiento: " + this.fechaNacimiento +", Ficha: " + this.numeroFicha ;
     }
 
     public Cliente getDueno() {
         return dueno;
     }
 
-    public void setDatosMascota(String nombreMascota, String especie, String raza, LocalDate fechaNacimiento) {
+    public void setDatosMascota(String nombreMascota, String especie, String raza, LocalDate fechaNacimiento, Long numeroFicha) {
         this.nombreMascota = nombreMascota;
         this.especie = especie;
         this.raza = raza;
         this.fechaNacimiento = fechaNacimiento;
+        this.numeroFicha = numeroFicha;
     }
     public void setDueno(Cliente dueno) {
         this.dueno = dueno;
