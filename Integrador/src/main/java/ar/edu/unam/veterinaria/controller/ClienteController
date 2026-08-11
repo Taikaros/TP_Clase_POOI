@@ -1,0 +1,209 @@
+public class ClienteController {
+
+    //CAMPOS DE TEXTO
+    @FXML
+    private TextField txtNombreCliente;
+
+    @FXML
+    private TextField txtApellidoCliente;
+
+    @FXML
+    private TextField txtTelefonoCliente;
+
+    @FXML
+    private TextField txtEmailCliente;
+
+    @FXML
+    private TextField txtNombreMascota;
+
+    @FXML
+    private TextField txtEspecie;
+
+    @FXML
+    private TextField txtRaza;
+
+    @FXML
+    private DatePicker dpFechaNacimiento;
+
+    @FXML
+    private TextField txtNumeroFicha;
+
+    //TABLAS
+    @FXML
+    private TableView<Cliente> tablaClientes;
+    @FXML
+    private TableColumn<Cliente, String> colNombreCliente;
+    @FXML
+    private TableColumn<Cliente, String> colApellidoCliente;
+    @FXML
+    private TableColumn<Cliente, String> colTelefonoCliente;
+    @FXML
+    private TableColumn<Cliente, String> colEmailCliente;
+
+    @FXML
+    private TableView<Mascota> tablaMascotas;
+    @FXML
+    private TableColumn<Mascota, String> colNombreMascota;
+    @FXML
+    private TableColumn<Mascota, String> colEspecie;
+    @FXML
+    private TableColumn<Mascota, String> colRaza;
+    @FXML
+    private TableColumn<Mascota, String> colFechaNacimiento;
+    @FXML
+    private TableColumn<Mascota, String> colNumeroFicha;
+
+    //INICIALIZACION
+    @FXML
+    public void initialize() {
+        
+        colNombreCliente.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        colApellidoCliente.setCellValueFactory(new PropertyValueFactory<>("apellido"));
+        colTelefonoCliente.setCellValueFactory(new PropertyValueFactory<>("telefono"));
+        colEmailCliente.setCellValueFactory(new PropertyValueFactory<>("email"));
+
+        colNombreMascota.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        colEspecie.setCellValueFactory(new PropertyValueFactory<>("especie"));
+        colRaza.setCellValueFactory(new PropertyValueFactory<>("raza"));
+        colFechaNacimiento.setCellValueFactory(new PropertyValueFactory<>("fechaNacimiento"));
+        colNumeroFicha.setCellValueFactory(new PropertyValueFactory<>("numeroFicha"));
+
+        tablaClientes.getSelectionModel().selectedItemProperty().addListener((observable, clienteAnterior, clienteSeleccionado) -> {
+            
+            if (clienteSeleccionado != null) {
+                List<Mascota> mascotasDelCliente = clienteSeleccionado.getMascotas(); 
+                
+                ObservableList<Mascota> mascotasObservable = FXCollections.observableArrayList(mascotasDelCliente);
+                tablaMascotas.setItems(mascotasObservable);
+                
+            } else {
+                tablaMascotas.getItems().clear();
+            }
+        });
+        List<Cliente> todosLosClientes = ClienteService.obtenerTodos();
+        tablaClientes.setItems(FXCollections.observableArrayList(todosLosClientes));
+        tablaMascotas.getSelectionModel().selectedItemProperty().addListener((observable, mascotaAnterior, mascotaSeleccionada) -> {
+            if (mascotaSeleccionada != null) {
+                txtNombreMascota.setText(mascotaSeleccionada.getNombre());
+                txtEspecie.setText(mascotaSeleccionada.getEspecie());
+                txtRaza.setText(mascotaSeleccionada.getRaza());
+                dpFechaNacimiento.setValue(mascotaSeleccionada.getFechaNacimiento()); 
+                txtNumeroFicha.setText(String.valueOf(mascotaSeleccionada.getNumeroFicha())); 
+            }
+        });
+        tablaClientes.getSelectionModel().selectedItemProperty().addListener((observable, clienteAnterior, clienteSeleccionado) -> {
+            if (clienteSeleccionado != null) {
+                txtNombreCliente.setText(clienteSeleccionado.getNombre());
+                txtApellidoCliente.setText(clienteSeleccionado.getApellido());
+                txtTelefonoCliente.setText(clienteSeleccionado.getTelefono());
+                txtEmailCliente.setText(clienteSeleccionado.getEmail());
+                List<Mascota> mascotasDelCliente = clienteSeleccionado.getMascotas();
+                tablaMascotas.setItems(FXCollections.observableArrayList(mascotasDelCliente));
+            } else {
+                tablaMascotas.getItems().clear();
+    }
+});
+}
+    //SERVICIOS
+    private ClienteService clienteService = new ClienteService();
+    private MascotaService mascotaService = new MascotaService();
+
+    //BOTONES
+@FXML
+private void guardarCliente() {
+        String nombre = txtNombreCliente.getText();
+        String apellido = txtApellidoCliente.getText();
+        String telefono = txtTelefonoCliente.getText();
+        String email = txtEmailCliente.getText();
+        Cliente cliente = new Cliente(nombre, apellido, telefono, email);
+        clienteService.guardarCliente(cliente);
+        tablaClientes.getItems().add(cliente);
+}
+@FXML
+private void agregarMascota() {
+    Cliente clienteSeleccionado = tablaClientes.getSelectionModel().getSelectedItem();
+
+    if (clienteSeleccionado == null) {
+        mostrarAlerta("Atención", "Debe seleccionar un cliente de la tabla antes de agregar una mascota.");
+        return; 
+    }
+    String nombre = txtNombreMascota.getText();
+    String especie = txtEspecie.getText();
+    String raza = txtRaza.getText();
+    var fechaNac = dpFechaNacimiento.getValue(); 
+    String nroFicha = txtNumeroFicha.getText(); 
+    Mascota nuevaMascota = new Mascota(nombre, especie, raza, fechaNac, nroFicha);
+    clienteSeleccionado.getMascotas().add(nuevaMascota);
+    mascotaService.guardarMascota(nuevaMascota); 
+    tablaMascotas.getItems().add(nuevaMascota);
+    limpiar();
+}
+@FXML
+private void eliminar() {
+    Cliente clienteSeleccionado = tablaClientes.getSelectionModel().getSelectedItem();
+    Mascota mascotaSeleccionada = tablaMascotas.getSelectionModel().getSelectedItem();
+
+    if (mascotaSeleccionada != null) {
+        clienteSeleccionado.getMascotas().remove(mascotaSeleccionada);
+        tablaMascotas.getItems().remove(mascotaSeleccionada);
+        limpiar();
+    } 
+    else if (clienteSeleccionado != null) {
+        clienteSeleccionado.setActivo(false); 
+        tablaClientes.getItems().remove(clienteSeleccionado);
+        mostrarAlerta("Éxito", "El cliente ha sido dado de baja.");
+        limpiar();
+    } else {
+        mostrarAlerta("Atención", "Debe seleccionar un elemento para eliminar.");
+    }
+}
+@FXML
+private void modificar() {
+        Mascota mascotaSeleccionada = tablaMascotas.getSelectionModel().getSelectedItem();
+        Cliente clienteSeleccionado = tablaClientes.getSelectionModel().getSelectedItem();
+        if (mascotaSeleccionada != null) {
+            mascotaSeleccionada.setNombre(txtNombreMascota.getText());
+            mascotaSeleccionada.setEspecie(txtEspecie.getText());
+            mascotaSeleccionada.setRaza(txtRaza.getText());
+            mascotaSeleccionada.setFechaNacimiento(dpFechaNacimiento.getValue());   
+            mascotaSeleccionada.setNumeroFicha(txtNumeroFicha.getText()); 
+            tablaMascotas.refresh();
+            limpiar();
+            mostrarAlerta("Éxito", "Mascota modificada correctamente.");
+        } else if (clienteSeleccionado != null) {
+            clienteSeleccionado.setNombre(txtNombreCliente.getText());
+            clienteSeleccionado.setApellido(txtApellidoCliente.getText());
+            clienteSeleccionado.setTelefono(txtTelefonoCliente.getText());
+            clienteSeleccionado.setEmail(txtEmailCliente.getText());
+            tablaClientes.refresh();
+            limpiar();
+            mostrarAlerta("Éxito", "Cliente modificado correctamente.");
+        } else {
+            mostrarAlerta("Atención", "Seleccione una mascota de la tabla para modificarla.");
+        }
+    }
+@FXML
+private void limpiar() {
+    txtNombreCliente.clear();
+    txtApellidoCliente.clear();
+    txtTelefonoCliente.clear();
+    txtEmailCliente.clear();
+
+    txtNombreMascota.clear();
+    txtEspecie.clear();
+    txtRaza.clear();
+    dpFechaNacimiento.setValue(null);
+    txtNumeroFicha.clear();
+
+    tablaClientes.getSelectionModel().clearSelection();
+    tablaMascotas.getSelectionModel().clearSelection();
+}
+private void mostrarAlerta(String titulo, String mensaje) {
+    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+    alert.setTitle(titulo);
+    alert.setHeaderText(null);
+    alert.setContentText(mensaje);
+    alert.showAndWait();
+}
+};
+

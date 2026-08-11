@@ -1,0 +1,6 @@
+public class ClienteService {
+    private ClienteDAO = new ClienteDAO();
+    public void guardarCliente(Cliente cliente) {
+        clienteDAO.guardar(cliente);
+    }
+}
