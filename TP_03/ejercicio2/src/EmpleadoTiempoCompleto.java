@@ -16,4 +16,5 @@ public class EmpleadoTiempoCompleto extends Empleado {
     @Override
     public String toString() {
         return super.toString() + ", bonoAnual: " + bonoAnual + "]";
+    }
 }

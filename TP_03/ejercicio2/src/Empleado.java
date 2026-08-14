@@ -5,7 +5,7 @@ public class Empleado {
     private String dni;
     private double sueldoBase;
     
-    public Empleado (String nombre, String dni, double sueldoBase){
+    public Empleados (String nombre, String dni, double sueldoBase){
        this.nombre = nombre;
        this.dni = dni;
        this.sueldoBase = sueldoBase;
@@ -40,5 +40,5 @@ public class Empleado {
     public int hashCode(){
         return Objects.hash(dni);
     }
-    
+
 }
