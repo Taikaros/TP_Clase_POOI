@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
+import ar.edu.unam.veterinaria.utils.CargadorDatosPrueba;
 
 public class AppVeterinaria extends Application {
 
@@ -60,8 +61,37 @@ public class AppVeterinaria extends Application {
     }
 
     public static void main(String[] args) {
-        // Aquí podrías inicializar tu emf = Persistence.createEntityManagerFactory("tuUnidadDePersistencia");
-        // antes de lanzar la interfaz gráfica, o hacerlo mediante un bloque static.
-        launch(args);
+// 1. LEER LA CONTRASEÑA (¡Asegurate de que esta parte no se haya borrado!)
+        Properties dbProps = new Properties();
+        try (InputStream input = AppVeterinaria.class.getClassLoader().getResourceAsStream("database.properties")) {
+            if (input != null) {
+                dbProps.load(input);
+            }
+        } catch (Exception e) {
+            LOGGER.severe("Error al cargar properties: " + e.getMessage());
+        }
+
+        // 2. INYECTAR LA CONTRASEÑA AL MAPA
+        Map<String, String> jpaProperties = new HashMap<>();
+        jpaProperties.put("jakarta.persistence.jdbc.password", dbProps.getProperty("db.password"));
+        
+        try {
+            // 3. CREAR LA CONEXIÓN (Pasando el mapa con la clave)
+            emf = Persistence.createEntityManagerFactory("VeterinariaPU", jpaProperties);
+            LOGGER.info("Conexión a la base de datos Neon establecida correctamente.");
+            
+            // 4. EJECUTAR EL SCRIPT DE LUCAS
+            ar.edu.unam.veterinaria.utils.CargadorDatosPrueba.inicializadorDatos();
+            
+            // 5. ARRANCAR LA INTERFAZ
+            launch(args);
+            
+        } catch (Exception e) {
+            LOGGER.severe("Error al inicializar la aplicación: " + e.getMessage());
+        } finally {
+            if (emf != null && emf.isOpen()) {
+                emf.close();
+            }
+        }
     }
 }

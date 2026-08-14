@@ -1,13 +1,14 @@
 package ar.edu.unam.veterinaria.model;
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 
 @Entity
 public class Cliente extends Persona {
     
-    @OneToMany(mappedBy = "dueño")
+    @OneToMany(mappedBy = "dueno", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Mascota> mascotas = new ArrayList<>();
 
     public Cliente() {
