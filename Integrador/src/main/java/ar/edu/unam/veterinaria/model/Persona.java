@@ -18,7 +18,10 @@ public abstract class Persona {
     protected String apellido;
     protected String telefono;
     protected String email;
+    @Column(nullable = false)
+    protected boolean activo = true; 
     protected Persona() {
+        // Constructor vacío requerido por JPA
     }
     protected Persona(String nombre, String apellido, String telefono, String email) {
         this.nombre = nombre;
@@ -46,5 +49,11 @@ public abstract class Persona {
     public void setDatosPersonales(String nombre, String apellido) {
         this.nombre = nombre;
         this.apellido = apellido;
+    }
+    public boolean isActivo() {
+        return activo;
+    }
+    public void setActivo(boolean activo) {
+        this.activo = activo;
     }
 }

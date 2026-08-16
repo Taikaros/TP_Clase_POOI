@@ -132,24 +132,26 @@ private void agregarMascota() {
     String raza = txtRaza.getText();
     var fechaNac = dpFechaNacimiento.getValue(); 
     String nroFicha = txtNumeroFicha.getText(); 
-    Mascota nuevaMascota = new Mascota(nombre, especie, raza, fechaNac, nroFicha);
+    Mascota nuevaMascota = new Mascota(nombre, especie, raza, fechaNac, clienteSeleccionado, Long.valueOf(nroFicha));
     clienteSeleccionado.getMascotas().add(nuevaMascota);
     mascotaService.guardarMascota(nuevaMascota); 
     tablaMascotas.getItems().add(nuevaMascota);
     limpiar();
 }
 @FXML
+
 private void eliminar() {
     Cliente clienteSeleccionado = tablaClientes.getSelectionModel().getSelectedItem();
     Mascota mascotaSeleccionada = tablaMascotas.getSelectionModel().getSelectedItem();
 
     if (mascotaSeleccionada != null) {
+        mascotaService.eliminarMascota(mascotaSeleccionada);
         clienteSeleccionado.getMascotas().remove(mascotaSeleccionada);
         tablaMascotas.getItems().remove(mascotaSeleccionada);
         limpiar();
     } 
     else if (clienteSeleccionado != null) {
-        clienteSeleccionado.setActivo(false); 
+        clienteService.darDeBaja(clienteSeleccionado); 
         tablaClientes.getItems().remove(clienteSeleccionado);
         mostrarAlerta("Éxito", "El cliente ha sido dado de baja.");
         limpiar();
@@ -166,7 +168,8 @@ private void modificar() {
             mascotaSeleccionada.setEspecie(txtEspecie.getText());
             mascotaSeleccionada.setRaza(txtRaza.getText());
             mascotaSeleccionada.setFechaNacimiento(dpFechaNacimiento.getValue());   
-            mascotaSeleccionada.setNumeroFicha(txtNumeroFicha.getText()); 
+            mascotaSeleccionada.setNumeroFicha(txtNumeroFicha.getText());
+            mascotaService.actualizarMascota(mascotaSeleccionada); 
             tablaMascotas.refresh();
             limpiar();
             mostrarAlerta("Éxito", "Mascota modificada correctamente.");
@@ -175,6 +178,7 @@ private void modificar() {
             clienteSeleccionado.setApellido(txtApellidoCliente.getText());
             clienteSeleccionado.setTelefono(txtTelefonoCliente.getText());
             clienteSeleccionado.setEmail(txtEmailCliente.getText());
+            clienteService.actualizarCliente(clienteSeleccionado);
             tablaClientes.refresh();
             limpiar();
             mostrarAlerta("Éxito", "Cliente modificado correctamente.");

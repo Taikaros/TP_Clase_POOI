@@ -1,201 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane 
-            fx:controller="ar.edu.unam.veterinaria.controller.ClienteController"
-            xmlns="http://javafx.com/javafx/21"
-            xmlns:fx="http://javafx.com/fxml/1"
-            prefWidth="1000.0"
-            prefHeight="700.0">
-
+<BorderPane prefHeight="700.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.ClienteController">
     <top>
-        <Label text="Gestión de Clientes y Mascotas"
-                BorderPane.alignment="CENTER">
+        <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="Gestión de Clientes y Mascotas" BorderPane.alignment="CENTER">
             <padding>
-                <Insets top="15" bottom="15"/>
+                <Insets bottom="15.0" top="15.0" />
             </padding>
-            <style>
-                -fx-font-size: 22px;
-                -fx-font-weight: bold;
-            </style>
         </Label>
     </top>
-
     <center>
+        <VBox spacing="15.0" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+            </padding>
+            <children>
+                <!--  CLIENTE  -->
+                <TitledPane expanded="true" text="Datos del Cliente">
+                    <content>
+                        <GridPane hgap="10.0" vgap="10.0">
+                            <children>
+                                <Label text="Nombre" />
+                                <TextField fx:id="txtNombreCliente" GridPane.columnIndex="1" />
+                                <Label text="Apellido" GridPane.rowIndex="1" />
+                                <TextField fx:id="txtApellidoCliente" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <Label text="Teléfono" GridPane.rowIndex="2" />
+                                <TextField fx:id="txtTelefonoCliente" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <Label text="Email" GridPane.rowIndex="3" />
+                                <TextField fx:id="txtEmailCliente" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                            </children>
+                        </GridPane>
+                    </content>
+                </TitledPane>
 
-        <VBox spacing="15" padding="15">
+                <!--  MASCOTA  -->
+                <TitledPane expanded="true" text="Datos de la Mascota">
+                    <content>
+                        <GridPane hgap="10.0" vgap="10.0">
+                            <children>
+                                <Label text="Nombre" />
+                                <TextField fx:id="txtNombreMascota" GridPane.columnIndex="1" />
+                                <Label text="Especie" GridPane.rowIndex="1" />
+                                <TextField fx:id="txtEspecie" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <Label text="Raza" GridPane.rowIndex="2" />
+                                <TextField fx:id="txtRaza" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <Label text="Fecha Nacimiento" GridPane.rowIndex="3" />
+                                <DatePicker fx:id="dpFechaNacimiento" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                <Label text="N° Ficha" GridPane.rowIndex="4" />
+                                <TextField fx:id="txtNumeroFicha" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                            </children>
+                        </GridPane>
+                    </content>
+                </TitledPane>
 
-            <!--  CLIENTE  -->
+                <!--  BOTONES  -->
+                <HBox spacing="10.0">
+                    <children>
+                        <Button fx:id="btnGuardarCliente" onAction="#guardarCliente" text="Guardar Cliente" />
+                        <Button fx:id="btnAgregarMascota" onAction="#agregarMascota" text="Agregar Mascota" />
+                        <Button fx:id="btnModificar" onAction="#modificar" text="Modificar" />
+                        <Button fx:id="btnEliminar" onAction="#eliminar" text="Eliminar" />
+                        <Button fx:id="btnLimpiar" onAction="#limpiar" text="Limpiar" />
+                    </children>
+                </HBox>
 
-            <TitledPane text="Datos del Cliente" expanded="true">
+                <!--  TABLA CLIENTES  -->
+                <Label style="-fx-font-size:16px; -fx-font-weight:bold;" text="Clientes" />
+                <TableView fx:id="tablaClientes" prefHeight="180.0">
+                    <columns>
+                        <TableColumn fx:id="colNombreCliente" prefWidth="150.0" text="Nombre" />
+                        <TableColumn fx:id="colApellidoCliente" prefWidth="150.0" text="Apellido" />
+                        <TableColumn fx:id="colTelefonoCliente" prefWidth="150.0" text="Teléfono" />
+                        <TableColumn fx:id="colEmailCliente" prefWidth="250.0" text="Email" />
+                    </columns>
+                </TableView>
 
-                <GridPane hgap="10" vgap="10">
-
-                    <Label text="Nombre"/>
-                    <TextField fx:id="txtNombreCliente"
-                        GridPane.columnIndex="1"/>
-
-                    <Label text="Apellido"
-                        GridPane.rowIndex="1"/>
-                    <TextField fx:id="txtApellidoCliente"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="1"/>
-
-                    <Label text="Teléfono"
-                        GridPane.rowIndex="2"/>
-                    <TextField fx:id="txtTelefonoCliente"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="2"/>
-
-                    <Label text="Email"
-                        GridPane.rowIndex="3"/>
-                    <TextField fx:id="txtEmailCliente"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="3"/>
-
-                </GridPane>
-
-            </TitledPane>
-
-            <!--  MASCOTA  -->
-
-            <TitledPane text="Datos de la Mascota" expanded="true">
-
-                <GridPane hgap="10" vgap="10">
-
-                    <Label text="Nombre"/>
-                    <TextField fx:id="txtNombreMascota"
-                        GridPane.columnIndex="1"/>
-
-                    <Label text="Especie"
-                        GridPane.rowIndex="1"/>
-                    <TextField fx:id="txtEspecie"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="1"/>
-
-                    <Label text="Raza"
-                        GridPane.rowIndex="2"/>
-                    <TextField fx:id="txtRaza"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="2"/>
-
-                    <Label text="Fecha Nacimiento"
-                        GridPane.rowIndex="3"/>
-                    <DatePicker fx:id="dpFechaNacimiento"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="3"/>
-
-                    <Label text="N° Ficha"
-                        GridPane.rowIndex="4"/>
-                    <TextField fx:id="txtNumeroFicha"
-                        GridPane.columnIndex="1"
-                        GridPane.rowIndex="4"/>
-
-                </GridPane>
-
-            </TitledPane>
-
-            <!--  BOTONES  -->
-
-        <HBox spacing="10">
-
-    <Button text="Guardar Cliente"
-            fx:id="btnGuardarCliente"
-            onAction="#guardarCliente"/>
-
-    <Button text="Agregar Mascota"
-            fx:id="btnAgregarMascota"
-            onAction="#agregarMascota"/>
-
-    <Button text="Modificar"
-            fx:id="btnModificar"
-            onAction="#modificar"/>
-
-    <Button text="Eliminar"
-            fx:id="btnEliminar"
-            onAction="#eliminar"/>
-
-    <Button text="Limpiar"
-            fx:id="btnLimpiar"
-            onAction="#limpiar"/>
-
-        </HBox>
-
-            <!--  TABLA CLIENTES  -->
-
-            <Label text="Clientes">
-                <style>
-                    -fx-font-size:16px;
-                    -fx-font-weight:bold;
-                </style>
-            </Label>
-
-            <TableView fx:id="tablaClientes" prefHeight="180">
-
-                <columns>
-
-                    <TableColumn fx:id="colNombreCliente"
-                        text="Nombre"
-                        prefWidth="150"/>
-
-                    <TableColumn fx:id="colApellidoCliente"
-                        text="Apellido"
-                        prefWidth="150"/>
-
-                    <TableColumn fx:id="colTelefonoCliente"
-                        text="Teléfono"
-                        prefWidth="150"/>
-
-                    <TableColumn fx:id="colEmailCliente"
-                        text="Email"
-                        prefWidth="250"/>
-
-                </columns>
-
-            </TableView>
-
-            <!--  TABLA MASCOTAS  -->
-
-            <Label text="Mascotas">
-                <style>
-                    -fx-font-size:16px;
-                    -fx-font-weight:bold;
-                </style>
-            </Label>
-
-            <TableView fx:id="tablaMascotas" prefHeight="200">
-
-                <columns>
-
-                    <TableColumn fx:id="colNombreMascota"
-                        text="Nombre"
-                        prefWidth="150"/>
-
-                    <TableColumn fx:id="colEspecie"
-                        text="Especie"
-                        prefWidth="150"/>
-
-                    <TableColumn fx:id="colRaza"
-                        text="Raza"
-                        prefWidth="150"/>
-
-                    <TableColumn fx:id="colFechaNacimiento"
-                        text="Nacimiento"
-                        prefWidth="170"/>
-
-                    <TableColumn fx:id="colNumeroFicha"
-                        text="N° Ficha"
-                        prefWidth="120"/>
-
-                </columns>
-
-            </TableView>
-
+                <!--  TABLA MASCOTAS  -->
+                <Label style="-fx-font-size:16px; -fx-font-weight:bold;" text="Mascotas" />
+                <TableView fx:id="tablaMascotas" prefHeight="200.0">
+                    <columns>
+                        <TableColumn fx:id="colNombreMascota" prefWidth="150.0" text="Nombre" />
+                        <TableColumn fx:id="colEspecie" prefWidth="150.0" text="Especie" />
+                        <TableColumn fx:id="colRaza" prefWidth="150.0" text="Raza" />
+                        <TableColumn fx:id="colFechaNacimiento" prefWidth="170.0" text="Nacimiento" />
+                        <TableColumn fx:id="colNumeroFicha" prefWidth="120.0" text="N° Ficha" />
+                    </columns>
+                </TableView>
+            </children>
         </VBox>
-
     </center>
-
 </BorderPane>

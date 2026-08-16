@@ -6,7 +6,7 @@ import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
- class MascotaTest {
+class MascotaTest {
 
     @Test
     void noDebePermitirCrearMascotaSinCliente() {
