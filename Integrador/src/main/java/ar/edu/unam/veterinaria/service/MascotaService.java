@@ -1,3 +1,8 @@
+package ar.edu.unam.veterinaria.service;
+
+import ar.edu.unam.veterinaria.DAO.MascotaDAO;
+import ar.edu.unam.veterinaria.model.Mascota;
+
 public class MascotaService {
     private MascotaDAO mascotaDAO = new MascotaDAO();
 

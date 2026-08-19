@@ -36,21 +36,41 @@ public class Mascota {
     }
 
     // getters y setters
-
-    public String getDetallesMascota() {
-        return "Nombre: " + this.nombreMascota + ", Especie: " + this.especie + ", Raza: " + this.raza +
-                ", Fecha de Nacimiento: " + this.fechaNacimiento +", Ficha: " + this.numeroFicha ;
+    public Long getId() {
+        return id;
+    }
+    public String getNombreMascota() {
+        return nombreMascota;
+    }
+    public String getEspecie() {
+        return especie;
+    }
+    public String getRaza() {
+        return raza;
+    }
+    public LocalDate getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+    public Long getNumeroFicha() {
+        return numeroFicha;
     }
 
     public Cliente getDueno() {
         return dueno;
     }
-
-    public void setDatosMascota(String nombreMascota, String especie, String raza, LocalDate fechaNacimiento, Long numeroFicha) {
+    public void setNombreMascota(String nombreMascota) {
         this.nombreMascota = nombreMascota;
+    }
+    public void setEspecie(String especie) {
         this.especie = especie;
+    }
+    public void setRaza(String raza) {
         this.raza = raza;
+    }
+    public void setFechaNacimiento(LocalDate fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
+    }
+    public void setNumeroFicha(Long numeroFicha) {
         this.numeroFicha = numeroFicha;
     }
     public void setDueno(Cliente dueno) {

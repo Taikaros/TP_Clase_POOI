@@ -1,3 +1,15 @@
+package ar.edu.unam.veterinaria.controller;
+
+import ar.edu.unam.veterinaria.model.Cliente;
+import ar.edu.unam.veterinaria.model.Mascota;
+import ar.edu.unam.veterinaria.service.ClienteService;
+import ar.edu.unam.veterinaria.service.MascotaService;
+import javafx.collections.FXCollections;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import java.util.List;
+
 public class ClienteController {
 
     //CAMPOS DE TEXTO
@@ -56,7 +68,8 @@ public class ClienteController {
     //INICIALIZACION
     @FXML
     public void initialize() {
-        
+    try {
+        // Configuraciones de las columnas
         colNombreCliente.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colApellidoCliente.setCellValueFactory(new PropertyValueFactory<>("apellido"));
         colTelefonoCliente.setCellValueFactory(new PropertyValueFactory<>("telefono"));
@@ -68,41 +81,44 @@ public class ClienteController {
         colFechaNacimiento.setCellValueFactory(new PropertyValueFactory<>("fechaNacimiento"));
         colNumeroFicha.setCellValueFactory(new PropertyValueFactory<>("numeroFicha"));
 
-        tablaClientes.getSelectionModel().selectedItemProperty().addListener((observable, clienteAnterior, clienteSeleccionado) -> {
-            
-            if (clienteSeleccionado != null) {
-                List<Mascota> mascotasDelCliente = clienteSeleccionado.getMascotas(); 
+        // Lógica de listeners
+        tablaClientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                txtNombreCliente.setText(newVal.getNombre());
+                txtApellidoCliente.setText(newVal.getApellido());
+                txtTelefonoCliente.setText(newVal.getTelefono());
+                txtEmailCliente.setText(newVal.getEmail());
                 
-                ObservableList<Mascota> mascotasObservable = FXCollections.observableArrayList(mascotasDelCliente);
-                tablaMascotas.setItems(mascotasObservable);
-                
+                List<Mascota> mascotas = newVal.getMascotas();
+                if(mascotas != null) {
+                    tablaMascotas.setItems(FXCollections.observableArrayList(mascotas));
+                }
             } else {
                 tablaMascotas.getItems().clear();
             }
         });
-        List<Cliente> todosLosClientes = ClienteService.obtenerTodos();
-        tablaClientes.setItems(FXCollections.observableArrayList(todosLosClientes));
-        tablaMascotas.getSelectionModel().selectedItemProperty().addListener((observable, mascotaAnterior, mascotaSeleccionada) -> {
-            if (mascotaSeleccionada != null) {
-                txtNombreMascota.setText(mascotaSeleccionada.getNombre());
-                txtEspecie.setText(mascotaSeleccionada.getEspecie());
-                txtRaza.setText(mascotaSeleccionada.getRaza());
-                dpFechaNacimiento.setValue(mascotaSeleccionada.getFechaNacimiento()); 
-                txtNumeroFicha.setText(String.valueOf(mascotaSeleccionada.getNumeroFicha())); 
+
+        tablaMascotas.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                txtNombreMascota.setText(newVal.getNombreMascota());
+                txtEspecie.setText(newVal.getEspecie());
+                txtRaza.setText(newVal.getRaza());
+                dpFechaNacimiento.setValue(newVal.getFechaNacimiento()); 
+                txtNumeroFicha.setText(String.valueOf(newVal.getNumeroFicha())); 
             }
         });
-        tablaClientes.getSelectionModel().selectedItemProperty().addListener((observable, clienteAnterior, clienteSeleccionado) -> {
-            if (clienteSeleccionado != null) {
-                txtNombreCliente.setText(clienteSeleccionado.getNombre());
-                txtApellidoCliente.setText(clienteSeleccionado.getApellido());
-                txtTelefonoCliente.setText(clienteSeleccionado.getTelefono());
-                txtEmailCliente.setText(clienteSeleccionado.getEmail());
-                List<Mascota> mascotasDelCliente = clienteSeleccionado.getMascotas();
-                tablaMascotas.setItems(FXCollections.observableArrayList(mascotasDelCliente));
-            } else {
-                tablaMascotas.getItems().clear();
-    }
-});
+
+        // Carga de datos
+        // Nota: Asegúrate de usar la instancia en minúscula si el método no es estático
+        List<Cliente> todosLosClientes = clienteService.obtenerTodos(); 
+        if (todosLosClientes != null) {
+            tablaClientes.setItems(FXCollections.observableArrayList(todosLosClientes));
+        }
+
+    } catch (Exception e) {
+        System.err.println("¡Error crítico al inicializar la pantalla de Clientes!");
+        e.printStackTrace();
+    };
 }
     //SERVICIOS
     private ClienteService clienteService = new ClienteService();
@@ -164,11 +180,11 @@ private void modificar() {
         Mascota mascotaSeleccionada = tablaMascotas.getSelectionModel().getSelectedItem();
         Cliente clienteSeleccionado = tablaClientes.getSelectionModel().getSelectedItem();
         if (mascotaSeleccionada != null) {
-            mascotaSeleccionada.setNombre(txtNombreMascota.getText());
+            mascotaSeleccionada.setNombreMascota(txtNombreMascota.getText());
             mascotaSeleccionada.setEspecie(txtEspecie.getText());
             mascotaSeleccionada.setRaza(txtRaza.getText());
             mascotaSeleccionada.setFechaNacimiento(dpFechaNacimiento.getValue());   
-            mascotaSeleccionada.setNumeroFicha(txtNumeroFicha.getText());
+            mascotaSeleccionada.setNumeroFicha(Long.valueOf(txtNumeroFicha.getText()));
             mascotaService.actualizarMascota(mascotaSeleccionada); 
             tablaMascotas.refresh();
             limpiar();
@@ -210,4 +226,5 @@ private void mostrarAlerta(String titulo, String mensaje) {
     alert.showAndWait();
 }
 };
+
 

@@ -11,7 +11,7 @@
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver" />
             <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://ep-quiet-snow-aqy8ns11.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require" />
             <property name="jakarta.persistence.jdbc.user" value="neondb_owner" />
-
+            <property name="jakarta.persistence.jdbc.password" value="npg_petWKVP3mc0u" />
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
             
             <property name="hibernate.hbm2ddl.auto" value="update" />

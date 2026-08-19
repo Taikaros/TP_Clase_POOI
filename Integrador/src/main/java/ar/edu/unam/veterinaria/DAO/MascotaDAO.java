@@ -1,4 +1,8 @@
+package ar.edu.unam.veterinaria.DAO;
+
 import jakarta.persistence.EntityManager;
+import ar.edu.unam.veterinaria.model.Mascota;
+import ar.edu.unam.veterinaria.utils.JPAUtil;
 
 public class MascotaDAO {
     

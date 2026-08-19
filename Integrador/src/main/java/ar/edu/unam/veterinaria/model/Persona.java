@@ -39,16 +39,23 @@ public abstract class Persona {
     public String getApellido() {
         return this.apellido;
     }
-    public String getContacto() {
-        return "Teléfono: " + this.telefono + ", Email: " + this.email;
+    public String getTelefono() {
+        return this.telefono;
     }
-    public void setContacto(String telefono, String email) {
-        this.telefono = telefono;
-        this.email = email;
+    public String getEmail() {
+        return this.email;
     }
-    public void setDatosPersonales(String nombre, String apellido) {
+    public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+    public void setApellido(String apellido) {
         this.apellido = apellido;
+    }
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+    public void setEmail(String email) {
+        this.email = email;
     }
     public boolean isActivo() {
         return activo;

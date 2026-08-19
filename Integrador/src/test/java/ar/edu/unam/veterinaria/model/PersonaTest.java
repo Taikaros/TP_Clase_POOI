@@ -11,7 +11,7 @@ class PersonaTest {
         Persona personaDummy = new Persona("Juan", "Pérez", "3758-123456", "juan@email.com") {};
 
         // Act (Actuar): Obtenemos el resultado del método
-        String resultado = personaDummy.getContacto();
+        String resultado = personaDummy.getTelefono() + ", " + personaDummy.getEmail();
 
         // Assert (Afirmar): Verificamos que el formato sea exactamente el esperado
         String esperado = "Teléfono: 3758-123456, Email: juan@email.com";
@@ -24,7 +24,8 @@ class PersonaTest {
         Persona personaDummy = new Persona() {};
         
         // Act
-        personaDummy.setDatosPersonales("Carlos", "Gómez");
+        personaDummy.setNombre("Carlos");
+        personaDummy.setApellido("Gómez");
 
         // Assert
         assertEquals("Carlos", personaDummy.getNombre(), "El nombre no se actualizó correctamente");
