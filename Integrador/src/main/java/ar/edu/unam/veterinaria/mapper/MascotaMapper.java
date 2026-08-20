@@ -9,14 +9,24 @@ public class MascotaMapper {
         if (mascota == null) {
             return null;
         }
-        long idCliente = 0;
+        
+        Long idCliente = 0L;
         String nombreDueno = "Sin Dueño";
+        
         if (mascota.getDueno() != null) {
             idCliente = mascota.getDueno().getId();
             nombreDueno = mascota.getDueno().getNombre()+ " "+ mascota.getDueno().getApellido();
         }
-        return new MascotaDTO(mascota.getId(), mascota.getNombreMascota(), mascota.getEspecie(), mascota.getRaza(), mascota.getFechaNacimiento(), idCliente, nombreDueno);
-
-
+        
+        return new MascotaDTO(
+            mascota.getId(), 
+            mascota.getNombreMascota(), 
+            mascota.getEspecie(), 
+            mascota.getRaza(), 
+            mascota.getFechaNacimiento(), 
+            idCliente, 
+            nombreDueno,
+            mascota.getNumeroFicha() // Extraemos el numero de ficha
+        );
     }
 }
