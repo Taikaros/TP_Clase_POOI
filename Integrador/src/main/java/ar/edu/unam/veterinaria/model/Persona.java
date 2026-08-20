@@ -41,7 +41,6 @@ public abstract class Persona {
     }
     public String getTelefono() {
         return this.telefono;
-
     }
 
     public String getEmail() {
@@ -55,8 +54,8 @@ public abstract class Persona {
         this.email = email;
     } 
     public void setDatosPersonales(String nombre, String apellido) {
-
         this.nombre = nombre;
+        this.apellido = apellido;
     }
     public void setApellido(String apellido) {
         this.apellido = apellido;

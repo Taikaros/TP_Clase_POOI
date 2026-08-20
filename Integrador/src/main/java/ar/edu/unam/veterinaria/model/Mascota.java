@@ -23,6 +23,7 @@ public class Mascota {
 
     public Mascota() {
     }
+
     public Mascota(Long id,String nombreMascota, String especie, String raza, LocalDate fechaNacimiento, Cliente dueno, Long numeroFicha) {
         if(dueno == null) {
             throw new IllegalArgumentException("La mascota debe tener un dueño asignado.");
@@ -40,7 +41,6 @@ public class Mascota {
         if (dueno == null) {
             throw new IllegalArgumentException("La mascota debe tener un dueño asignado obligatoriamente.");
         }
-        
         this.nombreMascota = nombreMascota;
         this.especie = especie;
         this.raza = raza;
