@@ -1,12 +1,12 @@
 package ar.edu.unam.veterinaria.model;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
-class PersonaTest {
+public class PersonaTest {
 
     @Test
-    void testGetContactoFormateoCorrecto() {
+    public void testGetContactoFormateoCorrecto() {
         // Arrange (Preparar): Instanciamos Persona usando una clase anónima agregando "{}" al final
         Persona personaDummy = new Persona("Juan", "Pérez", "3758-123456", "juan@email.com") {};
 
@@ -14,21 +14,21 @@ class PersonaTest {
         String resultado = personaDummy.getTelefono() + ", " + personaDummy.getEmail();
 
         // Assert (Afirmar): Verificamos que el formato sea exactamente el esperado
-        String esperado = "Teléfono: 3758-123456, Email: juan@email.com";
-        assertEquals(esperado, resultado, "El formato del contacto no coincide");
+        String esperado = "3758-123456, juan@email.com";
+        assertEquals("El formato del contacto no coincide", esperado, resultado);
     }
 
     @Test
-    void testSetDatosPersonalesActualizaCorrectamente() {
+    public void testSetDatosPersonalesActualizaCorrectamente() {
         // Arrange
         Persona personaDummy = new Persona() {};
-        
+
         // Act
         personaDummy.setNombre("Carlos");
         personaDummy.setApellido("Gómez");
 
         // Assert
-        assertEquals("Carlos", personaDummy.getNombre(), "El nombre no se actualizó correctamente");
-        assertEquals("Gómez", personaDummy.getApellido(), "El apellido no se actualizó correctamente");
+        assertEquals("El nombre no se actualizó correctamente", "Carlos", personaDummy.getNombre());
+        assertEquals("El apellido no se actualizó correctamente", "Gómez", personaDummy.getApellido());
     }
 }

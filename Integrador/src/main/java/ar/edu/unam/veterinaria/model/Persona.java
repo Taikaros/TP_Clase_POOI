@@ -73,4 +73,7 @@ public abstract class Persona {
     public void setActivo(boolean activo) {
         this.activo = activo;
     }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 }

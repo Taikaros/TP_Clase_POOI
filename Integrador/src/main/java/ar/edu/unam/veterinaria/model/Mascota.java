@@ -35,7 +35,19 @@ public class Mascota {
         this.dueno = dueno;
         this.numeroFicha = numeroFicha;
     }
-
+ public Mascota(String nombreMascota, String especie, String raza, java.time.LocalDate fechaNacimiento, Cliente dueno, Long numeroFicha) {
+        // Agregamos esta validación para que el test pase
+        if (dueno == null) {
+            throw new IllegalArgumentException("La mascota debe tener un dueño asignado obligatoriamente.");
+        }
+        
+        this.nombreMascota = nombreMascota;
+        this.especie = especie;
+        this.raza = raza;
+        this.fechaNacimiento = fechaNacimiento;
+        this.dueno = dueno;
+        this.numeroFicha = numeroFicha;
+    }
     // getters y setters
     public Long getId() {
         return id;
