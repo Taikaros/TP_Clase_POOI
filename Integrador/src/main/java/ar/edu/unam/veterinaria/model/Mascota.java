@@ -27,6 +27,7 @@ public class Mascota {
         if(dueno == null) {
             throw new IllegalArgumentException("La mascota debe tener un dueño asignado.");
         }
+        this.id = id;
         this.nombreMascota = nombreMascota;
         this.especie = especie;
         this.raza = raza;
