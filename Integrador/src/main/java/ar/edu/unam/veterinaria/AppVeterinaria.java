@@ -36,6 +36,8 @@ public class AppVeterinaria extends Application {
         FXMLLoader loader = new FXMLLoader(fxmlLocation);
         Parent root = loader.load();
         Scene scene = new Scene(root, 1280, 720);
+
+        scene.getStylesheets().add(getClass().getResource("/views/style.css").toExternalForm());
         
         // Ponemos un título temporal para darle un feedback al usuario de que está cargando
         primaryStage.setTitle("Huellas & Salud - Centro Veterinario (Conectando a la base de datos...)");
