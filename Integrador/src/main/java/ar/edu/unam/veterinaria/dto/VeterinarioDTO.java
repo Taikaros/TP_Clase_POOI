@@ -13,12 +13,13 @@ public class VeterinarioDTO {
 
     public VeterinarioDTO() {
     }
-    public VeterinarioDTO(Long id, String nombre, String apellido, String especialidad, String matricula) {
+    public VeterinarioDTO(Long id, String nombre, String apellido, String especialidad, String matricula, List<String> especialidades) {
         this.id = id;
         this.nombre = nombre;
         this.apellido = apellido;
         this.especialidad = especialidad;
         this.matricula = matricula;
+        this.especialidades = especialidades;
     }
 
     public Long getId() {
@@ -50,5 +51,11 @@ public class VeterinarioDTO {
     }
     public void setMatricula(String matricula) {
         this.matricula = matricula;
+    }
+    public List<String> getEspecialidades() {
+        return especialidades;
+    }
+    public void setEspecialidades(List<String> especialidades) {
+        this.especialidades = especialidades;
     }
 }

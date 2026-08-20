@@ -41,11 +41,21 @@ public abstract class Persona {
     }
     public String getTelefono() {
         return this.telefono;
+
     }
+
     public String getEmail() {
         return this.email;
     }
-    public void setNombre(String nombre) {
+    public String getContacto() {
+        return "Teléfono: " + this.telefono + ", Email: " + this.email;
+    }
+    public void setContacto(String telefono, String email) {
+        this.telefono = telefono;
+        this.email = email;
+    } 
+    public void setDatosPersonales(String nombre, String apellido) {
+
         this.nombre = nombre;
     }
     public void setApellido(String apellido) {
