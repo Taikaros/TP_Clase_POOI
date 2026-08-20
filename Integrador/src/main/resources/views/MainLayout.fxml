@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.geometry.Insets?>
+<?import java.lang.String?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ar.edu.unam.veterinaria.controller.MainLayoutController"
+            stylesheets="@style.css"
+            prefWidth="1280.0" prefHeight="720.0">
+
+    <left>
+        <VBox fx:id="sidebar" styleClass="sidebar-container" spacing="5.0" prefWidth="250.0">
+            <padding>
+                <Insets top="30.0" right="15.0" bottom="20.0" left="15.0"/>
+            </padding>
+            
+            <HBox alignment="CENTER_LEFT" spacing="15.0" styleClass="logo-container">
+                <padding>
+                    <Insets left="10.0" bottom="25.0"/>
+                </padding>
+                <FontIcon iconLiteral="fas-plus-square" iconSize="32" styleClass="logo-icon"/>
+                <VBox alignment="CENTER_LEFT" spacing="2.0">
+                    <Label text="Huellas &amp; Salud" styleClass="logo-title"/>
+                    <Label text="CENTRO VETERINARIO" styleClass="logo-subtitle"/>
+                </VBox>
+            </HBox>
+            <StackPane styleClass="nav-divider" maxHeight="1.0" />
+            <Label text="MÓDULOS" styleClass="sidebar-section-title">
+                <padding>
+                    <Insets left="15.0" top="5.0" bottom="5.0"/>
+                </padding>
+            </Label>
+
+            <Button fx:id="btnClientes" text=" Clientes" onAction="#cargarVistaClientes" maxWidth="Infinity" styleClass="nav-button">
+                <graphic><FontIcon iconLiteral="fas-user-friends" iconSize="16" styleClass="nav-icon"/></graphic>
+            </Button>
+            
+            <Button fx:id="btnTurnos" onAction="#cargarVistaTurnos" maxWidth="Infinity" contentDisplay="GRAPHIC_ONLY">
+                <styleClass>
+                    <String fx:value="nav-button"/>
+                    <String fx:value="nav-button-active"/>
+                </styleClass>
+                <graphic>
+                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                        <FontIcon iconLiteral="fas-calendar-alt" iconSize="16" styleClass="nav-icon"/>
+                        <Label text="Turnos" styleClass="nav-text-active"/>
+                        <Region HBox.hgrow="ALWAYS"/> <Label text="•" styleClass="nav-dot"/>
+                        <StackPane styleClass="nav-divider" maxHeight="1.0" />
+                    </HBox>
+                </graphic>
+            </Button>
+            
+            <Button fx:id="btnHistorial" text=" Historial Médico" onAction="#cargarVistaHistorial" maxWidth="Infinity" styleClass="nav-button">
+                <graphic><FontIcon iconLiteral="fas-notes-medical" iconSize="16" styleClass="nav-icon"/></graphic>
+            </Button>
+            
+            <Button fx:id="btnVacunaciones" text=" Vacunaciones" onAction="#cargarVistaVacunaciones" maxWidth="Infinity" styleClass="nav-button">
+                <graphic><FontIcon iconLiteral="fas-syringe" iconSize="16" styleClass="nav-icon"/></graphic>
+            </Button>
+            
+            <Button fx:id="btnVeterinarios" text=" Veterinarios" onAction="#cargarVistaVeterinarios" maxWidth="Infinity" styleClass="nav-button">
+                <graphic><FontIcon iconLiteral="fas-user-md" iconSize="16" styleClass="nav-icon"/></graphic>
+            </Button>
+            
+            <Button fx:id="btnGuarderia" text=" Guardería &amp; Peluquería" onAction="#cargarVistaGuarderia" maxWidth="Infinity" styleClass="nav-button">
+                <graphic><FontIcon iconLiteral="fas-paw" iconSize="16" styleClass="nav-icon"/></graphic>
+            </Button>
+
+            <Region VBox.vgrow="ALWAYS" />
+
+            <Button text=" Configuración" maxWidth="Infinity" styleClass="nav-button">
+                <graphic><FontIcon iconLiteral="fas-cog" iconSize="16" styleClass="nav-icon"/></graphic>
+            </Button>
+            
+            <Button text=" Cerrar sesión" maxWidth="Infinity">
+                <styleClass>
+                    <String fx:value="nav-button"/>
+                    <String fx:value="logout-button"/>
+                </styleClass>
+                <graphic><FontIcon iconLiteral="fas-sign-out-alt" iconSize="16" styleClass="logout-icon"/></graphic>
+            </Button>
+
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane fx:id="contentArea" styleClass="main-content-area">
+            <padding>
+                <Insets top="30.0" right="40.0" bottom="30.0" left="40.0"/>
+            </padding>
+        </StackPane>
+    </center>
+
+</BorderPane>

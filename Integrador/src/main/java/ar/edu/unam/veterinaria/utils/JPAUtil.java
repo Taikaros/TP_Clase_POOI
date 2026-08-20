@@ -1,0 +1,14 @@
+package ar.edu.unam.veterinaria.utils;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+
+public class JPAUtil {
+    // "VeterinariaPU" es el nombre de tu persistence-unit en el XML
+    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("VeterinariaPU");
+
+    public static EntityManager getEntityManager() {
+        return emf.createEntityManager();
+    }
+}

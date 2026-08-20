@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="ar.edu.unam.veterinaria.controller.TurnoController">
+
+    <!-- PANEL IZQUIERDO: Formulario y Botones -->
+    <left>
+        <VBox spacing="15" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+
+            <Label text="Gestión de Turnos" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+            <!-- Formulario -->
+            <GridPane vgap="10" hgap="10">
+                <!-- DatePicker para la fecha -->
+                <Label text="Fecha:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <DatePicker fx:id="dpFecha" promptText="Seleccione fecha" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <!-- ComboBox para Cliente/Mascota -->
+                <Label text="Mascota/Cliente:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="cbClienteMascota" promptText="Seleccionar..." GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="Infinity"/>
+
+                <!-- ComboBox para Profesional -->
+                <Label text="Profesional:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <ComboBox fx:id="cbProfesional" promptText="Seleccionar vet..." GridPane.rowIndex="2" GridPane.columnIndex="1" maxWidth="Infinity"/>
+            </GridPane>
+
+            <Region VBox.vgrow="ALWAYS" />
+
+            <!-- Botones "Agendar" y "Cancelar" -->
+            <HBox spacing="10" alignment="CENTER">
+                <Button fx:id="btnAgendar" text="Agendar Turno" onAction="#guardarTurno" style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+            <Button fx:id="btnCancelar" text="Cancelar Turno" onAction="#cancelarTurno" style="-fx-background-color: #F44336; -fx-text-fill: white;"/>
+            </HBox>
+        </VBox>
+    </left>
+
+    <!-- PANEL CENTRAL: TableView con los turnos del día -->
+    <center>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="0"/>
+            </padding>
+            
+            <Label text="Turnos del Día" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+            
+            <TableView fx:id="tvTurnos" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colHora" text="Hora" prefWidth="100"/>
+                    <TableColumn fx:id="colMascota" text="Mascota/Cliente" prefWidth="200"/>
+                    <TableColumn fx:id="colProfesional" text="Profesional" prefWidth="200"/>
+                    <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+
+</BorderPane>
