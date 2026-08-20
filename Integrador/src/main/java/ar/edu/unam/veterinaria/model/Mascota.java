@@ -66,6 +66,28 @@ public class Mascota {
         this.id = id;
 
     }
+    public void setNombreMascota(String nombreMascota) {
+        this.nombreMascota = nombreMascota;
+    }
+    public void setEspecie(String especie) {
+        this.especie = especie;
+    }
+    public void setRaza(String raza) {
+        this.raza = raza;
+    }
+    public void setFechaNacimiento(LocalDate fechaNacimiento) {
+        this.fechaNacimiento = fechaNacimiento;
+    }
+    public void setNumeroFicha(Long numeroFicha) {
+        this.numeroFicha = numeroFicha;
+    }
+    public String getNombre() {
+        return nombreMascota;
+    }
+    public void setNombre(String nombre) {
+        this.nombreMascota = nombre;
+    }
+
     public void setDueno(Cliente dueno) {
         this.dueno = dueno;
     }

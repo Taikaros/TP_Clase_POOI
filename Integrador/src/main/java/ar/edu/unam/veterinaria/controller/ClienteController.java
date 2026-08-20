@@ -2,8 +2,8 @@ package ar.edu.unam.veterinaria.controller;
 
 import ar.edu.unam.veterinaria.model.Cliente;
 import ar.edu.unam.veterinaria.model.Mascota;
-import ar.edu.unam.veterinaria.service.ClienteService;
-import ar.edu.unam.veterinaria.service.MascotaService;
+import ar.edu.unam.veterinaria.service.ClienteServiceDAO;
+import ar.edu.unam.veterinaria.service.MascotaServiceDAO;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -121,8 +121,8 @@ public class ClienteController {
     };
 }
     //SERVICIOS
-    private ClienteService clienteService = new ClienteService();
-    private MascotaService mascotaService = new MascotaService();
+    private ClienteServiceDAO clienteService = new ClienteServiceDAO();
+    private MascotaServiceDAO mascotaService = new MascotaServiceDAO();
 
     //BOTONES
 @FXML
