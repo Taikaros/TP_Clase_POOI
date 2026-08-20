@@ -23,34 +23,83 @@ public class Mascota {
 
     public Mascota() {
     }
-    public Mascota(String nombreMascota, String especie, String raza, LocalDate fechaNacimiento, Cliente dueno) {
+    public Mascota(Long id,String nombreMascota, String especie, String raza, LocalDate fechaNacimiento, Cliente dueno, Long numeroFicha) {
         if(dueno == null) {
             throw new IllegalArgumentException("La mascota debe tener un dueño asignado.");
         }
+        this.id = id;
         this.nombreMascota = nombreMascota;
         this.especie = especie;
         this.raza = raza;
         this.fechaNacimiento = fechaNacimiento;
         this.dueno = dueno;
+        this.numeroFicha = numeroFicha;
     }
-
-    // getters y setters
-
-    public String getDetallesMascota() {
-        return "Nombre: " + this.nombreMascota + ", Especie: " + this.especie + ", Raza: " + this.raza +
-                ", Fecha de Nacimiento: " + this.fechaNacimiento;
-    }
-
-    public Cliente getDueno() {
-        return dueno;
-    }
-
-    public void setDatosMascota(String nombreMascota, String especie, String raza, LocalDate fechaNacimiento) {
+ public Mascota(String nombreMascota, String especie, String raza, java.time.LocalDate fechaNacimiento, Cliente dueno, Long numeroFicha) {
+        // Agregamos esta validación para que el test pase
+        if (dueno == null) {
+            throw new IllegalArgumentException("La mascota debe tener un dueño asignado obligatoriamente.");
+        }
+        
         this.nombreMascota = nombreMascota;
         this.especie = especie;
         this.raza = raza;
         this.fechaNacimiento = fechaNacimiento;
+        this.dueno = dueno;
+        this.numeroFicha = numeroFicha;
     }
+    // getters y setters
+    public Long getId() {
+        return id;
+    }
+    public String getNombreMascota() {
+        return nombreMascota;
+    }
+    public String getEspecie() {
+        return especie;
+    }
+    public String getRaza() {
+        return raza;
+    }
+    public LocalDate getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+    public Long getNumeroFicha() {
+        return numeroFicha;
+    }
+    public String getDetallesMascota() {
+        return "Nombre: " + this.nombreMascota + ", Especie: " + this.especie + ", Raza: " + this.raza +
+                ", Fecha de Nacimiento: " + this.fechaNacimiento +", Ficha: " + this.numeroFicha ;
+    }
+    public Cliente getDueno() {
+        return dueno;
+    }
+    public void setId(Long id) {
+        this.id = id;
+
+    }
+    public void setNombreMascota(String nombreMascota) {
+        this.nombreMascota = nombreMascota;
+    }
+    public void setEspecie(String especie) {
+        this.especie = especie;
+    }
+    public void setRaza(String raza) {
+        this.raza = raza;
+    }
+    public void setFechaNacimiento(LocalDate fechaNacimiento) {
+        this.fechaNacimiento = fechaNacimiento;
+    }
+    public void setNumeroFicha(Long numeroFicha) {
+        this.numeroFicha = numeroFicha;
+    }
+    public String getNombre() {
+        return nombreMascota;
+    }
+    public void setNombre(String nombre) {
+        this.nombreMascota = nombre;
+    }
+
     public void setDueno(Cliente dueno) {
         this.dueno = dueno;
     }

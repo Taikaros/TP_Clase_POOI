@@ -1,0 +1,114 @@
+.root {
+    /* Forzamos tipografía limpia */
+    -fx-font-family: "Inter", "Roboto", "Segoe UI", sans-serif;
+}
+
+.sidebar-container {
+    -fx-background-color: #1E293B; /* Fondo oscuro original */
+}
+
+/* --- LOGO --- */
+.logo-icon {
+    -fx-icon-color: #10B981;
+    -fx-background-color: #0F172A; /* Fondo oscuro de la caja */
+    -fx-padding: 5 8 5 8; /* Espacio alrededor de la cruz */
+    -fx-background-radius: 8; /* Bordes redondeados */
+}
+.logo-title {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+.logo-subtitle {
+    /* Tu variable Madera Clara aplicada directamente */
+    -fx-text-fill: #D2B48C; 
+    -fx-font-size: 10px;
+    -fx-letter-spacing: 1px;
+    -fx-font-weight: bold;
+}
+
+.sidebar-section-title {
+    -fx-text-fill: #64748B;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-letter-spacing: 0.5px;
+}
+
+/* --- BOTONES DE NAVEGACIÓN --- */
+.button.nav-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-text-fill: #CBD5E1;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 10 15 10 15;
+    -fx-cursor: hand;
+}
+
+.nav-icon {
+    -fx-icon-color: #CBD5E1;
+}
+
+/* Hover general */
+.button.nav-button:hover {
+    -fx-background-color: #334155;
+    -fx-text-fill: white;
+}
+.button.nav-button:hover .nav-icon {
+    -fx-icon-color: white;
+}
+.button.nav-button:focused {
+    -fx-background-color: transparent;
+}
+
+/* --- ESTADOS ACTIVOS --- */
+.button.nav-button-active, 
+.button.nav-button-active:focused,
+.button.nav-button-active:hover {
+    -fx-background-color: #2CA871; /* El verde exacto del prototipo */
+    -fx-text-fill: white;
+    /* Ajuste de padding para compensar el HBox interno */
+    -fx-padding: 5 15 5 10; 
+}
+.button.nav-button-active .nav-icon {
+    -fx-icon-color: white; 
+}
+
+/* Clases específicas para el HBox del botón activo */
+.nav-text-active {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+.nav-dot {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+/* --- BOTÓN CERRAR SESIÓN --- */
+.button.logout-button {
+    -fx-text-fill: #F87171; /* Rojo Salmón */
+}
+.logout-icon {
+    -fx-icon-color: #F87171;
+}
+.button.logout-button:hover {
+    -fx-background-color: #33202A; /* Fondo rojizo súper tenue en hover */
+    -fx-text-fill: #FCA5A5;
+}
+.button.logout-button:hover .logout-icon {
+    -fx-icon-color: #FCA5A5;
+}
+
+/* --- ÁREA CENTRAL --- */
+.main-content-area {
+    -fx-background-color: #F8FAFC;
+}
+
+/* --- Barra de Separacion --- */
+.nav-divider {
+    -fx-background-color: #334155;
+    -fx-min-height: 1px;
+    -fx-max-height: 1px;
+}
