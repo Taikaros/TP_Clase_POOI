@@ -220,11 +220,19 @@
 }
 .table-mascotas .table-row-cell {
     -fx-background-color: white;
-    -fx-border-color: -color-madera-clara; 
+    -fx-border-color: -color-madera-clara;
     -fx-border-width: 1px;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
-    -fx-padding: 10px;
+    -fx-padding: 5px; 
+    -fx-cell-size: 45px; 
+}
+
+.table-mascotas .table-cell {
+    -fx-text-fill: -color-texto-oscuro;
+    -fx-font-weight: normal;
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER_LEFT;
 }
 .table-mascotas .table-row-cell:empty {
     -fx-background-color: transparent;
