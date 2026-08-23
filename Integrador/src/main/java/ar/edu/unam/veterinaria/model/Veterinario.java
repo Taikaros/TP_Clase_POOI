@@ -5,6 +5,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
@@ -19,8 +21,12 @@ public class Veterinario extends Persona {
 
     // multiplicidad de 1 Veterinario tiene Muchas (*) Especialidades
     // uso una tabla intermedia para mantener limpia la relacion unidireccional
-    @OneToMany
-    @JoinColumn(name = "veterinario_id") 
+    @ManyToMany
+    @JoinTable(
+        name = "veterinario_especialidad",
+        joinColumns = @JoinColumn(name = "veterinario_id"),
+        inverseJoinColumns = @JoinColumn(name = "especialidad_id")
+    )
     private List<Especialidad> especialidades = new ArrayList<>();
 
     // mapeo 

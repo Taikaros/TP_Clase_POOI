@@ -238,3 +238,142 @@
     -fx-background-color: transparent;
     -fx-border-color: transparent;
 }
+/* ==================== TARJETAS DE VETERINARIOS ==================== */
+.vet-card {
+    -fx-background-color: white;
+    -fx-background-radius: 16px;
+    -fx-border-radius: 16px;
+    -fx-border-color: #E2E8F0;
+    -fx-border-width: 1px;
+    -fx-padding: 20px;
+    /* Sombra sutil calcada de Figma */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.04), 15, 0, 0, 5);
+}
+
+.avatar-circle-large {
+    -fx-background-radius: 50;
+    -fx-min-width: 55px;
+    -fx-min-height: 55px;
+    -fx-max-width: 55px;
+    -fx-max-height: 55px;
+}
+.avatar-text {
+    -fx-font-size: 18px;
+    -fx-font-weight: 900;
+}
+
+/* Colores pastel para Avatares */
+.bg-pastel-blue { -fx-background-color: #E0F2FE; }
+.text-blue { -fx-text-fill: #0369A1; }
+
+.bg-pastel-green { -fx-background-color: #DCFCE7; }
+.text-green { -fx-text-fill: #15803D; }
+
+.bg-pastel-yellow { -fx-background-color: #FEF9C3; }
+.text-yellow { -fx-text-fill: #A16207; }
+
+.bg-pastel-purple { -fx-background-color: #F3E8FF; }
+.text-purple { -fx-text-fill: #6B21A8; }
+
+.bg-pastel-red { -fx-background-color: #FEE2E2; }
+.text-red { -fx-text-fill: #B91C1C; }
+
+
+/* ==================== PASTILLAS (PILLS) ==================== */
+.pill {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 4px 10px;
+    -fx-background-radius: 12px;
+}
+/* Variantes de colores para las especialidades */
+.pill-green { -fx-background-color: #DCFCE7; -fx-text-fill: #15803D; }
+.pill-red { -fx-background-color: #FEE2E2; -fx-text-fill: #B91C1C; }
+.pill-yellow { -fx-background-color: #FEF9C3; -fx-text-fill: #A16207; }
+.pill-blue { -fx-background-color: #E0F2FE; -fx-text-fill: #0369A1; }
+.pill-purple { -fx-background-color: #F3E8FF; -fx-text-fill: #6B21A8; }
+
+
+/* ==================== MENÚ KEBAB (3 Puntos) ==================== */
+.kebab-menu {
+    -fx-background-color: transparent;
+    -fx-padding: 5px;
+    -fx-cursor: hand;
+}
+/* Ocultar la flechita por defecto del MenuButton de JavaFX */
+.kebab-menu .arrow-button { -fx-padding: 0; }
+.kebab-menu .arrow { -fx-shape: null; -fx-padding: 0; }
+
+.menu-item-danger .label {
+    -fx-text-fill: #EF4444;
+}
+
+
+/* ==================== MODALES Y PANELES FLOTANTES ==================== */
+/* Fondo oscuro translúcido */
+.modal-overlay {
+    -fx-background-color: rgba(15, 23, 42, 0.4); 
+}
+
+/* Caja del Modal (Centrada) */
+.modal-box {
+    -fx-background-color: white;
+    -fx-background-radius: 16px;
+    -fx-padding: 30px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 30, 0, 0, 10);
+}
+
+/* Panel Lateral (Sale de la derecha) */
+.slide-panel {
+    -fx-background-color: white;
+    -fx-padding: 30px 40px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 30, 0, -5, 0);
+}
+
+/* Botón 'X' para cerrar */
+.btn-close-modal {
+    -fx-background-color: transparent;
+    -fx-text-fill: #94A3B8;
+    -fx-cursor: hand;
+}
+.btn-close-modal:hover {
+    -fx-background-color: #F1F5F9;
+    -fx-background-radius: 50;
+}
+
+/* ComboBox Filtro */
+.combo-filtro {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+}
+
+/* Quitar fondo al ScrollPane */
+.scroll-invisible {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+.scroll-invisible .viewport {
+    -fx-background-color: transparent;
+}
+/* ==================== SELECTOR DE ESPECIALIDADES ==================== */
+.pill-toggle {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 16px;
+    -fx-background-radius: 16px;
+    -fx-text-fill: -color-texto-gris;
+    -fx-padding: 6px 14px;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+.pill-toggle:hover {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: -color-madera-clara;
+}
+.pill-toggle:selected {
+    -fx-background-color: -color-primario;
+    -fx-border-color: -color-primario;
+    -fx-text-fill: white;
+}

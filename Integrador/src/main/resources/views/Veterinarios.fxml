@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<!-- STACKPANE: Nos permite superponer ventanas (Modales y Paneles) -->
+<StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.VeterinarioController">
+    
+    <!-- ========================================== -->
+    <!-- CAPA 0: EL DIRECTORIO PRINCIPAL (DE FONDO) -->
+    <!-- ========================================== -->
+    <VBox spacing="25.0" style="-fx-background-color: -color-fondo-main;">
+        <padding><Insets top="40.0" right="40.0" bottom="40.0" left="40.0" /></padding>
+
+        <!-- HEADER -->
+        <HBox alignment="CENTER_LEFT">
+            <VBox spacing="5.0">
+                <Label text="Directorio de Veterinarios" style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: -color-texto-oscuro;" />
+                <HBox spacing="5.0">
+                    <Label text="Equipo médico · " style="-fx-text-fill: -color-texto-gris; -fx-font-size: 14px;" />
+                    <Label fx:id="lblContador" text="0 profesionales" style="-fx-text-fill: -color-primario; -fx-font-size: 14px; -fx-font-weight: bold;" />
+                </HBox>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <HBox spacing="15.0">
+                <Button text="  Gestionar Especialidades" onAction="#abrirModalEspecialidades" styleClass="btn-outline">
+                    <graphic><FontIcon iconLiteral="fas-cog" iconColor="#D2B48C" /></graphic>
+                </Button>
+                <Button text="  Nuevo Profesional" onAction="#abrirPanelFormulario" styleClass="btn-primary">
+                    <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" /></graphic>
+                </Button>
+            </HBox>
+        </HBox>
+
+        <!-- BARRA DE BÚSQUEDA Y FILTRO -->
+        <HBox spacing="20.0">
+            <HBox alignment="CENTER_LEFT" styleClass="search-box" HBox.hgrow="ALWAYS">
+                <FontIcon iconLiteral="fas-search" iconColor="#94A3B8" iconSize="16"/>
+                <TextField fx:id="txtBuscar" promptText="Buscar por nombre o matrícula..." styleClass="search-field" HBox.hgrow="ALWAYS" />
+            </HBox>
+            <ComboBox fx:id="cbFiltroEspecialidad" promptText="Especialidad" prefWidth="200.0" styleClass="combo-filtro" />
+        </HBox>
+
+        <!-- GRID DE TARJETAS (Acá se inyectan mediante el controlador) -->
+        <ScrollPane fitToWidth="true" styleClass="scroll-invisible" VBox.vgrow="ALWAYS">
+            <FlowPane fx:id="gridVeterinarios" hgap="25.0" vgap="25.0">
+                <padding><Insets top="10.0" bottom="10.0" right="10.0" left="10.0"/></padding>
+                <!-- El FlowPane está intencionalmente vacío. El controlador lo llena. -->
+            </FlowPane>
+        </ScrollPane>
+    </VBox>
+
+    <!-- ========================================== -->
+    <!-- CAPA 1: MODAL DE ESPECIALIDADES (OCULTO)   -->
+    <!-- ========================================== -->
+    <StackPane fx:id="overlayEspecialidades" styleClass="modal-overlay" visible="false">
+        <VBox styleClass="modal-box" maxHeight="550.0" maxWidth="650.0" spacing="20.0">
+            <HBox alignment="CENTER_LEFT">
+                <VBox>
+                    <Label text="Gestionar Especialidades" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+                    <Label text="Catálogo global del sistema" style="-fx-text-fill: -color-texto-gris;" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#cerrarModales" styleClass="btn-close-modal">
+                    <graphic><FontIcon iconLiteral="fas-times" iconSize="18"/></graphic>
+                </Button>
+            </HBox>
+
+            <!-- Inputs Nueva Especialidad -->
+            <VBox spacing="10.0">
+                <Label text="AGREGAR NUEVA ESPECIALIDAD" styleClass="label-form" />
+                <HBox spacing="10.0">
+                    <TextField fx:id="txtNuevaEspNombre" promptText="Nombre de la especialidad" styleClass="input-field" HBox.hgrow="ALWAYS" />
+                    <TextField fx:id="txtNuevaEspDesc" promptText="Descripción breve (opcional)" styleClass="input-field" HBox.hgrow="ALWAYS" />
+                    <Button text=" Agregar" onAction="#guardarEspecialidad" styleClass="btn-outline">
+                        <graphic><FontIcon iconLiteral="fas-plus" styleClass="btn-outline-icon"/></graphic>
+                    </Button>
+                </HBox>
+            </VBox>
+
+            <!-- Tabla de Especialidades -->
+            <TableView fx:id="tablaEspecialidades" VBox.vgrow="ALWAYS" styleClass="table-as-list">
+                <columns>
+                    <TableColumn fx:id="colEspNombre" text="Especialidad" prefWidth="200.0" />
+                    <TableColumn fx:id="colEspDesc" text="Descripción" prefWidth="350.0" />
+                </columns>
+            </TableView>
+
+            <HBox alignment="CENTER_RIGHT">
+                <Button text="Eliminar Seleccionada" onAction="#eliminarEspecialidadCatalogo" styleClass="btn-danger-text" />
+            </HBox>
+        </VBox>
+    </StackPane>
+
+    <!-- ========================================== -->
+    <!-- CAPA 2: PANEL LATERAL DE PROFESIONAL (OCULTO) -->
+    <!-- ========================================== -->
+    <HBox fx:id="overlayFormulario" styleClass="modal-overlay" visible="false" alignment="TOP_RIGHT">
+        <!-- Espacio oscuro clickeable para cerrar -->
+        <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModales" />
+        
+        <VBox styleClass="slide-panel" prefWidth="500.0" spacing="20.0">
+            <HBox alignment="CENTER_LEFT">
+                <VBox>
+                    <Label fx:id="lblTituloFormulario" text="Nuevo Profesional" style="-fx-font-size: 22px; -fx-font-weight: bold;" />
+                    <Label text="Complete los datos del médico veterinario" style="-fx-text-fill: -color-texto-gris;" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#cerrarModales" styleClass="btn-close-modal">
+                    <graphic><FontIcon iconLiteral="fas-times" iconSize="18"/></graphic>
+                </Button>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" styleClass="scroll-invisible" VBox.vgrow="ALWAYS">
+                <VBox spacing="25.0">
+                    <padding><Insets top="10.0" right="10.0" bottom="10.0" left="5.0"/></padding>
+                    
+                    <!-- Datos Personales -->
+                    <GridPane hgap="15.0" vgap="15.0">
+                        <columnConstraints>
+                            <ColumnConstraints percentWidth="50" />
+                            <ColumnConstraints percentWidth="50" />
+                        </columnConstraints>
+                        
+                        <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="5.0">
+                            <Label text="NOMBRE *" styleClass="label-form" />
+                            <TextField fx:id="txtVetNombre" styleClass="input-field" />
+                        </VBox>
+                        <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="5.0">
+                            <Label text="APELLIDO *" styleClass="label-form" />
+                            <TextField fx:id="txtVetApellido" styleClass="input-field" />
+                        </VBox>
+                        <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" spacing="5.0">
+                            <Label text="TELÉFONO" styleClass="label-form" />
+                            <TextField fx:id="txtVetTelefono" promptText="+54 9 11..." styleClass="input-field" />
+                        </VBox>
+                        <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="5.0">
+                            <Label text="MATRÍCULA *" styleClass="label-form" />
+                            <TextField fx:id="txtVetMatricula" promptText="MV 00.000" styleClass="input-field" />
+                        </VBox>
+                        <VBox GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2" spacing="5.0">
+                            <Label text="EMAIL" styleClass="label-form" />
+                            <TextField fx:id="txtVetEmail" promptText="profesional@huellas.vet" styleClass="input-field" />
+                        </VBox>
+                    </GridPane>
+
+                    <!-- Especialidades -->
+                    <VBox spacing="10.0">
+                        <Label text="ESPECIALIDADES (Obligatorio)" styleClass="label-form" />
+                        <FlowPane fx:id="panelEspecialidades" hgap="10.0" vgap="10.0" />
+                    </VBox>
+
+                    <!-- SECCIÓN HORARIOS (Arreglada con minWidth para el texto y negrita) -->
+                    <VBox spacing="10.0">
+                        <Label text="DÍAS Y HORARIOS DE ATENCIÓN" styleClass="label-form" />
+                        <VBox spacing="8.0">
+                            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                <CheckBox fx:id="chkLun" text="Lun" minWidth="65.0" style="-fx-text-fill: -color-texto-oscuro; -fx-font-weight: bold;" />
+                                <TextField fx:id="txtHoraLun" promptText="09:00-17:00" styleClass="input-field" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                <CheckBox fx:id="chkMar" text="Mar" minWidth="65.0" style="-fx-text-fill: -color-texto-oscuro; -fx-font-weight: bold;" />
+                                <TextField fx:id="txtHoraMar" promptText="09:00-17:00" styleClass="input-field" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                <CheckBox fx:id="chkMie" text="Mié" minWidth="65.0" style="-fx-text-fill: -color-texto-oscuro; -fx-font-weight: bold;" />
+                                <TextField fx:id="txtHoraMie" promptText="09:00-17:00" styleClass="input-field" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                <CheckBox fx:id="chkJue" text="Jue" minWidth="65.0" style="-fx-text-fill: -color-texto-oscuro; -fx-font-weight: bold;" />
+                                <TextField fx:id="txtHoraJue" promptText="09:00-17:00" styleClass="input-field" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                <CheckBox fx:id="chkVie" text="Vie" minWidth="65.0" style="-fx-text-fill: -color-texto-oscuro; -fx-font-weight: bold;" />
+                                <TextField fx:id="txtHoraVie" promptText="09:00-17:00" styleClass="input-field" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                <CheckBox fx:id="chkSab" text="Sáb" minWidth="65.0" style="-fx-text-fill: -color-texto-oscuro; -fx-font-weight: bold;" />
+                                <TextField fx:id="txtHoraSab" promptText="09:00-14:00" styleClass="input-field" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                                <CheckBox fx:id="chkDom" text="Dom" minWidth="65.0" style="-fx-text-fill: -color-texto-oscuro; -fx-font-weight: bold;" />
+                                <TextField fx:id="txtHoraDom" promptText="ej. 09:00-12:00" styleClass="input-field" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                        </VBox>
+                    </VBox>
+                </VBox>
+            </ScrollPane>
+
+            <HBox alignment="CENTER_RIGHT" spacing="15.0">
+                <Button text="Cancelar" onAction="#cerrarModales" styleClass="btn-outline" />
+                <Button fx:id="btnGuardarFormulario" text=" Guardar Profesional" onAction="#guardarVeterinario" styleClass="btn-primary">
+                    <graphic><FontIcon iconLiteral="fas-check" iconColor="white"/></graphic>
+                </Button>
+            </HBox>
+        </VBox>
+    </HBox>
+
+</StackPane>
