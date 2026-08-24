@@ -19,13 +19,20 @@ public class TurnoService {
     public List<TurnoDTO> obtenerTodos() {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
-            TypedQuery<Turno> query = em.createQuery("SELECT t FROM Turno t ORDER BY t.fecha DESC, t.hora DESC", Turno.class);
+            // EL FIX MÁGICO: Usamos LEFT JOIN FETCH para traer todo en 1 solo viaje a la base de datos
+            String jpql = "SELECT DISTINCT t FROM Turno t " +
+                          "LEFT JOIN FETCH t.cliente " +
+                          "LEFT JOIN FETCH t.mascota " +
+                          "LEFT JOIN FETCH t.veterinario " +
+                          "LEFT JOIN FETCH t.servicios " +
+                          "ORDER BY t.fecha DESC, t.hora DESC";
+                          
+            TypedQuery<Turno> query = em.createQuery(jpql, Turno.class);
             return query.getResultStream().map(TurnoMapper::toDTO).collect(Collectors.toList());
         } finally {
             em.close();
         }
     }
-
     private void validarSolapamiento(EntityManager em, TurnoDTO dto, Long turnoIdIgnorar) throws TurnoSolapado {
         String jpql = "SELECT COUNT(t) FROM Turno t WHERE t.fecha = :fecha AND t.hora = :hora AND t.estado != 'CANCELADO' " +
                       "AND (t.veterinario.id = :vetId OR t.mascota.id = :masId)";

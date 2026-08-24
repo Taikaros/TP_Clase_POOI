@@ -16,14 +16,13 @@ public class VeterinarioService {
     public List<VeterinarioDTO> obtenerTodos() {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
-            // Solo traemos a los veterinarios activos
-            TypedQuery<Veterinario> query = em.createQuery(
-                "SELECT v FROM Veterinario v WHERE v.activo = true", 
-                Veterinario.class
-            );
-            return query.getResultList().stream()
-                        .map(VeterinarioMapper::toDTO)
-                        .collect(Collectors.toList());
+            // Hacemos FETCH de las especialidades para evitar el N+1
+            String jpql = "SELECT DISTINCT v FROM Veterinario v " +
+                          "LEFT JOIN FETCH v.especialidades " +
+                          "WHERE v.activo = true";
+                          
+            TypedQuery<Veterinario> query = em.createQuery(jpql, Veterinario.class);
+            return query.getResultStream().map(VeterinarioMapper::toDTO).collect(Collectors.toList());
         } finally {
             em.close();
         }

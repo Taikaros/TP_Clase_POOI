@@ -54,10 +54,15 @@ public class ClienteService {
         }
     }
 
-    public List<ClienteDTO> obtenerTodos() {
+   public List<ClienteDTO> obtenerTodos() {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
-            TypedQuery<Cliente> query = em.createQuery("SELECT c FROM Cliente c WHERE c.activo = true", Cliente.class);
+            // Traemos al cliente con su lista de mascotas pegada
+            String jpql = "SELECT DISTINCT c FROM Cliente c " +
+                          "LEFT JOIN FETCH c.mascotas " +
+                          "WHERE c.activo = true";
+                          
+            TypedQuery<Cliente> query = em.createQuery(jpql, Cliente.class);
             return query.getResultStream().map(ClienteMapper::toDTO).collect(Collectors.toList());
         } finally {
             em.close();
