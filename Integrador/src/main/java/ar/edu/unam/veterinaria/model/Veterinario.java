@@ -90,7 +90,48 @@ public class Veterinario extends Persona {
     }
     
     
-    public boolean validarDisponibilidad(java.time.LocalDate fecha, java.time.LocalTime hora, double duracion) {
-        return true;
+public boolean validarDisponibilidad(java.time.LocalDate fecha, java.time.LocalTime hora, double duracionMinutos) {
+        if (this.diasDisponibles == null || this.diasDisponibles.isEmpty()) {
+            return false;
+        }
+
+        // Traducimos la fecha actual al formato de texto que usamos en la vista (Lun, Mar, Mié, etc.)
+        String prefijoDia = "";
+        switch (fecha.getDayOfWeek()) {
+            case MONDAY: prefijoDia = "Lun"; break;
+            case TUESDAY: prefijoDia = "Mar"; break;
+            case WEDNESDAY: prefijoDia = "Mi"; break; // Buscamos por prefijo "Mi" para evitar problemas con la tilde
+            case THURSDAY: prefijoDia = "Jue"; break;
+            case FRIDAY: prefijoDia = "Vie"; break;
+            case SATURDAY: prefijoDia = "S"; break; // "Sáb" o "Sab"
+            case SUNDAY: prefijoDia = "Dom"; break;
+        }
+
+        for (String diaStr : this.diasDisponibles) {
+            if (diaStr.startsWith(prefijoDia)) {
+                try {
+                    // Extraemos el horario, ej: "Lun: 09:00-17:00" -> "09:00-17:00"
+                    String rangoHorario = diaStr.substring(diaStr.indexOf(":") + 1).trim();
+                    String[] limites = rangoHorario.split("-");
+                    
+                    if (limites.length == 2) {
+                        java.time.LocalTime inicioJornada = java.time.LocalTime.parse(limites[0].trim());
+                        java.time.LocalTime finJornada = java.time.LocalTime.parse(limites[1].trim());
+                        
+                        // Calculamos a qué hora terminará el turno
+                        java.time.LocalTime finTurno = hora.plusMinutes((long) duracionMinutos);
+
+                        // Verificamos que no empiece antes de que llegue, ni termine después de que se vaya
+                        if (!hora.isBefore(inicioJornada) && !finTurno.isAfter(finJornada)) {
+                            return true; // El horario es válido
+                        }
+                    }
+                } catch (Exception e) {
+                    // Si el horario se escribió mal en la BD (ej. 09 a 17), salta el error y no da disponibilidad
+                    System.out.println("Error parseando horario del veterinario: " + diaStr);
+                }
+            }
+        }
+        return false; // Si recorrió todo y no encontró un día válido, no está disponible
     }
 }

@@ -4,10 +4,9 @@
 <?import javafx.scene.layout.*?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<VBox spacing="25.0" style="-fx-background-color: #F8FAFC;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.ClienteController">
+<VBox spacing="25.0" style="-fx-background-color: #F8FAFC;" minHeight="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.ClienteController">
     <padding><Insets top="40.0" right="40.0" bottom="40.0" left="40.0" /></padding>
-
-    <!-- HEADER Y BÚSQUEDA -->
+    
     <VBox spacing="20.0">
         <HBox alignment="CENTER_LEFT">
             <VBox spacing="2.0">
@@ -19,21 +18,19 @@
                 <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" iconSize="14"/></graphic>
             </Button>
         </HBox>
-
         <HBox alignment="CENTER_LEFT" styleClass="search-box">
             <FontIcon iconLiteral="fas-search" iconColor="#94A3B8" iconSize="16"/>
             <TextField fx:id="txtBuscar" promptText="Buscar por nombre o apellido..." styleClass="search-field" HBox.hgrow="ALWAYS" />
         </HBox>
     </VBox>
-
-    <!-- DOS COLUMNAS PRINCIPALES -->
-    <HBox spacing="30.0" VBox.vgrow="ALWAYS">
+    
+    <!-- DOS COLUMNAS PRINCIPALES (Con minHeight="0") -->
+    <HBox spacing="30.0" VBox.vgrow="ALWAYS" minHeight="0">
+        
         <!-- IZQUIERDA: LISTA DE CLIENTES -->
-        <VBox spacing="10.0" prefWidth="320.0" minWidth="320.0">
-            <!-- AQUÍ AGREGAMOS EL fx:id AL CONTADOR -->
+        <VBox spacing="10.0" prefWidth="320.0" minWidth="320.0" minHeight="0">
             <Label fx:id="lblCantidadClientes" text="CLIENTES (0)" style="-fx-font-size: 12px; -fx-font-weight: 800; -fx-text-fill: #64748B; -fx-letter-spacing: 1px;" />
-            <TableView fx:id="tablaClientes" VBox.vgrow="ALWAYS" styleClass="table-as-list">
-                <!-- COLUMNAS COMPLETAS (4 columnas de 80 de ancho = 320 en total) -->
+            <TableView fx:id="tablaClientes" VBox.vgrow="ALWAYS" styleClass="table-as-list" minHeight="0">
                 <columns>
                     <TableColumn fx:id="colNombreCliente" text="Nombre" prefWidth="80.0" />
                     <TableColumn fx:id="colApellidoCliente" text="Apellido" prefWidth="80.0" />
@@ -42,11 +39,10 @@
                 </columns>
             </TableView>
         </VBox>
-
+        
         <!-- DERECHA: TARJETAS DE DETALLE -->
-        <VBox spacing="30.0" HBox.hgrow="ALWAYS">
+        <VBox spacing="30.0" HBox.hgrow="ALWAYS" minHeight="0">
             
-            <!-- TARJETA: DATOS DEL CLIENTE -->
             <VBox styleClass="card" spacing="25.0">
                 <HBox alignment="CENTER_LEFT" spacing="15.0">
                     <StackPane styleClass="avatar-circle">
@@ -57,8 +53,8 @@
                         <Label text="DNI: -" style="-fx-text-fill: #64748B; -fx-font-size: 13px;" />
                     </VBox>
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button text=" Editar" onAction="#modificarCliente" styleClass="btn-outline"> 
-                        <graphic><FontIcon iconLiteral="fas-pen" styleClass="btn-outline-icon"/></graphic>
+                    <Button text=" Editar" onAction="#modificarCliente" styleClass="btn-outline">
+                         <graphic><FontIcon iconLiteral="fas-pen" styleClass="btn-outline-icon"/></graphic>
                     </Button>
                 </HBox>
                 
@@ -67,7 +63,6 @@
                         <ColumnConstraints percentWidth="50" />
                         <ColumnConstraints percentWidth="50" />
                     </columnConstraints>
-                    
                     <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="8.0">
                         <Label text="NOMBRE" styleClass="label-form" />
                         <TextField fx:id="txtNombreCliente" styleClass="input-field" />
@@ -94,20 +89,16 @@
                     <Button text="Guardar Cambios" onAction="#guardarCliente" styleClass="btn-primary" />
                 </HBox>
             </VBox>
-
-            <!-- TARJETA: MASCOTAS ASOCIADAS -->
-            <VBox styleClass="card" spacing="20.0" VBox.vgrow="ALWAYS">
-                <!-- HEADER DE MASCOTAS MODIFICADO -->
+            
+            <VBox styleClass="card" spacing="20.0" VBox.vgrow="ALWAYS" minHeight="0">
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <FontIcon iconLiteral="fas-paw" iconColor="#D2B48C" iconSize="20"/>
                     <Label text="Mascotas asociadas" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
                     <Label fx:id="lblCantidadMascotas" text="0" styleClass="badge-count" />
                     <Region HBox.hgrow="ALWAYS" />
                     
-                    <!-- NUEVOS BOTONES DE ACCIÓN PARA MASCOTAS -->
                     <Button text="Eliminar Mascota" onAction="#eliminarMascota" styleClass="btn-danger-text" />
                     <Button text="Modificar Mascota" onAction="#modificarMascota" styleClass="btn-outline" />
-
                     <Button text=" Agregar Mascota" onAction="#agregarMascota" styleClass="btn-primary">
                         <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" /></graphic>
                     </Button>
@@ -120,8 +111,8 @@
                     <DatePicker fx:id="dpFechaNacimiento" promptText="Nacimiento" styleClass="date-field" prefWidth="140.0" />
                     <TextField fx:id="txtNumeroFicha" promptText="Ficha" styleClass="input-field" prefWidth="90.0" />
                 </HBox>
-
-                <TableView fx:id="tablaMascotas" VBox.vgrow="ALWAYS" styleClass="table-mascotas">
+                
+                <TableView fx:id="tablaMascotas" VBox.vgrow="ALWAYS" styleClass="table-mascotas" minHeight="0">
                     <columns>
                         <TableColumn fx:id="colNombreMascota" text="Nombre" prefWidth="160.0" />
                         <TableColumn fx:id="colEspecie" text="Especie" prefWidth="100.0" />
@@ -131,6 +122,7 @@
                     </columns>
                 </TableView>
             </VBox>
+            
         </VBox>
     </HBox>
 </VBox>

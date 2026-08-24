@@ -377,3 +377,57 @@
     -fx-border-color: -color-primario;
     -fx-text-fill: white;
 }
+/* ==================== TIMELINE (CALENDARIO) ==================== */
+.timeline-container {
+    -fx-background-color: white;
+    -fx-background-radius: 16px;
+    -fx-padding: 15px 25px;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 16px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.02), 10, 0, 0, 4);
+}
+.timeline-btn {
+    -fx-background-color: white;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 8px;
+    -fx-padding: 8px 12px;
+    -fx-cursor: hand;
+}
+.timeline-day {
+    -fx-padding: 10px 20px;
+    -fx-background-radius: 12px;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+.timeline-day:hover { -fx-background-color: #F8FAFC; }
+.timeline-day-active { -fx-background-color: -color-primario; }
+.timeline-day-active:hover { -fx-background-color: -color-primario-hover; }
+
+.timeline-text-day { -fx-text-fill: #64748B; -fx-font-size: 11px; -fx-font-weight: bold; }
+.timeline-text-num { -fx-text-fill: #1E293B; -fx-font-size: 20px; -fx-font-weight: 900; }
+.timeline-day-active .timeline-text-day, .timeline-day-active .timeline-text-num { -fx-text-fill: white; }
+
+/* ==================== ESTILOS ESPECÍFICOS DE TABLA TURNOS ==================== */
+.pill-outline {
+    -fx-border-color: #D2B48C;
+    -fx-border-radius: 12px;
+    -fx-text-fill: #A16207;
+    -fx-background-color: #FFFBEB; 
+    -fx-padding: 4px 12px;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.btn-action-small {
+    -fx-padding: 6px 12px;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+}
+.btn-atender { -fx-background-color: -color-primario; -fx-text-fill: white; }
+.btn-atender:hover { -fx-background-color: -color-primario-hover; }
+.btn-editar { -fx-background-color: white; -fx-border-color: #E2E8F0; -fx-text-fill: #64748B; }
+.btn-editar:hover { -fx-background-color: #F8FAFC; }
+.btn-cancelar { -fx-background-color: transparent; -fx-border-color: transparent; -fx-text-fill: #94A3B8; }
+.btn-cancelar:hover { -fx-text-fill: #EF4444; }

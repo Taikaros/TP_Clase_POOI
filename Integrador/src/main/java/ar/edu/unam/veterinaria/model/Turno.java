@@ -1,16 +1,10 @@
 package ar.edu.unam.veterinaria.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Turno {
@@ -25,7 +19,9 @@ public class Turno {
     @Column(nullable = false)
     private LocalTime hora;
     
-    private String motivo;
+    // LA NUEVA RELACIÓN
+    @OneToMany(mappedBy = "turno", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Servicio> servicios = new ArrayList<>();
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -43,83 +39,42 @@ public class Turno {
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
 
-    // Constructor vacío exigido por JPA
-    public Turno() {
-    }
+    public Turno() {}
 
-    // Constructor con parámetros
-    public Turno(LocalDate fecha, LocalTime hora, String motivo, Mascota mascota, Veterinario veterinario, Cliente cliente) {
+    public Turno(LocalDate fecha, LocalTime hora, Mascota mascota, Veterinario veterinario, Cliente cliente) {
         this.fecha = fecha;
         this.hora = hora;
-        this.motivo = motivo;
         this.mascota = mascota;
         this.veterinario = veterinario;
         this.cliente = cliente;
-        this.estado = EstadoTurno.PENDIENTE; // Por defecto inicia como Pendiente
-    }
-    
-    // Getters y Setters estándar
-    public Long getId() {
-        return id;
+        this.estado = EstadoTurno.PENDIENTE; 
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    // Métodos de negocio según UML
+    public void agregarServicio(Servicio servicio) {
+        this.servicios.add(servicio);
+        servicio.setTurno(this); // Sincronizamos ambos lados de la relación
     }
 
-    public LocalDate getFecha() {
-        return fecha;
+    public Double calcularCostoTotal() {
+        return servicios.stream().mapToDouble(Servicio::calcularCosto).sum();
     }
 
-    public void setFecha(LocalDate fecha) {
-        this.fecha = fecha;
-    }
-
-    public LocalTime getHora() {
-        return hora;
-    }
-
-    public void setHora(LocalTime hora) {
-        this.hora = hora;
-    }
-
-    public String getMotivo() {
-        return motivo;
-    }
-
-    public void setMotivo(String motivo) {
-        this.motivo = motivo;
-    }
-
-    public EstadoTurno getEstado() {
-        return estado;
-    }
-
-    public void setEstado(EstadoTurno estado) {
-        this.estado = estado;
-    }
-
-    public Mascota getMascota() {
-        return mascota;
-    }
-
-    public void setMascota(Mascota mascota) {
-        this.mascota = mascota;
-    }
-
-    public Veterinario getVeterinario() {
-        return veterinario;
-    }
-
-    public void setVeterinario(Veterinario veterinario) {
-        this.veterinario = veterinario;
-    }
-
-    public Cliente getCliente() {
-        return cliente;
-    }
-
-    public void setCliente(Cliente cliente) {
-        this.cliente = cliente;
-    }
+    // Getters y Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public LocalDate getFecha() { return fecha; }
+    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
+    public LocalTime getHora() { return hora; }
+    public void setHora(LocalTime hora) { this.hora = hora; }
+    public List<Servicio> getServicios() { return servicios; }
+    public void setServicios(List<Servicio> servicios) { this.servicios = servicios; }
+    public EstadoTurno getEstado() { return estado; }
+    public void setEstado(EstadoTurno estado) { this.estado = estado; }
+    public Mascota getMascota() { return mascota; }
+    public void setMascota(Mascota mascota) { this.mascota = mascota; }
+    public Veterinario getVeterinario() { return veterinario; }
+    public void setVeterinario(Veterinario veterinario) { this.veterinario = veterinario; }
+    public Cliente getCliente() { return cliente; }
+    public void setCliente(Cliente cliente) { this.cliente = cliente; }
 }
