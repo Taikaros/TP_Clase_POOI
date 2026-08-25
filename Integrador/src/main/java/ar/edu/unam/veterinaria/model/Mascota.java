@@ -104,4 +104,39 @@ public class Mascota {
         this.dueno = dueno;
     }
     
+// --- REGLA DE NEGOCIO: BARRERA DE VACUNAS ---
+    
+    @jakarta.persistence.OneToMany(mappedBy = "mascota")
+    private java.util.List<Turno> historialTurnos = new java.util.ArrayList<>();
+
+    public java.util.List<Turno> getHistorialTurnos() { return historialTurnos; }
+
+    public boolean tieneVacunaVigente(Vacuna vacunaAControlar, java.time.LocalDate fechaTurnoDeseado) {
+        if (this.historialTurnos == null) return false;
+        
+        for (Turno turno : this.historialTurnos) {
+            // Solo miramos turnos válidos que hayan ocurrido antes o el mismo día del turno nuevo
+            if (!turno.getEstado().name().equals("CANCELADO") && !turno.getFecha().isAfter(fechaTurnoDeseado)) {
+                
+                for (Servicio servicio : turno.getServicios()) {
+                    if (servicio instanceof Vacunacion) {
+                        Vacunacion vacAnterior = (Vacunacion) servicio;
+                        
+                        // Si la vacuna aplicada es la misma que intentan aplicar ahora...
+                        if (vacAnterior.getVacunaAplicada() != null && vacAnterior.getVacunaAplicada().getId().equals(vacunaAControlar.getId())) {
+                            
+                            // Calculamos cuándo vence usando el método de la propia vacuna
+                            java.time.LocalDate fechaVencimiento = vacAnterior.getVacunaAplicada().calcularProximaAplicacion(turno.getFecha());
+                            
+                            // Si el nuevo turno es ANTES de que se venza, la vacuna está vigente
+                            if (fechaTurnoDeseado.isBefore(fechaVencimiento) || fechaTurnoDeseado.isEqual(fechaVencimiento)) {
+                                return true; // ¡BARRERA ACTIVADA!
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false; // Vía libre, se la puede vacunar
+    }
 }

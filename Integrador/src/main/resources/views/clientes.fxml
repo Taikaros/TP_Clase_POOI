@@ -4,125 +4,163 @@
 <?import javafx.scene.layout.*?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<VBox spacing="25.0" style="-fx-background-color: #F8FAFC;" minHeight="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.ClienteController">
-    <padding><Insets top="40.0" right="40.0" bottom="40.0" left="40.0" /></padding>
+<StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.ClienteController">
     
-    <VBox spacing="20.0">
-        <HBox alignment="CENTER_LEFT">
-            <VBox spacing="2.0">
-                <Label text="Gestión de Clientes" style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #1E293B;" />
-                <Label text="Busque, registre y administre los datos de los propietarios" style="-fx-text-fill: #64748B; -fx-font-size: 14px;" />
+    <!-- CAPA 0: INTERFAZ PRINCIPAL -->
+    <VBox spacing="20.0" style="-fx-background-color: #F8FAFC;">
+        <padding><Insets top="30.0" right="40.0" bottom="30.0" left="40.0" /></padding>
+        
+        <!-- HEADER -->
+        <VBox spacing="15.0">
+            <HBox alignment="CENTER_LEFT">
+                <VBox spacing="2.0">
+                    <Label text="Gestión de Clientes" style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #1E293B;" />
+                    <Label text="Busque, registre y administre los datos de los propietarios" style="-fx-text-fill: #64748B; -fx-font-size: 14px;" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text=" Nuevo Cliente" onAction="#limpiarFormularioCliente" styleClass="btn-primary">
+                    <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" iconSize="14"/></graphic>
+                </Button>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" styleClass="search-box">
+                <FontIcon iconLiteral="fas-search" iconColor="#94A3B8" iconSize="16"/>
+                <TextField fx:id="txtBuscar" promptText="Buscar por DNI o nombre del cliente..." styleClass="search-field" HBox.hgrow="ALWAYS" />
+            </HBox>
+        </VBox>
+        
+        <!-- CUERPO PRINCIPAL DIVIDIDO EN 2 COLUMNAS -->
+        <HBox spacing="30.0" VBox.vgrow="ALWAYS" minHeight="0">
+            
+            <!-- COLUMNA IZQUIERDA: LISTA DE CLIENTES -->
+            <VBox spacing="10.0" prefWidth="320.0" minWidth="320.0" minHeight="0">
+                <Label fx:id="lblCantidadClientes" text="CLIENTES (0)" style="-fx-font-size: 12px; -fx-font-weight: 800; -fx-text-fill: #64748B; -fx-letter-spacing: 1px;" />
+                <ListView fx:id="listaClientes" VBox.vgrow="ALWAYS" styleClass="list-cards, scroll-invisible" />
             </VBox>
-            <Region HBox.hgrow="ALWAYS" />
-            <Button text=" Nuevo Cliente" onAction="#limpiar" styleClass="btn-primary">
-                <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" iconSize="14"/></graphic>
-            </Button>
-        </HBox>
-        <HBox alignment="CENTER_LEFT" styleClass="search-box">
-            <FontIcon iconLiteral="fas-search" iconColor="#94A3B8" iconSize="16"/>
-            <TextField fx:id="txtBuscar" promptText="Buscar por nombre o apellido..." styleClass="search-field" HBox.hgrow="ALWAYS" />
+            
+            <!-- COLUMNA DERECHA: DETALLES (CON SCROLL) -->
+            <ScrollPane fitToWidth="true" styleClass="scroll-invisible" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+                <VBox spacing="25.0">
+                    <padding><Insets right="10.0" bottom="10.0"/></padding>
+                    
+                    <!-- TARJETA 1: DATOS DEL CLIENTE -->
+                    <VBox styleClass="card" spacing="25.0">
+                        <HBox alignment="CENTER_LEFT" spacing="15.0">
+                            <StackPane styleClass="avatar-circle" style="-fx-background-color: #ECFDF5; -fx-min-width: 65px; -fx-min-height: 65px;">
+                                <FontIcon iconLiteral="fas-user" iconSize="28" iconColor="#2CA871"/>
+                            </StackPane>
+                            <VBox spacing="2.0">
+                                <Label fx:id="lblNombrePerfil" text="Nombre del Cliente" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                                <Label fx:id="lblDniPerfil" text="DNI: -" style="-fx-text-fill: #64748B; -fx-font-size: 14px;" />
+                            </VBox>
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button text=" Editar" onAction="#modificarCliente" styleClass="btn-outline">
+                                 <graphic><FontIcon iconLiteral="fas-pen" iconColor="#D2B48C"/></graphic>
+                            </Button>
+                        </HBox>
+                        
+                        <GridPane hgap="30.0" vgap="20.0">
+                            <columnConstraints>
+                                <ColumnConstraints percentWidth="50" />
+                                <ColumnConstraints percentWidth="50" />
+                            </columnConstraints>
+                            <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="8.0">
+                                <Label text="NOMBRE" styleClass="label-form">
+                                    <graphic><FontIcon iconLiteral="fas-user-alt" iconColor="#94A3B8"/></graphic>
+                                </Label>
+                                <TextField fx:id="txtNombreCliente" styleClass="input-field" />
+                            </VBox>
+                            <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="8.0">
+                                <Label text="APELLIDO" styleClass="label-form" />
+                                <TextField fx:id="txtApellidoCliente" styleClass="input-field" />
+                            </VBox>
+                            <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" spacing="8.0">
+                                <Label text="TELÉFONO" styleClass="label-form">
+                                    <graphic><FontIcon iconLiteral="fas-phone-alt" iconColor="#94A3B8"/></graphic>
+                                </Label>
+                                <TextField fx:id="txtTelefonoCliente" styleClass="input-field" />
+                            </VBox>
+                            <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="8.0">
+                                <Label text="EMAIL" styleClass="label-form">
+                                    <graphic><FontIcon iconLiteral="fas-envelope" iconColor="#94A3B8"/></graphic>
+                                </Label>
+                                <TextField fx:id="txtEmailCliente" styleClass="input-field" />
+                            </VBox>
+                            <VBox GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2" spacing="8.0">
+                                <Label text="DNI" styleClass="label-form">
+                                    <graphic><FontIcon iconLiteral="fas-id-card" iconColor="#94A3B8"/></graphic>
+                                </Label>
+                                <TextField fx:id="txtDniCliente" styleClass="input-field" />
+                            </VBox>
+                        </GridPane>
+                        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                            <Button text="Eliminar Cliente" onAction="#eliminarCliente" styleClass="btn-danger-text" />
+                            <Button text="Guardar Cambios" onAction="#guardarCliente" styleClass="btn-primary" />
+                        </HBox>
+                    </VBox>
+                    
+                    <!-- TARJETA 2: MASCOTAS ASOCIADAS -->
+                    <VBox styleClass="card" spacing="20.0" minHeight="300.0">
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <FontIcon iconLiteral="fas-paw" iconColor="#D2B48C" iconSize="20"/>
+                            <Label text="Mascotas asociadas" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                            <Label fx:id="lblCantidadMascotas" text="0" styleClass="badge-count" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Button text=" Agregar Mascota" onAction="#abrirModalMascota" styleClass="btn-primary">
+                                <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" /></graphic>
+                            </Button>
+                        </HBox>
+                        
+                        <!-- Lista de mascotas estilo tarjetas -->
+                        <ListView fx:id="listaMascotas" VBox.vgrow="ALWAYS" styleClass="list-cards, scroll-invisible" />
+                    </VBox>
+                    
+                </VBox>
+            </ScrollPane>
         </HBox>
     </VBox>
-    
-    <!-- DOS COLUMNAS PRINCIPALES (Con minHeight="0") -->
-    <HBox spacing="30.0" VBox.vgrow="ALWAYS" minHeight="0">
-        
-        <!-- IZQUIERDA: LISTA DE CLIENTES -->
-        <VBox spacing="10.0" prefWidth="320.0" minWidth="320.0" minHeight="0">
-            <Label fx:id="lblCantidadClientes" text="CLIENTES (0)" style="-fx-font-size: 12px; -fx-font-weight: 800; -fx-text-fill: #64748B; -fx-letter-spacing: 1px;" />
-            <TableView fx:id="tablaClientes" VBox.vgrow="ALWAYS" styleClass="table-as-list" minHeight="0">
-                <columns>
-                    <TableColumn fx:id="colNombreCliente" text="Nombre" prefWidth="80.0" />
-                    <TableColumn fx:id="colApellidoCliente" text="Apellido" prefWidth="80.0" />
-                    <TableColumn fx:id="colTelefonoCliente" text="Teléfono" prefWidth="80.0" />
-                    <TableColumn fx:id="colEmailCliente" text="Email" prefWidth="80.0" />
-                </columns>
-            </TableView>
-        </VBox>
-        
-        <!-- DERECHA: TARJETAS DE DETALLE -->
-        <VBox spacing="30.0" HBox.hgrow="ALWAYS" minHeight="0">
-            
-            <VBox styleClass="card" spacing="25.0">
-                <HBox alignment="CENTER_LEFT" spacing="15.0">
-                    <StackPane styleClass="avatar-circle">
-                        <FontIcon iconLiteral="fas-user" iconSize="24" styleClass="avatar-icon"/>
-                    </StackPane>
-                    <VBox spacing="2.0">
-                        <Label text="Detalles del Cliente" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
-                        <Label text="DNI: -" style="-fx-text-fill: #64748B; -fx-font-size: 13px;" />
-                    </VBox>
-                    <Region HBox.hgrow="ALWAYS" />
-                    <Button text=" Editar" onAction="#modificarCliente" styleClass="btn-outline">
-                         <graphic><FontIcon iconLiteral="fas-pen" styleClass="btn-outline-icon"/></graphic>
-                    </Button>
-                </HBox>
-                
-                <GridPane hgap="30.0" vgap="20.0">
-                    <columnConstraints>
-                        <ColumnConstraints percentWidth="50" />
-                        <ColumnConstraints percentWidth="50" />
-                    </columnConstraints>
-                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="8.0">
-                        <Label text="NOMBRE" styleClass="label-form" />
-                        <TextField fx:id="txtNombreCliente" styleClass="input-field" />
-                    </VBox>
-                    <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="8.0">
-                        <Label text="APELLIDO" styleClass="label-form" />
-                        <TextField fx:id="txtApellidoCliente" styleClass="input-field" />
-                    </VBox>
-                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" spacing="8.0">
-                        <Label text="TELÉFONO" styleClass="label-form">
-                            <graphic><FontIcon iconLiteral="fas-phone-alt" iconColor="#94A3B8"/></graphic>
-                        </Label>
-                        <TextField fx:id="txtTelefonoCliente" styleClass="input-field" />
-                    </VBox>
-                    <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="8.0">
-                        <Label text="EMAIL" styleClass="label-form">
-                            <graphic><FontIcon iconLiteral="fas-envelope" iconColor="#94A3B8"/></graphic>
-                        </Label>
-                        <TextField fx:id="txtEmailCliente" styleClass="input-field" />
-                    </VBox>
-                </GridPane>
-                <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                    <Button text="Eliminar Cliente" onAction="#eliminarCliente" styleClass="btn-danger-text" />
-                    <Button text="Guardar Cambios" onAction="#guardarCliente" styleClass="btn-primary" />
-                </HBox>
-            </VBox>
-            
-            <VBox styleClass="card" spacing="20.0" VBox.vgrow="ALWAYS" minHeight="0">
-                <HBox alignment="CENTER_LEFT" spacing="10.0">
-                    <FontIcon iconLiteral="fas-paw" iconColor="#D2B48C" iconSize="20"/>
-                    <Label text="Mascotas asociadas" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
-                    <Label fx:id="lblCantidadMascotas" text="0" styleClass="badge-count" />
-                    <Region HBox.hgrow="ALWAYS" />
-                    
-                    <Button text="Eliminar Mascota" onAction="#eliminarMascota" styleClass="btn-danger-text" />
-                    <Button text="Modificar Mascota" onAction="#modificarMascota" styleClass="btn-outline" />
-                    <Button text=" Agregar Mascota" onAction="#agregarMascota" styleClass="btn-primary">
-                        <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" /></graphic>
-                    </Button>
-                </HBox>
-                
+
+    <!-- CAPA 1: MODAL LATERAL PARA AGREGAR/EDITAR MASCOTA -->
+    <HBox fx:id="overlayMascota" styleClass="modal-overlay" visible="false" alignment="TOP_RIGHT">
+        <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModalMascota" />
+        <VBox styleClass="slide-panel" prefWidth="400.0" spacing="25.0">
+            <HBox alignment="CENTER_LEFT">
+                <Label fx:id="lblTituloModalMascota" text="Agregar Mascota" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#cerrarModalMascota" styleClass="btn-close-modal">
+                    <graphic><FontIcon iconLiteral="fas-times" iconSize="18"/></graphic>
+                </Button>
+            </HBox>
+            <Separator />
+            <VBox spacing="15.0">
+                <VBox spacing="5.0">
+                    <Label text="NOMBRE DE LA MASCOTA *" styleClass="label-form" />
+                    <TextField fx:id="txtNombreMascota" promptText="Ej. Firulais" styleClass="input-field" />
+                </VBox>
                 <HBox spacing="15.0">
-                    <TextField fx:id="txtNombreMascota" promptText="Nombre de mascota..." styleClass="input-field" HBox.hgrow="ALWAYS" />
-                    <TextField fx:id="txtEspecie" promptText="Especie" styleClass="input-field" prefWidth="120.0" />
-                    <TextField fx:id="txtRaza" promptText="Raza" styleClass="input-field" prefWidth="120.0" />
-                    <DatePicker fx:id="dpFechaNacimiento" promptText="Nacimiento" styleClass="date-field" prefWidth="140.0" />
-                    <TextField fx:id="txtNumeroFicha" promptText="Ficha" styleClass="input-field" prefWidth="90.0" />
+                    <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                        <Label text="ESPECIE *" styleClass="label-form" />
+                        <TextField fx:id="txtEspecie" promptText="Ej. Perro" styleClass="input-field" />
+                    </VBox>
+                    <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                        <Label text="RAZA *" styleClass="label-form" />
+                        <TextField fx:id="txtRaza" promptText="Ej. Labrador" styleClass="input-field" />
+                    </VBox>
                 </HBox>
-                
-                <TableView fx:id="tablaMascotas" VBox.vgrow="ALWAYS" styleClass="table-mascotas" minHeight="0">
-                    <columns>
-                        <TableColumn fx:id="colNombreMascota" text="Nombre" prefWidth="160.0" />
-                        <TableColumn fx:id="colEspecie" text="Especie" prefWidth="100.0" />
-                        <TableColumn fx:id="colRaza" text="Raza" prefWidth="130.0" />
-                        <TableColumn fx:id="colFechaNacimiento" text="Nacimiento" prefWidth="120.0" />
-                        <TableColumn fx:id="colNumeroFicha" text="Ficha" prefWidth="80.0" />
-                    </columns>
-                </TableView>
+                <VBox spacing="5.0">
+                    <Label text="FECHA DE NACIMIENTO *" styleClass="label-form" />
+                    <DatePicker fx:id="dpFechaNacimiento" promptText="dd/mm/aaaa" styleClass="date-field" maxWidth="Infinity"/>
+                </VBox>
+                <VBox spacing="5.0">
+                    <Label text="N° DE FICHA (Opcional)" styleClass="label-form" />
+                    <TextField fx:id="txtNumeroFicha" promptText="Dejar vacío para auto-generar" styleClass="input-field" />
+                </VBox>
             </VBox>
-            
+            <Region VBox.vgrow="ALWAYS" />
+            <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                <Button text="Cancelar" onAction="#cerrarModalMascota" styleClass="btn-outline" />
+                <Button fx:id="btnGuardarMascota" text="Guardar" onAction="#guardarMascota" styleClass="btn-primary" />
+            </HBox>
         </VBox>
     </HBox>
-</VBox>
+
+</StackPane>

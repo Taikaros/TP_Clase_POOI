@@ -14,37 +14,34 @@ public class ClienteService {
     private void validarDatosBase(ClienteDTO dto) {
         if (dto.getNombre() == null || dto.getNombre().trim().isEmpty()) throw new IllegalArgumentException("El nombre es obligatorio.");
         if (dto.getApellido() == null || dto.getApellido().trim().isEmpty()) throw new IllegalArgumentException("El apellido es obligatorio.");
-        if (dto.getTelefono() == null || dto.getTelefono().trim().isEmpty()) throw new IllegalArgumentException("El teléfono es obligatorio.");
-        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) throw new IllegalArgumentException("El email es obligatorio.");
+        if (dto.getDni() == null || dto.getDni().trim().isEmpty()) throw new IllegalArgumentException("El DNI es obligatorio.");
     }
 
     private void validarDuplicados(EntityManager em, ClienteDTO dto) {
-        // Busca si hay otro cliente con el mismo nombre y apellido, excluyendo el ID actual (útil para cuando modificamos)
-        Long count = em.createQuery("SELECT COUNT(c) FROM Cliente c WHERE LOWER(c.nombre) = LOWER(:nombre) AND LOWER(c.apellido) = LOWER(:apellido) AND c.id != :id AND c.activo = true", Long.class)
-                .setParameter("nombre", dto.getNombre().trim())
-                .setParameter("apellido", dto.getApellido().trim())
-                .setParameter("id", dto.getId())
+        String jpql = "SELECT COUNT(c) FROM Cliente c WHERE c.dni = :dni AND c.id != :id AND c.activo = true";
+        Long count = em.createQuery(jpql, Long.class)
+                .setParameter("dni", dto.getDni())
+                .setParameter("id", dto.getId() != 0 ? dto.getId() : -1L)
                 .getSingleResult();
-        
+
         if (count > 0) {
-            throw new IllegalArgumentException("Ya existe un cliente activo registrado con el nombre y apellido especificado.");
+            throw new IllegalArgumentException("Ya existe un cliente activo registrado con el DNI especificado.");
         }
     }
 
     public ClienteDTO guardarCliente(ClienteDTO clienteDTO) {
         validarDatosBase(clienteDTO);
-        
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
-            validarDuplicados(em, clienteDTO); // Lanza error si está duplicado
-            
             em.getTransaction().begin();
+            validarDuplicados(em, clienteDTO);
             Cliente cliente = ClienteMapper.toEntity(clienteDTO);
             em.persist(cliente);
             em.getTransaction().commit();
             return ClienteMapper.toDTO(cliente);
         } catch (IllegalArgumentException e) {
-            throw e; // Repasamos la excepción de negocio tal cual
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             e.printStackTrace();
@@ -54,14 +51,10 @@ public class ClienteService {
         }
     }
 
-   public List<ClienteDTO> obtenerTodos() {
+    public List<ClienteDTO> obtenerTodos() {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
-            // Traemos al cliente con su lista de mascotas pegada
-            String jpql = "SELECT DISTINCT c FROM Cliente c " +
-                          "LEFT JOIN FETCH c.mascotas " +
-                          "WHERE c.activo = true";
-                          
+            String jpql = "SELECT DISTINCT c FROM Cliente c LEFT JOIN FETCH c.mascotas WHERE c.activo = true";
             TypedQuery<Cliente> query = em.createQuery(jpql, Cliente.class);
             return query.getResultStream().map(ClienteMapper::toDTO).collect(Collectors.toList());
         } finally {
@@ -71,23 +64,25 @@ public class ClienteService {
 
     public ClienteDTO actualizarCliente(ClienteDTO clienteDTO) {
         validarDatosBase(clienteDTO);
-        
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
-            validarDuplicados(em, clienteDTO);
-
             em.getTransaction().begin();
+            validarDuplicados(em, clienteDTO);
             Cliente cliente = em.find(Cliente.class, clienteDTO.getId());
             if (cliente != null) {
-                cliente.setDatosPersonales(clienteDTO.getNombre(), clienteDTO.getApellido());
-                cliente.setContacto(clienteDTO.getTelefono(), clienteDTO.getEmail());
+                cliente.setNombre(clienteDTO.getNombre());
+                cliente.setApellido(clienteDTO.getApellido());
+                cliente.setDni(clienteDTO.getDni());
+                cliente.setTelefono(clienteDTO.getTelefono());
+                cliente.setEmail(clienteDTO.getEmail());
                 em.merge(cliente);
+                em.getTransaction().commit();
+                return ClienteMapper.toDTO(cliente);
             } else {
                 throw new IllegalArgumentException("El cliente que intenta modificar ya no existe.");
             }
-            em.getTransaction().commit();
-            return ClienteMapper.toDTO(cliente);
         } catch (IllegalArgumentException e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e;
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
@@ -110,6 +105,7 @@ public class ClienteService {
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
             throw new RuntimeException("Error al dar de baja.");
         } finally {
             em.close();

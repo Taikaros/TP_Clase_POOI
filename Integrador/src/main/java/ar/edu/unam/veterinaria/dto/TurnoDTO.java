@@ -9,24 +9,22 @@ public class TurnoDTO {
     private LocalDate fecha;
     private LocalTime hora;
     private String estado;
-    
     private Long idMascota;
     private String nombreMascota;
-    
     private Long idVeterinario;
     private String nombreVeterinario;
-    
     private Long idCliente;
     private String nombreCliente;
-
     private String detallesServicios; 
     private List<String> serviciosSeleccionados; 
     private String notas; 
-    private Double costoTotal; // NUEVO CAMPO
+    private Double costoTotal;
+    private Long idVacuna;
+    private String nombreVacuna;
 
     public TurnoDTO() {}
 
-    public TurnoDTO(Long id, LocalDate fecha, LocalTime hora, String estado, Long idMascota, String nombreMascota, Long idVeterinario, String nombreVeterinario, Long idCliente, String nombreCliente, String detallesServicios, List<String> serviciosSeleccionados, String notas, Double costoTotal) {
+    public TurnoDTO(Long id, LocalDate fecha, LocalTime hora, String estado, Long idMascota, String nombreMascota, Long idVeterinario, String nombreVeterinario, Long idCliente, String nombreCliente, String detallesServicios, List<String> serviciosSeleccionados, String notas, Double costoTotal, Long idVacuna, String nombreVacuna) {
         this.id = id;
         this.fecha = fecha;
         this.hora = hora;
@@ -41,6 +39,8 @@ public class TurnoDTO {
         this.serviciosSeleccionados = serviciosSeleccionados;
         this.notas = notas;
         this.costoTotal = costoTotal;
+        this.idVacuna = idVacuna;
+        this.nombreVacuna = nombreVacuna;
     }
 
     public Long getId() { return id; }
@@ -71,4 +71,8 @@ public class TurnoDTO {
     public void setNotas(String notas) { this.notas = notas; }
     public Double getCostoTotal() { return costoTotal; }
     public void setCostoTotal(Double costoTotal) { this.costoTotal = costoTotal; }
+    public Long getIdVacuna() { return idVacuna; }
+    public void setIdVacuna(Long idVacuna) { this.idVacuna = idVacuna; }
+    public String getNombreVacuna() { return nombreVacuna; }
+    public void setNombreVacuna(String nombreVacuna) { this.nombreVacuna = nombreVacuna; }
 }

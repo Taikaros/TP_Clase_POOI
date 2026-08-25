@@ -6,6 +6,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "servicio_consulta")
 public class Consulta extends Servicio {
+
     private String motivoConsulta;
     private String diagnostico;
     private String tratamiento;
@@ -13,7 +14,9 @@ public class Consulta extends Servicio {
     public Consulta() {}
 
     public String getDetallesConsulta() {
-        return "Consulta: " + motivoConsulta + " - Dx: " + (diagnostico != null ? diagnostico : "Pendiente");
+        String dx = (diagnostico != null && !diagnostico.isEmpty()) ? diagnostico : "Pendiente";
+        String tr = (tratamiento != null && !tratamiento.isEmpty()) ? tratamiento : "Sin indicaciones específicas";
+        return "Consulta: " + motivoConsulta + " | Dx: " + dx + " | R/: " + tr;
     }
 
     @Override
@@ -21,7 +24,6 @@ public class Consulta extends Servicio {
         return getDetallesConsulta();
     }
 
-    // Getters y Setters
     public String getMotivoConsulta() { return motivoConsulta; }
     public void setMotivoConsulta(String motivoConsulta) { this.motivoConsulta = motivoConsulta; }
     public String getDiagnostico() { return diagnostico; }

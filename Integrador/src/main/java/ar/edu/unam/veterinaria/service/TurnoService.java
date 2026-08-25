@@ -5,6 +5,8 @@ import ar.edu.unam.veterinaria.dto.TurnoDTO;
 import ar.edu.unam.veterinaria.exception.CancelacionFueradeTermino;
 import ar.edu.unam.veterinaria.exception.TurnoSolapado;
 import ar.edu.unam.veterinaria.exception.VeterinarioNoDisponible;
+import ar.edu.unam.veterinaria.exception.VacunaVigenteException;
+import ar.edu.unam.veterinaria.exception.TurnoSinServiciosException;
 import ar.edu.unam.veterinaria.mapper.TurnoMapper;
 import ar.edu.unam.veterinaria.model.*;
 import jakarta.persistence.EntityManager;
@@ -19,43 +21,33 @@ public class TurnoService {
     public List<TurnoDTO> obtenerTodos() {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
-            // EL FIX MÁGICO: Usamos LEFT JOIN FETCH para traer todo en 1 solo viaje a la base de datos
             String jpql = "SELECT DISTINCT t FROM Turno t " +
                           "LEFT JOIN FETCH t.cliente " +
                           "LEFT JOIN FETCH t.mascota " +
                           "LEFT JOIN FETCH t.veterinario " +
                           "LEFT JOIN FETCH t.servicios " +
                           "ORDER BY t.fecha DESC, t.hora DESC";
-                          
             TypedQuery<Turno> query = em.createQuery(jpql, Turno.class);
             return query.getResultStream().map(TurnoMapper::toDTO).collect(Collectors.toList());
-        } finally {
-            em.close();
-        }
+        } finally { em.close(); }
     }
+
     private void validarSolapamiento(EntityManager em, TurnoDTO dto, Long turnoIdIgnorar) throws TurnoSolapado {
         String jpql = "SELECT COUNT(t) FROM Turno t WHERE t.fecha = :fecha AND t.hora = :hora AND t.estado != 'CANCELADO' " +
                       "AND (t.veterinario.id = :vetId OR t.mascota.id = :masId)";
         if (turnoIdIgnorar != null) jpql += " AND t.id != :turnoIdIgnorar";
-
         TypedQuery<Long> query = em.createQuery(jpql, Long.class)
             .setParameter("fecha", dto.getFecha())
             .setParameter("hora", dto.getHora())
             .setParameter("vetId", dto.getIdVeterinario())
             .setParameter("masId", dto.getIdMascota());
-            
         if (turnoIdIgnorar != null) query.setParameter("turnoIdIgnorar", turnoIdIgnorar);
-
-        if (query.getSingleResult() > 0) {
-            throw new TurnoSolapado("Ya existe un turno agendado en ese horario para el veterinario o la mascota.");
-        }
+        if (query.getSingleResult() > 0) throw new TurnoSolapado("Ya existe un turno agendado en ese horario para el veterinario o la mascota.");
     }
 
-    // EL AUTOGENERADOR DE CATÁLOGOS (Si el precio no existe, lo crea)
     private TipoServicio obtenerOCrearTipoServicio(EntityManager em, String nombre) {
         List<TipoServicio> catalogo = em.createQuery("SELECT ts FROM TipoServicio ts WHERE ts.nombreDescriptivo = :nombre", TipoServicio.class)
             .setParameter("nombre", nombre).getResultList();
-            
         if (!catalogo.isEmpty()) return catalogo.get(0);
         
         Double precioFicticio = 15000.0;
@@ -69,7 +61,7 @@ public class TurnoService {
         return nuevoTS;
     }
 
-    public TurnoDTO guardarTurno(TurnoDTO dto) throws VeterinarioNoDisponible, TurnoSolapado {
+    public TurnoDTO guardarTurno(TurnoDTO dto) throws VeterinarioNoDisponible, TurnoSolapado, VacunaVigenteException, TurnoSinServiciosException {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
@@ -94,36 +86,46 @@ public class TurnoService {
 
             if (dto.getServiciosSeleccionados() != null) {
                 for (String nombreServicio : dto.getServiciosSeleccionados()) {
-                    TipoServicio ts = obtenerOCrearTipoServicio(em, nombreServicio); // <--- Busca el precio
+                    TipoServicio ts = obtenerOCrearTipoServicio(em, nombreServicio);
                     if (nombreServicio.equals("Vacunación")) {
                         Vacunacion vacunacion = new Vacunacion();
-                        vacunacion.setTipoServicio(ts); // <--- Congela el precio histórico
+                        vacunacion.setTipoServicio(ts);
+                        if (dto.getIdVacuna() != null) {
+                            Vacuna vacunaSeleccionada = em.find(Vacuna.class, dto.getIdVacuna());
+                            if (vacunaSeleccionada != null) {
+                                if (mascota.tieneVacunaVigente(vacunaSeleccionada, dto.getFecha())) {
+                                    throw new VacunaVigenteException("La mascota ya posee la vacuna " + vacunaSeleccionada.getNombreComercial() + " vigente para esa fecha.");
+                                }
+                                vacunacion.setVacunaAplicada(vacunaSeleccionada);
+                            }
+                        }
                         turno.agregarServicio(vacunacion);
                     } else {
                         Consulta consulta = new Consulta();
-                        consulta.setTipoServicio(ts); // <--- Congela el precio histórico
+                        consulta.setTipoServicio(ts);
                         consulta.setMotivoConsulta(nombreServicio + (dto.getNotas() != null && !dto.getNotas().isEmpty() ? " - " + dto.getNotas() : ""));
                         turno.agregarServicio(consulta);
                     }
                 }
             }
             
+            // LA REGLA DE ORO EN ACCIÓN ANTES DE GUARDAR
+            turno.validarServicios();
+            
             em.persist(turno);
             em.getTransaction().commit();
             return TurnoMapper.toDTO(turno);
-        } catch (TurnoSolapado | VeterinarioNoDisponible e) {
+        } catch (TurnoSolapado | VeterinarioNoDisponible | VacunaVigenteException | TurnoSinServiciosException e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e; 
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             e.printStackTrace();
             return null;
-        } finally {
-            em.close();
-        }
+        } finally { em.close(); }
     }
 
-    public TurnoDTO actualizarTurno(TurnoDTO dto) throws VeterinarioNoDisponible, TurnoSolapado {
+    public TurnoDTO actualizarTurno(TurnoDTO dto) throws VeterinarioNoDisponible, TurnoSolapado, VacunaVigenteException, TurnoSinServiciosException {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
@@ -154,6 +156,15 @@ public class TurnoService {
                     if (nombreServicio.equals("Vacunación")) {
                         Vacunacion vacunacion = new Vacunacion();
                         vacunacion.setTipoServicio(ts);
+                        if (dto.getIdVacuna() != null) {
+                            Vacuna vacunaSeleccionada = em.find(Vacuna.class, dto.getIdVacuna());
+                            if (vacunaSeleccionada != null) {
+                                if (mascota.tieneVacunaVigente(vacunaSeleccionada, dto.getFecha())) {
+                                    throw new VacunaVigenteException("La mascota ya posee la vacuna " + vacunaSeleccionada.getNombreComercial() + " vigente para esa fecha.");
+                                }
+                                vacunacion.setVacunaAplicada(vacunaSeleccionada);
+                            }
+                        }
                         turno.agregarServicio(vacunacion);
                     } else {
                         Consulta consulta = new Consulta();
@@ -163,19 +174,21 @@ public class TurnoService {
                     }
                 }
             }
+            
+            // LA REGLA DE ORO EN ACCIÓN ANTES DE ACTUALIZAR
+            turno.validarServicios();
+            
             em.merge(turno);
             em.getTransaction().commit();
             return TurnoMapper.toDTO(turno);
-        } catch (TurnoSolapado | VeterinarioNoDisponible e) {
+        } catch (TurnoSolapado | VeterinarioNoDisponible | VacunaVigenteException | TurnoSinServiciosException e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e;
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             e.printStackTrace();
             return null;
-        } finally {
-            em.close();
-        }
+        } finally { em.close(); }
     }
 
     public void confirmarTurno(Long idTurno) {
@@ -183,9 +196,27 @@ public class TurnoService {
         try { em.getTransaction().begin(); Turno turno = em.find(Turno.class, idTurno); if (turno != null) { turno.setEstado(EstadoTurno.CONFIRMADO); em.merge(turno); } em.getTransaction().commit(); } catch (Exception e) { if (em.getTransaction().isActive()) em.getTransaction().rollback(); e.printStackTrace(); } finally { em.close(); }
     }
 
-    public void atenderTurno(Long idTurno) {
+    public void atenderTurno(Long idTurno, String diagnostico, String tratamiento) {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
-        try { em.getTransaction().begin(); Turno turno = em.find(Turno.class, idTurno); if (turno != null) { turno.setEstado(EstadoTurno.ATENDIDO); em.merge(turno); } em.getTransaction().commit(); } catch (Exception e) { if (em.getTransaction().isActive()) em.getTransaction().rollback(); e.printStackTrace(); } finally { em.close(); }
+        try {
+            em.getTransaction().begin();
+            Turno turno = em.find(Turno.class, idTurno);
+            if (turno != null) {
+                turno.setEstado(EstadoTurno.ATENDIDO);
+                for (Servicio s : turno.getServicios()) {
+                    if (s instanceof Consulta) {
+                        Consulta c = (Consulta) s;
+                        c.setDiagnostico(diagnostico);
+                        c.setTratamiento(tratamiento);
+                    }
+                }
+                em.merge(turno);
+            }
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally { em.close(); }
     }
 
     public void cancelarTurno(Long idTurno) throws CancelacionFueradeTermino {
