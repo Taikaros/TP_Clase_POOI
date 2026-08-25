@@ -5,7 +5,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
-import ar.edu.unam.veterinaria.model.Persona;
 
 @Entity
 public class Cliente extends Persona {
