@@ -431,3 +431,55 @@
 .btn-editar:hover { -fx-background-color: #F8FAFC; }
 .btn-cancelar { -fx-background-color: transparent; -fx-border-color: transparent; -fx-text-fill: #94A3B8; }
 .btn-cancelar:hover { -fx-text-fill: #EF4444; }
+/* ==================== LISTVIEWS ESTILO TARJETA (FIGMA) ==================== */
+.list-cards {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0 5 0 0;
+}
+.list-cards:focused {
+    -fx-background-color: transparent;
+}
+.list-cards .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 10 0; /* Espaciado entre tarjetas */
+}
+.list-cards .list-cell:empty {
+    -fx-padding: 0;
+}
+
+/* Tarjeta Cliente (Izquierda) */
+.client-list-card {
+    -fx-background-color: white;
+    -fx-background-radius: 10px;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 15px;
+    -fx-cursor: hand;
+}
+.client-list-card:hover {
+    -fx-background-color: #F8FAFC;
+}
+/* Estado Seleccionado del Cliente */
+.list-cards .list-cell:selected .client-list-card {
+    -fx-background-color: #F0FDF4;
+    -fx-border-color: -color-primario;
+    -fx-border-width: 1px 4px 1px 1px; /* Borde grueso a la derecha como indicador */
+}
+
+/* Tarjeta Mascota (Derecha) */
+.pet-list-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12px;
+    -fx-border-color: #D2B48C;
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+    -fx-padding: 15px 20px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.02), 5, 0, 0, 2);
+}
+
+/* Badges Especies */
+.badge-especie-perro { -fx-background-color: #DCFCE7; -fx-text-fill: #15803D; }
+.badge-especie-gato { -fx-background-color: #F3E8FF; -fx-text-fill: #6B21A8; }
+.badge-especie-otro { -fx-background-color: #FEF9C3; -fx-text-fill: #A16207; }
