@@ -20,22 +20,21 @@
         </HBox>
         <HBox alignment="CENTER_LEFT" styleClass="search-box">
             <FontIcon iconLiteral="fas-search" iconColor="#94A3B8" iconSize="16"/>
-            <TextField fx:id="txtBuscar" promptText="Buscar por nombre o apellido..." styleClass="search-field" HBox.hgrow="ALWAYS" />
+            <TextField fx:id="txtBuscar" promptText="Buscar por DNI, nombre o apellido..." styleClass="search-field" HBox.hgrow="ALWAYS" />
         </HBox>
     </VBox>
     
-    <!-- DOS COLUMNAS PRINCIPALES (Con minHeight="0") -->
     <HBox spacing="30.0" VBox.vgrow="ALWAYS" minHeight="0">
         
         <!-- IZQUIERDA: LISTA DE CLIENTES -->
-        <VBox spacing="10.0" prefWidth="320.0" minWidth="320.0" minHeight="0">
+        <VBox spacing="10.0" prefWidth="340.0" minWidth="340.0" minHeight="0">
             <Label fx:id="lblCantidadClientes" text="CLIENTES (0)" style="-fx-font-size: 12px; -fx-font-weight: 800; -fx-text-fill: #64748B; -fx-letter-spacing: 1px;" />
             <TableView fx:id="tablaClientes" VBox.vgrow="ALWAYS" styleClass="table-as-list" minHeight="0">
                 <columns>
+                    <TableColumn fx:id="colDniCliente" text="DNI" prefWidth="80.0" />
                     <TableColumn fx:id="colNombreCliente" text="Nombre" prefWidth="80.0" />
                     <TableColumn fx:id="colApellidoCliente" text="Apellido" prefWidth="80.0" />
                     <TableColumn fx:id="colTelefonoCliente" text="Teléfono" prefWidth="80.0" />
-                    <TableColumn fx:id="colEmailCliente" text="Email" prefWidth="80.0" />
                 </columns>
             </TableView>
         </VBox>
@@ -50,7 +49,7 @@
                     </StackPane>
                     <VBox spacing="2.0">
                         <Label text="Detalles del Cliente" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
-                        <Label text="DNI: -" style="-fx-text-fill: #64748B; -fx-font-size: 13px;" />
+                        <Label fx:id="lblDniPerfil" text="DNI: -" style="-fx-text-fill: #64748B; -fx-font-size: 13px;" />
                     </VBox>
                     <Region HBox.hgrow="ALWAYS" />
                     <Button text=" Editar" onAction="#modificarCliente" styleClass="btn-outline">
@@ -64,20 +63,24 @@
                         <ColumnConstraints percentWidth="50" />
                     </columnConstraints>
                     <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="8.0">
-                        <Label text="NOMBRE" styleClass="label-form" />
+                        <Label text="NOMBRE *" styleClass="label-form" />
                         <TextField fx:id="txtNombreCliente" styleClass="input-field" />
                     </VBox>
                     <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="8.0">
-                        <Label text="APELLIDO" styleClass="label-form" />
+                        <Label text="APELLIDO *" styleClass="label-form" />
                         <TextField fx:id="txtApellidoCliente" styleClass="input-field" />
                     </VBox>
                     <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" spacing="8.0">
+                        <Label text="DNI *" styleClass="label-form" />
+                        <TextField fx:id="txtDniCliente" styleClass="input-field" />
+                    </VBox>
+                    <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="8.0">
                         <Label text="TELÉFONO" styleClass="label-form">
                             <graphic><FontIcon iconLiteral="fas-phone-alt" iconColor="#94A3B8"/></graphic>
                         </Label>
                         <TextField fx:id="txtTelefonoCliente" styleClass="input-field" />
                     </VBox>
-                    <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="8.0">
+                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2" spacing="8.0">
                         <Label text="EMAIL" styleClass="label-form">
                             <graphic><FontIcon iconLiteral="fas-envelope" iconColor="#94A3B8"/></graphic>
                         </Label>

@@ -19,27 +19,37 @@ public class MascotaService {
         if (dto.getFechaNacimiento() == null) throw new IllegalArgumentException("La fecha de nacimiento es obligatoria.");
     }
 
-    public MascotaDTO guardarMascota(MascotaDTO mascotaDTO) {
-        validarDatosMascota(mascotaDTO);
-        
+    public MascotaDTO guardarMascota(MascotaDTO dto) {
+        validarDatosMascota(dto);
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
-            Cliente dueno = em.find(Cliente.class, mascotaDTO.getIdCliente());
+            
+            Cliente dueno = em.find(Cliente.class, dto.getIdCliente());
             if (dueno == null) throw new IllegalArgumentException("El cliente dueño no existe.");
             
             Mascota mascota = new Mascota();
-            mascota.setNombreMascota(mascotaDTO.getNombreMascota());
-            mascota.setEspecie(mascotaDTO.getEspecie());
-            mascota.setRaza(mascotaDTO.getRaza());
-            mascota.setFechaNacimiento(mascotaDTO.getFechaNacimiento());
-            mascota.setNumeroFicha(mascotaDTO.getNumeroFicha() != null ? mascotaDTO.getNumeroFicha() : 0L);
-            mascota.setDueno(dueno); 
+            mascota.setNombreMascota(dto.getNombreMascota());
+            mascota.setEspecie(dto.getEspecie());
+            mascota.setRaza(dto.getRaza());
+            mascota.setFechaNacimiento(dto.getFechaNacimiento());
+            mascota.setDueno(dueno);
+
+            // ---> AUTO-GENERADOR DE NÚMERO DE HISTORIA CLÍNICA <---
+            Long nroFicha = dto.getNumeroFicha();
+            if (nroFicha == null || nroFicha == 0L) {
+                // Si el usuario dejó el casillero en blanco, buscamos el número más alto en la base de datos
+                Long maxFicha = em.createQuery("SELECT MAX(m.numeroFicha) FROM Mascota m", Long.class).getSingleResult();
+                nroFicha = (maxFicha != null) ? maxFicha + 1L : 1L; // Si no hay mascotas, arranca en 1
+            }
+            mascota.setNumeroFicha(nroFicha);
 
             em.persist(mascota);
             em.getTransaction().commit();
             return MascotaMapper.toDTO(mascota);
+            
         } catch (IllegalArgumentException e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e;
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
@@ -60,55 +70,57 @@ public class MascotaService {
         }
     }
 
-    public MascotaDTO actualizarMascota(MascotaDTO mascotaDTO) {
-        validarDatosMascota(mascotaDTO);
-        
+    public MascotaDTO actualizarMascota(MascotaDTO dto) {
+        validarDatosMascota(dto);
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
-            Mascota mascota = em.find(Mascota.class, mascotaDTO.getId());
+            Mascota mascota = em.find(Mascota.class, dto.getId());
             if (mascota != null) {
-                mascota.setNombreMascota(mascotaDTO.getNombreMascota());
-                mascota.setEspecie(mascotaDTO.getEspecie());
-                mascota.setRaza(mascotaDTO.getRaza());
-                mascota.setFechaNacimiento(mascotaDTO.getFechaNacimiento());
-                mascota.setNumeroFicha(mascotaDTO.getNumeroFicha() != null ? mascotaDTO.getNumeroFicha() : 0L);
+                mascota.setNombreMascota(dto.getNombreMascota());
+                mascota.setEspecie(dto.getEspecie());
+                mascota.setRaza(dto.getRaza());
+                mascota.setFechaNacimiento(dto.getFechaNacimiento());
+                
+                // Solo actualiza la ficha si el usuario escribió un número manualmente para corregirlo
+                if (dto.getNumeroFicha() != null && dto.getNumeroFicha() > 0) {
+                    mascota.setNumeroFicha(dto.getNumeroFicha());
+                }
+                
                 em.merge(mascota);
+                em.getTransaction().commit();
+                return MascotaMapper.toDTO(mascota);
+            } else {
+                throw new IllegalArgumentException("Error al actualizar la mascota.");
             }
-            em.getTransaction().commit();
-            return MascotaMapper.toDTO(mascota);
         } catch (IllegalArgumentException e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e;
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
-            throw new RuntimeException("Error al actualizar la mascota.");
+            e.printStackTrace();
+            throw new RuntimeException("Error interno.");
         } finally {
             em.close();
         }
     }
 
     public void eliminarMascota(Long id) {
-    EntityManager em = AppVeterinaria.getEmf().createEntityManager();
-    try {
-        em.getTransaction().begin();
-        Mascota mascota = em.find(Mascota.class, id);
-        
-        if (mascota != null) {
-            // SOLUCIÓN: Desvincular de la lista del dueño para que JPA/Cascade nos permita borrar
-            Cliente dueno = mascota.getDueno();
-            if (dueno != null) {
-                dueno.getMascotas().remove(mascota);
+        EntityManager em = AppVeterinaria.getEmf().createEntityManager();
+        try {
+            em.getTransaction().begin();
+            Mascota mascota = em.find(Mascota.class, id);
+            if (mascota != null) {
+                mascota.getDueno().getMascotas().remove(mascota);
+                em.remove(mascota);
             }
-            em.remove(mascota);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
+            throw new RuntimeException("Error al eliminar la mascota.");
+        } finally {
+            em.close();
         }
-        
-        em.getTransaction().commit();
-    } catch (Exception e) {
-        if (em.getTransaction().isActive()) em.getTransaction().rollback();
-        e.printStackTrace(); // Imprime el error real en la consola por si falla
-        throw new RuntimeException("Error al eliminar la mascota.");
-    } finally {
-        em.close();
     }
-}
 }

@@ -4,28 +4,25 @@ import ar.edu.unam.veterinaria.dto.ClienteDTO;
 import ar.edu.unam.veterinaria.model.Cliente;
 
 public class ClienteMapper {
-    public static ClienteDTO toDTO(Cliente cliente){
-        if (cliente == null){
-            return null;
-        }
+    public static ClienteDTO toDTO(Cliente cliente) {
         return new ClienteDTO(
-                cliente.getId(),
-                cliente.getNombre(),
-                cliente.getApellido(),
-                cliente.getTelefono(),
-                cliente.getEmail()
+            cliente.getId(), 
+            cliente.getNombre(), 
+            cliente.getApellido(), 
+            cliente.getDni(),
+            cliente.getTelefono(), 
+            cliente.getEmail()
         );
     }
-    public static Cliente toEntity(ClienteDTO dtoClienteDTO){
-        if (dtoClienteDTO == null){
-            return null;
-        }
-        Cliente cliente = new Cliente();
 
-        //Metodos heredados de persona
-        cliente.setDatosPersonales(dtoClienteDTO.getNombre(), dtoClienteDTO.getApellido());
-        cliente.setContacto(dtoClienteDTO.getTelefono(), dtoClienteDTO.getEmail());
-        
+    public static Cliente toEntity(ClienteDTO dto) {
+        Cliente cliente = new Cliente(
+            dto.getNombre(), 
+            dto.getApellido(), 
+            dto.getDni(),
+            dto.getTelefono(), 
+            dto.getEmail()
+        );
         return cliente;
     }
 }
