@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<HBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.LoginController" prefWidth="1000" prefHeight="600">
+    
+    <!-- PANEL IZQUIERDO: BRANDING / SPLASH -->
+    <VBox styleClass="login-splash" HBox.hgrow="ALWAYS" alignment="CENTER" spacing="20">
+        <FontIcon iconLiteral="fas-paw" iconSize="90" iconColor="white" />
+        <Label text="Huellas &amp; Salud" style="-fx-font-size: 42px; -fx-font-weight: 900; -fx-text-fill: white;" />
+        <Label text="Sistema de Gestión Veterinaria" style="-fx-font-size: 18px; -fx-text-fill: #A7F3D0; -fx-letter-spacing: 2px;" />
+    </VBox>
+
+    <!-- PANEL DERECHO: FORMULARIO -->
+    <StackPane prefWidth="450" style="-fx-background-color: white;">
+        
+        <!-- FORMULARIO DE LOGIN -->
+        <VBox fx:id="panelLogin" alignment="CENTER_LEFT" spacing="30" disable="true">
+            <padding><Insets top="50" right="50" bottom="50" left="50"/></padding>
+            <VBox spacing="5">
+                <Label text="Iniciar Sesión" style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #1E293B;" />
+                <Label text="Ingrese sus credenciales de administrador" style="-fx-text-fill: #64748B; -fx-font-size: 14px;" />
+            </VBox>
+
+            <VBox spacing="20">
+                <VBox spacing="8">
+                    <Label text="USUARIO" styleClass="label-form" />
+                    <TextField fx:id="txtUsuario" promptText="ej. admin" styleClass="input-field" text="admin"/>
+                </VBox>
+                <VBox spacing="8">
+                    <Label text="CONTRASEÑA" styleClass="label-form" />
+                    <PasswordField fx:id="txtPassword" promptText="••••••••" styleClass="input-field" text="admin123"/>
+                </VBox>
+            </VBox>
+
+            <Button fx:id="btnIngresar" text="Ingresar al Sistema" onAction="#ingresar" maxWidth="Infinity" styleClass="btn-primary" style="-fx-padding: 12px; -fx-font-size: 15px;" />
+        </VBox>
+
+        <!-- PANTALLA DE CARGA SUPERPUESTA -->
+        <VBox fx:id="panelLoading" alignment="CENTER" spacing="15" style="-fx-background-color: rgba(255, 255, 255, 0.95);">
+            <ProgressIndicator />
+            <Label text="Conectando a la base de datos..." style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #2CA871;" />
+            <Label text="Estableciendo conexión segura con la nube" style="-fx-text-fill: #64748B; -fx-font-size: 12px;" />
+        </VBox>
+        
+    </StackPane>
+</HBox>
