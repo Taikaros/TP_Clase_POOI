@@ -6,6 +6,7 @@ import ar.edu.unam.veterinaria.exception.CancelacionFueradeTermino;
 import ar.edu.unam.veterinaria.exception.TurnoSolapado;
 import ar.edu.unam.veterinaria.exception.VeterinarioNoDisponible;
 import ar.edu.unam.veterinaria.exception.VacunaVigenteException;
+import ar.edu.unam.veterinaria.exception.TurnoSinServiciosException;
 import ar.edu.unam.veterinaria.mapper.TurnoMapper;
 import ar.edu.unam.veterinaria.model.*;
 import jakarta.persistence.EntityManager;
@@ -60,7 +61,7 @@ public class TurnoService {
         return nuevoTS;
     }
 
-    public TurnoDTO guardarTurno(TurnoDTO dto) throws VeterinarioNoDisponible, TurnoSolapado, VacunaVigenteException {
+    public TurnoDTO guardarTurno(TurnoDTO dto) throws VeterinarioNoDisponible, TurnoSolapado, VacunaVigenteException, TurnoSinServiciosException {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
@@ -108,10 +109,13 @@ public class TurnoService {
                 }
             }
             
+            // LA REGLA DE ORO EN ACCIÓN ANTES DE GUARDAR
+            turno.validarServicios();
+            
             em.persist(turno);
             em.getTransaction().commit();
             return TurnoMapper.toDTO(turno);
-        } catch (TurnoSolapado | VeterinarioNoDisponible | VacunaVigenteException e) {
+        } catch (TurnoSolapado | VeterinarioNoDisponible | VacunaVigenteException | TurnoSinServiciosException e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e; 
         } catch (Exception e) {
@@ -121,7 +125,7 @@ public class TurnoService {
         } finally { em.close(); }
     }
 
-    public TurnoDTO actualizarTurno(TurnoDTO dto) throws VeterinarioNoDisponible, TurnoSolapado, VacunaVigenteException {
+    public TurnoDTO actualizarTurno(TurnoDTO dto) throws VeterinarioNoDisponible, TurnoSolapado, VacunaVigenteException, TurnoSinServiciosException {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
@@ -170,10 +174,14 @@ public class TurnoService {
                     }
                 }
             }
+            
+            // LA REGLA DE ORO EN ACCIÓN ANTES DE ACTUALIZAR
+            turno.validarServicios();
+            
             em.merge(turno);
             em.getTransaction().commit();
             return TurnoMapper.toDTO(turno);
-        } catch (TurnoSolapado | VeterinarioNoDisponible | VacunaVigenteException e) {
+        } catch (TurnoSolapado | VeterinarioNoDisponible | VacunaVigenteException | TurnoSinServiciosException e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e;
         } catch (Exception e) {

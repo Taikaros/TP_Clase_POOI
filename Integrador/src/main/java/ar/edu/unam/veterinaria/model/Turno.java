@@ -77,4 +77,13 @@ public class Turno {
     public void setVeterinario(Veterinario veterinario) { this.veterinario = veterinario; }
     public Cliente getCliente() { return cliente; }
     public void setCliente(Cliente cliente) { this.cliente = cliente; }
+
+    // ---> LA REGLA DE ORO DEL DOMINIO <---
+    public void validarServicios() throws ar.edu.unam.veterinaria.exception.TurnoSinServiciosException {
+        if (this.servicios == null || this.servicios.isEmpty()) {
+            throw new ar.edu.unam.veterinaria.exception.TurnoSinServiciosException(
+                "Regla de Dominio: Un turno no puede ser agendado sin al menos una práctica o servicio asociado."
+            );
+        }
+    }
 }

@@ -5,6 +5,7 @@ import ar.edu.unam.veterinaria.exception.CancelacionFueradeTermino;
 import ar.edu.unam.veterinaria.exception.TurnoSolapado;
 import ar.edu.unam.veterinaria.exception.VeterinarioNoDisponible;
 import ar.edu.unam.veterinaria.exception.VacunaVigenteException;
+import ar.edu.unam.veterinaria.exception.TurnoSinServiciosException;
 import ar.edu.unam.veterinaria.model.Vacuna;
 import ar.edu.unam.veterinaria.service.*;
 import javafx.collections.FXCollections;
@@ -319,8 +320,6 @@ public class TurnoController {
         if (chkCirugia.isSelected()) serviciosSeleccionados.add(chkCirugia.getText());
         if (chkEcografia.isSelected()) serviciosSeleccionados.add(chkEcografia.getText());
         if (chkAnalisis.isSelected()) serviciosSeleccionados.add(chkAnalisis.getText());
-
-        if (serviciosSeleccionados.isEmpty()) { mostrarAlerta("Falta Servicio", "Debe seleccionar al menos una práctica médica a realizar.", Alert.AlertType.WARNING); return; }
         
         if (chkVacunacion.isSelected() && cbVacuna.getValue() == null) { mostrarAlerta("Vacuna Faltante", "Seleccione qué vacuna aplicará.", Alert.AlertType.WARNING); return; }
 
@@ -338,6 +337,8 @@ public class TurnoController {
             mostrarAlerta("Éxito", "Operación realizada correctamente.", Alert.AlertType.INFORMATION);
             fechaSeleccionada = guardado.getFecha(); fechaInicioCalendario = guardado.getFecha();
             generarCalendario(); cerrarModal(); cargarTabla(); 
+        } catch (TurnoSinServiciosException ex) {
+            mostrarAlerta("Falta Servicio (Regla de Dominio)", ex.getMessage(), Alert.AlertType.ERROR);
         } catch (VacunaVigenteException ex) {
             mostrarAlerta("Vacuna Rechazada", ex.getMessage(), Alert.AlertType.ERROR);
         } catch (VeterinarioNoDisponible | TurnoSolapado ex) {
