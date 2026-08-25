@@ -1,12 +1,13 @@
 package ar.edu.unam.veterinaria.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.BorderPane; // <-- IMPORTAMOS BORDERPANE
+import javafx.scene.layout.BorderPane;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,7 +15,6 @@ import java.util.logging.Logger;
 public class MainLayoutController {
     private static final Logger LOGGER = Logger.getLogger(MainLayoutController.class.getName());
     
-    // <-- ACÁ ESTABA EL ERROR: AHORA ES UN BORDERPANE
     @FXML private BorderPane sidebar; 
     @FXML private StackPane contentArea; 
 
@@ -28,7 +28,9 @@ public class MainLayoutController {
 
     @FXML
     public void initialize() {
-        cargarVistaClientes(null);
+        // ---> TRUCO DE OPTIMIZACIÓN: CARGA DIFERIDA <---
+        // Deja que JavaFX dibuje la ventana principal vacía e inmediatamente después carga los datos
+        Platform.runLater(() -> cargarVistaClientes(null));
     }
 
     private void cargarVista(String archivoFxml) {
@@ -57,4 +59,20 @@ public class MainLayoutController {
     @FXML public void cargarVistaVeterinarios(ActionEvent event) { activarBoton(btnVeterinarios); cargarVista("Veterinarios.fxml"); }
     @FXML public void cargarVistaGuarderia(ActionEvent event) { activarBoton(btnGuarderia); cargarVista("peluqueriaYguarderia.fxml"); }
     @FXML public void cargarVistaConfiguracion(ActionEvent event) { activarBoton(btnConfiguracion); cargarVista("configuracion.fxml"); }
+
+    @FXML
+    public void cerrarSesion(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/login.fxml"));
+            Parent root = loader.load();
+            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+            javafx.scene.Scene scene = new javafx.scene.Scene(root, 1000, 600);
+            scene.getStylesheets().add(getClass().getResource("/views/style.css").toExternalForm());
+            stage.setTitle("Huellas & Salud - Inicio de Sesión");
+            stage.setScene(scene);
+            stage.centerOnScreen();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

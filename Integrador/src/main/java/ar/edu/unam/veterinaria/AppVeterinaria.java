@@ -1,7 +1,6 @@
 package ar.edu.unam.veterinaria;
 
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -17,54 +16,36 @@ import java.util.logging.Logger;
 
 public class AppVeterinaria extends Application {
     private static final Logger LOGGER = Logger.getLogger(AppVeterinaria.class.getName());
-    
     private static EntityManagerFactory emf;
 
-    public static synchronized EntityManagerFactory getEmf() {
-        return emf;
-    }
+    public static synchronized EntityManagerFactory getEmf() { return emf; }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // 1. CARGAMOS LA INTERFAZ GRÁFICA AL INSTANTE
-        java.net.URL fxmlLocation = AppVeterinaria.class.getResource("/views/MainLayout.fxml");
+        java.net.URL fxmlLocation = AppVeterinaria.class.getResource("/views/login.fxml");
         if (fxmlLocation == null) {
-            System.err.println("¡ERROR CRÍTICO!: Java no encuentra el archivo FXML.");
+            System.err.println("¡ERROR CRÍTICO!: Java no encuentra el archivo login.fxml.");
             System.exit(1);
         }
-        
+
         FXMLLoader loader = new FXMLLoader(fxmlLocation);
         Parent root = loader.load();
-        Scene scene = new Scene(root, 1280, 720);
-
+        Scene scene = new Scene(root, 1000, 600); 
         scene.getStylesheets().add(getClass().getResource("/views/style.css").toExternalForm());
-        
-        // Ponemos un título temporal para darle un feedback al usuario de que está cargando
-        primaryStage.setTitle("Huellas & Salud - Centro Veterinario (Conectando a la base de datos...)");
-        primaryStage.setScene(scene);
-        primaryStage.show();
 
-        // 2. CONECTAMOS A NEON EN SEGUNDO PLANO (Background Thread)
-        new Thread(() -> {
-            conectarBaseDeDatos();
-            
-            // 3. UNA VEZ CONECTADO, VOLVEMOS AL HILO GRÁFICO PARA ACTUALIZAR LA VENTANA
-            Platform.runLater(() -> {
-                primaryStage.setTitle("Huellas & Salud - Centro Veterinario");
-                LOGGER.info("¡Interfaz lista y base de datos operativa!");
-            });
-        }).start();
+        primaryStage.setTitle("Huellas & Salud - Inicio de Sesión");
+        primaryStage.setScene(scene);
+        primaryStage.centerOnScreen();
+        primaryStage.show();
     }
 
-    private void conectarBaseDeDatos() {
+    public static void conectarBaseDeDatos() {
+        if (emf != null && emf.isOpen()) return; 
+        
         Properties dbProps = new Properties();
         try (InputStream input = AppVeterinaria.class.getClassLoader().getResourceAsStream("database.properties")) {
-            if (input != null) {
-                dbProps.load(input);
-            }
-        } catch (Exception e) {
-            LOGGER.severe("Error al cargar properties: " + e.getMessage());
-        }
+            if (input != null) dbProps.load(input);
+        } catch (Exception e) { LOGGER.severe("Error al cargar properties: " + e.getMessage()); }
 
         Map<String, String> jpaProperties = new HashMap<>();
         jpaProperties.put("jakarta.persistence.jdbc.password", dbProps.getProperty("db.password"));
@@ -72,9 +53,13 @@ public class AppVeterinaria extends Application {
         try {
             emf = Persistence.createEntityManagerFactory("VeterinariaPU", jpaProperties);
             LOGGER.info("Conexión a la base de datos Neon establecida correctamente.");
-            
-            // Ejecutamos el script de datos de prueba
             ar.edu.unam.veterinaria.utils.CargadorDatosPrueba.inicializadorDatos();
+            
+            // ---> TRUCO DE OPTIMIZACIÓN: WARM-UP <---
+            // Ejecutamos una consulta fantasma para obligar a Hibernate a calentar los motores
+            try (jakarta.persistence.EntityManager em = emf.createEntityManager()) {
+                em.createQuery("SELECT 1 FROM Cliente c").setMaxResults(1).getResultList();
+            }
             
         } catch (Exception e) {
             LOGGER.severe("Error crítico al conectar con JPA: " + e.getMessage());
@@ -91,7 +76,6 @@ public class AppVeterinaria extends Application {
     }
 
     public static void main(String[] args) {
-        // Ahora el main es súper liviano, solo "gatilla" la aplicación gráfica
         launch(args);
     }
 }

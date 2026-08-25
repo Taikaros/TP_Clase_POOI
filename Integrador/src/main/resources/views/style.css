@@ -483,3 +483,7 @@
 .badge-especie-perro { -fx-background-color: #DCFCE7; -fx-text-fill: #15803D; }
 .badge-especie-gato { -fx-background-color: #F3E8FF; -fx-text-fill: #6B21A8; }
 .badge-especie-otro { -fx-background-color: #FEF9C3; -fx-text-fill: #A16207; }
+
+.login-splash {
+    -fx-background-color: linear-gradient(to bottom right, #2CA871, #065F46);
+}
