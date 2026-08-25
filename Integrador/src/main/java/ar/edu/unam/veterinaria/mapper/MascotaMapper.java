@@ -26,7 +26,7 @@ public class MascotaMapper {
             mascota.getFechaNacimiento(), 
             idCliente, 
             nombreDueno,
-            mascota.getNumeroFicha() // Extraemos el numero de ficha
+            mascota.getNumeroFicha()// Extraemos el numero de ficha
         );
     }
 }

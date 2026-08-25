@@ -31,7 +31,9 @@ public class TurnoMapper {
             detalles, 
             null, 
             "",
-            turno.calcularCostoTotal() // <-- Calcula la suma exacta
+            turno.calcularCostoTotal(),
+            null, 
+            null
         );
     }
 }

@@ -6,7 +6,6 @@
 
 <StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.TurnoController">
     
-    <!-- CAPA 0: GRILLA PRINCIPAL Y CALENDARIO -->
     <VBox spacing="20.0" style="-fx-background-color: #F8FAFC;">
         <padding><Insets top="40.0" right="40.0" bottom="40.0" left="40.0" /></padding>
         
@@ -24,9 +23,7 @@
         <HBox styleClass="timeline-container" alignment="CENTER" spacing="20.0">
             <Button onAction="#semanaAnterior" styleClass="timeline-btn"><graphic><FontIcon iconLiteral="fas-chevron-left" iconColor="#94A3B8"/></graphic></Button>
             <Label fx:id="lblMesAnio" text="MES AÑO" style="-fx-font-weight: bold; -fx-text-fill: #64748B; -fx-padding: 0 15 0 0;" />
-            
             <HBox fx:id="hboxCalendario" alignment="CENTER" spacing="10.0" HBox.hgrow="ALWAYS" />
-            
             <Button onAction="#semanaSiguiente" styleClass="timeline-btn"><graphic><FontIcon iconLiteral="fas-chevron-right" iconColor="#94A3B8"/></graphic></Button>
         </HBox>
 
@@ -61,10 +58,9 @@
         </TableView>
     </VBox>
 
-    <!-- CAPA 1: PANEL LATERAL DE FORMULARIO -->
     <HBox fx:id="overlayFormulario" styleClass="modal-overlay" visible="false" alignment="TOP_RIGHT">
         <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModal" />
-        <VBox styleClass="slide-panel" prefWidth="450.0" spacing="20.0">
+        <VBox styleClass="slide-panel" prefWidth="480.0" spacing="20.0">
             <HBox alignment="CENTER_LEFT">
                 <VBox>
                     <Label fx:id="lblTituloFormulario" text="Crear Nuevo Turno" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
@@ -106,11 +102,16 @@
                         <Label text="SERVICIOS" styleClass="label-form" />
                         <GridPane hgap="10" vgap="10">
                             <CheckBox fx:id="chkConsulta" text="Consulta General" GridPane.columnIndex="0" GridPane.rowIndex="0" textFill="#64748b"/>
-                            <CheckBox fx:id="chkVacunacion" text="Vacunación" GridPane.columnIndex="1" GridPane.rowIndex="0" textFill="#64748b"/>
+                            
+                            <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <CheckBox fx:id="chkVacunacion" text="Vacunación" textFill="#64748b" onAction="#toggleVacuna"/>
+                                <ComboBox fx:id="cbVacuna" promptText="Elija vacuna..." disable="true" prefWidth="130"/>
+                            </HBox>
+                            
                             <CheckBox fx:id="chkDesparasitacion" text="Desparasitación" GridPane.columnIndex="0" GridPane.rowIndex="1" textFill="#64748b"/>
                             <CheckBox fx:id="chkCirugia" text="Cirugía Menor" GridPane.columnIndex="1" GridPane.rowIndex="1" textFill="#64748b"/>
                             <CheckBox fx:id="chkEcografia" text="Ecografía" GridPane.columnIndex="0" GridPane.rowIndex="2" textFill="#64748b"/>
-                            <CheckBox fx:id="chkAnalisis" text="Análisis de Sangre" GridPane.columnIndex="1" GridPane.rowIndex="2" textFill="#64748b"/>
+                            <CheckBox fx:id="chkAnalisis" text="Análisis Sangre" GridPane.columnIndex="1" GridPane.rowIndex="2" textFill="#64748b"/>
                         </GridPane>
                     </VBox>
 
@@ -127,7 +128,6 @@
         </VBox>
     </HBox>
 
-    <!-- CAPA 2: PANEL LATERAL DE DETALLES -->
     <HBox fx:id="overlayDetalles" styleClass="modal-overlay" visible="false" alignment="TOP_RIGHT">
         <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModal" />
         <VBox styleClass="slide-panel" prefWidth="400.0" spacing="25.0">
@@ -158,6 +158,37 @@
                 </HBox>
             </VBox>
         </VBox>
+    </HBox>
+
+    <HBox fx:id="overlayAtencion" styleClass="modal-overlay" visible="false" alignment="CENTER">
+        <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModal" />
+        <VBox styleClass="slide-panel" prefWidth="500.0" spacing="20.0" maxHeight="450.0" style="-fx-background-radius: 12; -fx-padding: 30;">
+            <HBox alignment="CENTER_LEFT">
+                <VBox>
+                    <Label text="Atención Médica" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    <Label fx:id="lblAtencionMascota" text="Registrando historial clínico" style="-fx-text-fill: #64748B; -fx-font-size: 12px;" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#cerrarModal" styleClass="btn-close-modal">
+                    <graphic><FontIcon iconLiteral="fas-times" iconSize="18"/></graphic>
+                </Button>
+            </HBox>
+            <Separator />
+            <VBox spacing="10.0">
+                <Label text="DIAGNÓSTICO *" styleClass="label-form" />
+                <TextArea fx:id="txtDiagnostico" promptText="Describa el cuadro clínico encontrado..." wrapText="true" prefRowCount="4" styleClass="input-field" />
+            </VBox>
+            <VBox spacing="10.0">
+                <Label text="TRATAMIENTO" styleClass="label-form" />
+                <TextArea fx:id="txtTratamiento" promptText="Indique la medicación o pasos a seguir..." wrapText="true" prefRowCount="4" styleClass="input-field" />
+            </VBox>
+            <Region VBox.vgrow="ALWAYS" />
+            <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                <Button text="Cancelar" onAction="#cerrarModal" styleClass="btn-outline" />
+                <Button text="Finalizar Atención" onAction="#confirmarAtencion" styleClass="btn-primary" style="-fx-background-color: #10B981;" />
+            </HBox>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModal" />
     </HBox>
 
 </StackPane>
