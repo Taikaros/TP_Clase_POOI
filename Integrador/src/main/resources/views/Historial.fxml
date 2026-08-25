@@ -8,59 +8,71 @@
     <padding>
         <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
     </padding>
+    
     <!-- Cabecera -->
     <VBox spacing="5.0">
         <Label style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #1E293B;" text="Historial Médico" />
         <Label style="-fx-text-fill: #64748B; -fx-font-size: 14px;" text="Consulte el historial clínico completo de cada paciente" />
     </VBox>
+    
     <!-- Barra de Búsqueda y Filtros -->
     <HBox spacing="15.0" alignment="CENTER_LEFT">
         <HBox alignment="CENTER_LEFT" styleClass="search-box" HBox.hgrow="ALWAYS">
             <FontIcon iconLiteral="fas-search" iconColor="#94A3B8" iconSize="16"/>
             <TextField fx:id="txtBuscarMascota" promptText="Buscar por nombre de mascota o número de ficha..." styleClass="search-field" HBox.hgrow="ALWAYS" />
         </HBox>
-        <Button text="Rango de Fechas" onAction="#filtrarPorFecha" styleClass="btn-outline" />
-        <Button text="Tipo de Servicio" onAction="#filtrarPorServicio" styleClass="btn-outline" />
-        <Button text="Exportar PDF" onAction="#exportarPDF" styleClass="btn-outline" />
+        <Button text="Rango de Fechas" onAction="#filtrarPorFecha" styleClass="btn-outline">
+            <graphic><FontIcon iconLiteral="fas-calendar-day" iconColor="#D2B48C"/></graphic>
+        </Button>
+        <Button text="Tipo de Servicio" onAction="#filtrarPorServicio" styleClass="btn-outline">
+            <graphic><FontIcon iconLiteral="fas-filter" iconColor="#D2B48C"/></graphic>
+        </Button>
+        <Button text="Exportar PDF" onAction="#exportarPDF" styleClass="btn-outline">
+            <graphic><FontIcon iconLiteral="fas-file-pdf" iconColor="#D2B48C"/></graphic>
+        </Button>
     </HBox>
+    
     <!-- CONTENEDOR MAESTRO-DETALLE -->
     <HBox spacing="30.0" VBox.vgrow="ALWAYS" minHeight="0">
         
         <!-- Columna Izquierda: Lista de Pacientes -->
         <VBox spacing="10.0" prefWidth="320.0" minWidth="320.0" minHeight="0">
             <Label style="-fx-font-size: 12px; -fx-font-weight: 800; -fx-text-fill: #64748B; -fx-letter-spacing: 1px;" text="PACIENTES" />
-            <ListView fx:id="listaPacientes" VBox.vgrow="ALWAYS" styleClass="scroll-invisible" style="-fx-background-color: transparent; -fx-border-color: transparent;" />
+            <ListView fx:id="listaPacientes" VBox.vgrow="ALWAYS" styleClass="list-cards, scroll-invisible" />
         </VBox>
+        
         <!-- Columna Derecha: Detalle del Paciente -->
         <VBox fx:id="panelDetalle" spacing="20.0" HBox.hgrow="ALWAYS" minHeight="0">
             
             <!-- Tarjeta de Perfil -->
             <VBox styleClass="card" spacing="15.0">
                 <HBox spacing="20.0" alignment="CENTER_LEFT">
-                    <StackPane styleClass="avatar-circle">
-                        <FontIcon iconLiteral="fas-dog" iconSize="28" styleClass="avatar-icon"/>
+                    <StackPane styleClass="avatar-circle" style="-fx-background-color: #FEF3C7; -fx-min-width: 80px; -fx-min-height: 80px;">
+                        <FontIcon iconLiteral="fas-dog" iconSize="40" iconColor="#D97706"/>
                     </StackPane>
-                    <VBox spacing="5.0" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
+                    <VBox spacing="8.0" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
                         <HBox spacing="10.0" alignment="CENTER_LEFT">
-                            <Label fx:id="lblPerfilNombre" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" text="Nombre" />
-                            <Label fx:id="lblPerfilFicha" styleClass="badge-count" text="FCH-000" />
+                            <Label fx:id="lblPerfilNombre" style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: #1E293B;" text="Nombre" />
+                            <Label fx:id="lblPerfilFicha" styleClass="badge-count" style="-fx-background-color: #D1FAE5; -fx-text-fill: #059669;" text="FCH-000" />
                         </HBox>
-                        <Label fx:id="lblPerfilDetalles" style="-fx-text-fill: #64748B; -fx-font-size: 14px;" text="Detalles" />
+                        <Label fx:id="lblPerfilDetalles" style="-fx-text-fill: #64748B; -fx-font-size: 14px;" text="Raza · Especie · Dueño" />
                         <HBox spacing="15.0">
-                            <Label fx:id="lblPerfilEdad" style="-fx-text-fill: #64748B; -fx-font-weight: bold;" text="Edad: " />
-                            <Label fx:id="lblPerfilRegistros" style="-fx-text-fill: #64748B; -fx-font-weight: bold;" text="Registros: 0" />
+                            <Label fx:id="lblPerfilEdad" style="-fx-background-color: #F1F5F9; -fx-padding: 4 10; -fx-background-radius: 6; -fx-text-fill: #475569; -fx-font-weight: bold; -fx-font-size: 12px;" text="Edad: -" />
+                            <Label fx:id="lblPerfilRegistros" style="-fx-background-color: #F1F5F9; -fx-padding: 4 10; -fx-background-radius: 6; -fx-text-fill: #475569; -fx-font-weight: bold; -fx-font-size: 12px;" text="Registros: 0" />
                         </HBox>
                     </VBox>
                 </HBox>
             </VBox>
-            <Label style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" text="Línea de tiempo clínica" />
+            
+            <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" text="Línea de tiempo clínica" />
+            
             <!-- ScrollPane para los registros médicos -->
             <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-invisible" style="-fx-background-color: transparent;">
                 <VBox fx:id="contenedorLineaTiempo" spacing="15.0">
                     <padding><Insets right="15.0" top="5.0" bottom="5.0"/></padding>
                 </VBox>
             </ScrollPane>
+            
         </VBox>
     </HBox>
-    <!-- Prueba 01 -->
 </VBox>
