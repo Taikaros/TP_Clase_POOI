@@ -1,7 +1,9 @@
 package ar.edu.unam.veterinaria.controller;
 
 import ar.edu.unam.veterinaria.model.TipoServicio;
+import ar.edu.unam.veterinaria.model.Vacuna;
 import ar.edu.unam.veterinaria.service.TipoServicioService;
+import ar.edu.unam.veterinaria.service.VacunaService;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -9,111 +11,188 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 public class ConfiguracionController {
 
+    // --- ELEMENTOS DE SERVICIOS GENERALES ---
     @FXML private TableView<TipoServicio> tablaServicios;
     @FXML private TableColumn<TipoServicio, String> colNombre;
     @FXML private TableColumn<TipoServicio, Double> colPrecio;
-    @FXML private TableColumn<TipoServicio, Double> colDuracion;
-    @FXML private TableColumn<TipoServicio, Integer> colCupo;
-    
-    @FXML private TextField txtNombre;
-    @FXML private TextField txtPrecio;
-    @FXML private TextField txtDuracion;
-    @FXML private TextField txtCupo;
-    @FXML private Label lblTituloFormulario;
+    @FXML private TableColumn<TipoServicio, Integer> colDuracion, colCupo;
+    @FXML private TextField txtNombre, txtPrecio, txtDuracion, txtCupo;
+    @FXML private CheckBox chkEsPeluqueria;
     @FXML private Button btnEliminar;
+    @FXML private Label lblTituloFormulario;
 
     private TipoServicioService service = new TipoServicioService();
-    private TipoServicio servicioEnEdicion = null;
+    private TipoServicio servicioEnEdicion;
+
+    // --- ELEMENTOS DE VACUNAS ---
+    @FXML private TableView<Vacuna> tablaVacunas;
+    @FXML private TableColumn<Vacuna, String> colVacNombre, colVacEnfermedad;
+    @FXML private TableColumn<Vacuna, Integer> colVacMeses;
+    @FXML private TextField txtVacNombre, txtVacEnfermedad, txtVacMeses;
+    @FXML private Button btnEliminarVacuna;
+    @FXML private Label lblTituloFormVacuna;
+
+    private VacunaService vacunaService = new VacunaService();
+    private Vacuna vacunaEnEdicion;
 
     @FXML
     public void initialize() {
+        // Init Tabla Servicios
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombreDescriptivo"));
         colPrecio.setCellValueFactory(new PropertyValueFactory<>("precioBase"));
         colDuracion.setCellValueFactory(new PropertyValueFactory<>("duracion"));
         colCupo.setCellValueFactory(new PropertyValueFactory<>("limiteCupoDiario"));
-        
-        colPrecio.setCellFactory(col -> new TableCell<TipoServicio, Double>() {
-            @Override protected void updateItem(Double price, boolean empty) {
+
+        colPrecio.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double price, boolean empty) {
                 super.updateItem(price, empty);
-                if (empty || price == null) setText(null);
-                else setText(String.format("$ %.2f", price));
+                setText((empty || price == null) ? null : String.format("$ %.2f", price));
             }
         });
 
-        tablaServicios.getSelectionModel().selectedItemProperty().addListener((obs, old, newVal) -> {
-            if(newVal != null) {
-                cargarDatosEnFormulario(newVal);
-            }
+        tablaServicios.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) cargarDatosEnFormulario(newVal);
         });
 
-        limpiarFormulario();
-        cargarTabla();
+        // Init Tabla Vacunas
+        colVacNombre.setCellValueFactory(new PropertyValueFactory<>("nombreComercial"));
+        colVacEnfermedad.setCellValueFactory(new PropertyValueFactory<>("enfermedad"));
+        colVacMeses.setCellValueFactory(new PropertyValueFactory<>("periodicidad"));
+
+        tablaVacunas.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) cargarDatosVacuna(newVal);
+        });
+
+        cargarTablaServicios();
+        cargarTablaVacunas();
     }
 
-    private void cargarTabla() {
+    // ==================== LÓGICA DE SERVICIOS ====================
+    private void cargarTablaServicios() {
         tablaServicios.setItems(FXCollections.observableArrayList(service.obtenerTodos()));
     }
 
     @FXML
-    public void limpiarFormulario() {
+    private void limpiarFormulario() {
         servicioEnEdicion = null;
-        txtNombre.clear();
-        txtPrecio.clear();
-        txtDuracion.clear();
-        txtCupo.clear();
         lblTituloFormulario.setText("Nuevo Servicio");
+        txtNombre.clear(); txtPrecio.clear(); txtDuracion.clear(); txtCupo.clear();
+        chkEsPeluqueria.setSelected(false);
         btnEliminar.setVisible(false);
         tablaServicios.getSelectionModel().clearSelection();
     }
 
     private void cargarDatosEnFormulario(TipoServicio ts) {
         servicioEnEdicion = ts;
-        txtNombre.setText(ts.getNombreDescriptivo());
+        lblTituloFormulario.setText("Editar Servicio");
+        String nombreReal = ts.getNombreDescriptivo();
+        if (nombreReal.startsWith("[PELUQUERÍA] ")) {
+            chkEsPeluqueria.setSelected(true);
+            nombreReal = nombreReal.replace("[PELUQUERÍA] ", "");
+        } else {
+            chkEsPeluqueria.setSelected(false);
+        }
+        txtNombre.setText(nombreReal);
         txtPrecio.setText(String.valueOf(ts.getPrecioBase()));
         txtDuracion.setText(String.valueOf(ts.getDuracion()));
         txtCupo.setText(String.valueOf(ts.getLimiteCupoDiario()));
-        lblTituloFormulario.setText("Editar Servicio");
         btnEliminar.setVisible(true);
     }
 
     @FXML
-    public void guardarServicio() {
+    private void guardarServicio() {
         if (txtNombre.getText().trim().isEmpty() || txtPrecio.getText().trim().isEmpty()) {
             mostrarAlerta("Campos Obligatorios", "El nombre y el precio son obligatorios.", Alert.AlertType.WARNING);
             return;
         }
-
         try {
-            String nombre = txtNombre.getText().trim();
-            Double precio = Double.parseDouble(txtPrecio.getText().replace(",", "."));
-            double duracion = txtDuracion.getText().isEmpty() ? 30.0 : Double.parseDouble(txtDuracion.getText().replace(",", "."));
-            Integer cupo = txtCupo.getText().isEmpty() ? 10 : Integer.parseInt(txtCupo.getText());
+            String nombreFinal = chkEsPeluqueria.isSelected() ? "[PELUQUERÍA] " + txtNombre.getText().trim() : txtNombre.getText().trim();
+            Double precio = Double.parseDouble(txtPrecio.getText().trim());
+            Double duracion = txtDuracion.getText().trim().isEmpty() ? 30.0 : Double.parseDouble(txtDuracion.getText().trim());
+            Integer cupo = txtCupo.getText().trim().isEmpty() ? 10 : Integer.parseInt(txtCupo.getText().trim());
 
             if (servicioEnEdicion == null) {
-                TipoServicio nuevo = new TipoServicio(nombre, precio, duracion, cupo);
-                service.guardar(nuevo);
-                mostrarAlerta("Éxito", "Servicio creado correctamente.", Alert.AlertType.INFORMATION);
+                service.guardar(new TipoServicio(nombreFinal, precio, duracion, cupo));
+                mostrarAlerta("Éxito", "Servicio creado.", Alert.AlertType.INFORMATION);
             } else {
-                servicioEnEdicion.setDetalles(nombre, precio, duracion, cupo);
+                servicioEnEdicion.setNombreDescriptivo(nombreFinal);
+                servicioEnEdicion.setPrecioBase(precio);
+                servicioEnEdicion.setDuracion(duracion);
+                servicioEnEdicion.setLimiteCupoDiario(cupo);
                 service.actualizar(servicioEnEdicion);
-                mostrarAlerta("Éxito", "Servicio actualizado correctamente.", Alert.AlertType.INFORMATION);
             }
-            
             limpiarFormulario();
-            cargarTabla();
-
-        } catch(NumberFormatException e) {
-            mostrarAlerta("Error de Formato", "Por favor, ingrese valores numéricos válidos en precio, duración y cupo.", Alert.AlertType.ERROR);
+            cargarTablaServicios();
+        } catch (NumberFormatException e) {
+            mostrarAlerta("Error", "Valores numéricos inválidos.", Alert.AlertType.ERROR);
         }
     }
 
     @FXML
-    public void eliminarServicio() {
+    private void eliminarServicio() {
         if (servicioEnEdicion != null) {
             service.eliminar(servicioEnEdicion.getId());
             limpiarFormulario();
-            cargarTabla();
-            mostrarAlerta("Éxito", "Servicio eliminado de forma definitiva.", Alert.AlertType.INFORMATION);
+            cargarTablaServicios();
+        }
+    }
+
+    // ==================== LÓGICA DE VACUNAS ====================
+    private void cargarTablaVacunas() {
+        tablaVacunas.setItems(FXCollections.observableArrayList(vacunaService.obtenerTodas()));
+    }
+
+    @FXML
+    private void limpiarFormularioVacuna() {
+        vacunaEnEdicion = null;
+        lblTituloFormVacuna.setText("Nueva Vacuna");
+        txtVacNombre.clear(); txtVacEnfermedad.clear(); txtVacMeses.clear();
+        btnEliminarVacuna.setVisible(false);
+        tablaVacunas.getSelectionModel().clearSelection();
+    }
+
+    private void cargarDatosVacuna(Vacuna v) {
+        vacunaEnEdicion = v;
+        lblTituloFormVacuna.setText("Editar Vacuna");
+        txtVacNombre.setText(v.getNombreComercial());
+        txtVacEnfermedad.setText(v.getEnfermedad());
+        txtVacMeses.setText(String.valueOf(v.getPeriodicidad()));
+        btnEliminarVacuna.setVisible(true);
+    }
+
+    @FXML
+    private void guardarVacuna() {
+        if (txtVacNombre.getText().trim().isEmpty() || txtVacMeses.getText().trim().isEmpty()) {
+            mostrarAlerta("Campos Obligatorios", "Nombre y Periodicidad son obligatorios.", Alert.AlertType.WARNING);
+            return;
+        }
+        try {
+            String nombre = txtVacNombre.getText().trim();
+            String enfermedad = txtVacEnfermedad.getText().trim();
+            Integer meses = Integer.parseInt(txtVacMeses.getText().trim());
+
+            if (vacunaEnEdicion == null) {
+                vacunaService.guardar(new Vacuna(nombre, enfermedad, meses));
+            } else {
+                vacunaEnEdicion.setNombreComercial(nombre);
+                vacunaEnEdicion.setEnfermedad(enfermedad);
+                vacunaEnEdicion.setPeriodicidad(meses);
+                vacunaService.guardar(vacunaEnEdicion);
+            }
+            limpiarFormularioVacuna();
+            cargarTablaVacunas();
+        } catch (NumberFormatException e) {
+            mostrarAlerta("Error", "La periodicidad debe ser en meses (números enteros).", Alert.AlertType.ERROR);
+        }
+    }
+
+    @FXML
+    private void eliminarVacuna() {
+        if (vacunaEnEdicion != null) {
+            vacunaService.eliminar(vacunaEnEdicion.getId());
+            limpiarFormularioVacuna();
+            cargarTablaVacunas();
         }
     }
 

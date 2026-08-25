@@ -54,10 +54,10 @@ public class MainLayoutController {
 
     @FXML public void cargarVistaClientes(ActionEvent event) { activarBoton(btnClientes); cargarVista("clientes.fxml"); }
     @FXML public void cargarVistaTurnos(ActionEvent event) { activarBoton(btnTurnos); cargarVista("turnos.fxml"); }
-    @FXML public void cargarVistaHistorial(ActionEvent event) { activarBoton(btnHistorial); cargarVista("Historial.fxml"); }
+    @FXML public void cargarVistaHistorial(ActionEvent event) { activarBoton(btnHistorial); cargarVista("Consultorio.fxml"); }
     @FXML public void cargarVistaVacunaciones(ActionEvent event) { activarBoton(btnVacunaciones); cargarVista("Vacunaciones.fxml"); }
     @FXML public void cargarVistaVeterinarios(ActionEvent event) { activarBoton(btnVeterinarios); cargarVista("Veterinarios.fxml"); }
-    @FXML public void cargarVistaGuarderia(ActionEvent event) { activarBoton(btnGuarderia); cargarVista("Guarderia.fxml"); }
+    @FXML public void cargarVistaGuarderia(ActionEvent event) { activarBoton(btnGuarderia); cargarVista("peluqueriaYguarderia.fxml"); }
     @FXML public void cargarVistaConfiguracion(ActionEvent event) { activarBoton(btnConfiguracion); cargarVista("configuracion.fxml"); }
 
     @FXML
