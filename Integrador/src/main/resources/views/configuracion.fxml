@@ -9,66 +9,101 @@
     
     <HBox alignment="CENTER_LEFT">
         <VBox spacing="5.0">
-            <Label text="Configuración de Servicios" style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #1E293B;" />
-            <Label text="Gestione el catálogo de prácticas y precios del sistema" style="-fx-text-fill: #64748B; -fx-font-size: 14px;" />
+            <Label text="Configuración de Servicios y Vacunas" style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #1E293B;" />
+            <Label text="Gestione el catálogo de prácticas, precios y periodicidad de vacunas" style="-fx-text-fill: #64748B; -fx-font-size: 14px;" />
         </VBox>
-        <Region HBox.hgrow="ALWAYS" />
-        <Button text=" Nuevo Servicio" onAction="#limpiarFormulario" styleClass="btn-primary">
-            <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" iconSize="14"/></graphic>
-        </Button>
     </HBox>
 
-    <HBox spacing="30.0" VBox.vgrow="ALWAYS">
-        <!-- TABLA -->
-        <VBox spacing="10.0" HBox.hgrow="ALWAYS">
-            <TableView fx:id="tablaServicios" VBox.vgrow="ALWAYS" styleClass="table-as-list">
-                <columns>
-                    <TableColumn fx:id="colNombre" text="Servicio" prefWidth="250.0" />
-                    <TableColumn fx:id="colPrecio" text="Precio Base" prefWidth="120.0" />
-                    <TableColumn fx:id="colDuracion" text="Duración (min)" prefWidth="120.0" />
-                    <TableColumn fx:id="colCupo" text="Cupo Diario" prefWidth="100.0" />
-                </columns>
-            </TableView>
-        </VBox>
-        
-        <!-- PANEL LATERAL CRUD -->
-            <VBox spacing="20.0" styleClass="card" prefWidth="350.0" minWidth="350.0">
-                <Label fx:id="lblTituloFormulario" text="Nuevo Servicio" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
-                <Separator />
-                            
-                <VBox spacing="5.0">
-                    <Label text="NOMBRE DESCRIPTIVO *" styleClass="label-form" />
-                    <TextField fx:id="txtNombre" styleClass="input-field" promptText="Ej. Radiografía" />
-                    <CheckBox fx:id="chkEsPeluqueria" text="¿Es un servicio de Peluquería?" style="-fx-text-fill: #64748B; -fx-font-size: 12px;"/>
+    <TabPane VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
+        <!-- TAB 1: SERVICIOS NORMALES -->
+        <Tab text="Servicios y Prácticas">
+            <HBox spacing="30.0">
+                <padding><Insets top="20.0" /></padding>
+                <VBox spacing="10.0" HBox.hgrow="ALWAYS">
+                    <TableView fx:id="tablaServicios" VBox.vgrow="ALWAYS" styleClass="table-as-list">
+                        <columns>
+                            <TableColumn fx:id="colNombre" text="Servicio" prefWidth="250.0" />
+                            <TableColumn fx:id="colPrecio" text="Precio Base" prefWidth="120.0" />
+                            <TableColumn fx:id="colDuracion" text="Duración (min)" prefWidth="120.0" />
+                            <TableColumn fx:id="colCupo" text="Cupo Diario" prefWidth="100.0" />
+                        </columns>
+                    </TableView>
                 </VBox>
-                <VBox spacing="5.0">
-                    <Label text="PRECIO BASE ($) *" styleClass="label-form" />
-                    <TextField fx:id="txtPrecio" styleClass="input-field" promptText="0.00" />
+                <VBox spacing="20.0" styleClass="card" prefWidth="350.0" minWidth="350.0">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label fx:id="lblTituloFormulario" text="Nuevo Servicio" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button onAction="#limpiarFormulario" styleClass="btn-outline"><graphic><FontIcon iconLiteral="fas-broom" /></graphic></Button>
+                    </HBox>
+                    <Separator />
+                    <VBox spacing="5.0">
+                        <Label text="NOMBRE DESCRIPTIVO *" styleClass="label-form" />
+                        <TextField fx:id="txtNombre" styleClass="input-field" promptText="Ej. Radiografía" />
+                        <CheckBox fx:id="chkEsPeluqueria" text="¿Es un servicio de Peluquería?" style="-fx-text-fill: #64748B; -fx-font-size: 12px;"/>
+                    </VBox>
+                    <VBox spacing="5.0">
+                        <Label text="PRECIO BASE ($) *" styleClass="label-form" />
+                        <TextField fx:id="txtPrecio" styleClass="input-field" promptText="0.00" />
+                    </VBox>
+                    <HBox spacing="15.0">
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                            <Label text="DURACIÓN (Minutos)" styleClass="label-form" />
+                            <TextField fx:id="txtDuracion" styleClass="input-field" promptText="30" />
+                        </VBox>
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                            <Label text="CUPO DIARIO" styleClass="label-form" />
+                            <TextField fx:id="txtCupo" styleClass="input-field" promptText="10" />
+                        </VBox>
+                    </HBox>
+                    <Region VBox.vgrow="ALWAYS" />
+                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                        <Button fx:id="btnEliminar" text="Eliminar" onAction="#eliminarServicio" styleClass="btn-danger-text" visible="false" />
+                        <Button text="Guardar" onAction="#guardarServicio" styleClass="btn-primary" />
+                    </HBox>
                 </VBox>
-                <HBox spacing="15.0">
-                    <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                        <Label text="DURACIÓN (Minutos)" styleClass="label-form" />
-                        <TextField fx:id="txtDuracion" styleClass="input-field" promptText="30" />
-                    </VBox>
-                    <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                        <Label text="CUPO DIARIO" styleClass="label-form" />
-                        <TextField fx:id="txtCupo" styleClass="input-field" promptText="10" />
-                    </VBox>
-                </HBox>
-                            
-                <Region VBox.vgrow="ALWAYS" />
-                            
-                <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                    <Button fx:id="btnEliminar" text="Eliminar" onAction="#eliminarServicio" styleClass="btn-danger-text" visible="false" />
-                    <Button text="Guardar" onAction="#guardarServicio" styleClass="btn-primary" />
-                </HBox>
-            </VBox>
-            
-            <Region VBox.vgrow="ALWAYS" />
-            
-            <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                <Button fx:id="btnEliminar" text="Eliminar" onAction="#eliminarServicio" styleClass="btn-danger-text" visible="false" />
-                <Button text="Guardar" onAction="#guardarServicio" styleClass="btn-primary" />
             </HBox>
-    </HBox>
+        </Tab>
+
+        <!-- TAB 2: CATÁLOGO DE VACUNAS -->
+        <Tab text="Catálogo de Vacunas">
+            <HBox spacing="30.0">
+                <padding><Insets top="20.0" /></padding>
+                <VBox spacing="10.0" HBox.hgrow="ALWAYS">
+                    <TableView fx:id="tablaVacunas" VBox.vgrow="ALWAYS" styleClass="table-as-list">
+                        <columns>
+                            <TableColumn fx:id="colVacNombre" text="Nombre Comercial" prefWidth="200.0" />
+                            <TableColumn fx:id="colVacEnfermedad" text="Enfermedad" prefWidth="200.0" />
+                            <TableColumn fx:id="colVacMeses" text="Periodicidad (Meses)" prefWidth="120.0" />
+                        </columns>
+                    </TableView>
+                </VBox>
+                <VBox spacing="20.0" styleClass="card" prefWidth="350.0" minWidth="350.0">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label fx:id="lblTituloFormVacuna" text="Nueva Vacuna" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Button onAction="#limpiarFormularioVacuna" styleClass="btn-outline"><graphic><FontIcon iconLiteral="fas-broom" /></graphic></Button>
+                    </HBox>
+                    <Separator />
+                    <VBox spacing="5.0">
+                        <Label text="NOMBRE COMERCIAL *" styleClass="label-form" />
+                        <TextField fx:id="txtVacNombre" styleClass="input-field" promptText="Ej. Nobivac Séxtuple" />
+                    </VBox>
+                    <VBox spacing="5.0">
+                        <Label text="ENFERMEDAD PREVENIDA *" styleClass="label-form" />
+                        <TextField fx:id="txtVacEnfermedad" styleClass="input-field" promptText="Ej. Moquillo / Parvovirus" />
+                    </VBox>
+                    <VBox spacing="5.0">
+                        <Label text="PERIODICIDAD (Meses) *" styleClass="label-form" />
+                        <TextField fx:id="txtVacMeses" styleClass="input-field" promptText="Ej. 12 (Para anual)" />
+                        <Label text="Ayuda al cálculo automático de próximos vencimientos en el Dashboard." style="-fx-text-fill: #64748B; -fx-font-size: 11px;" wrapText="true"/>
+                    </VBox>
+                    <Region VBox.vgrow="ALWAYS" />
+                    <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                        <Button fx:id="btnEliminarVacuna" text="Eliminar" onAction="#eliminarVacuna" styleClass="btn-danger-text" visible="false" />
+                        <Button text="Guardar" onAction="#guardarVacuna" styleClass="btn-primary" />
+                    </HBox>
+                </VBox>
+            </HBox>
+        </Tab>
+    </TabPane>
 </VBox>
