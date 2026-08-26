@@ -32,6 +32,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.function.UnaryOperator;
 
 public class GuarderiaPeluqueriaController {
 
@@ -111,13 +112,33 @@ public class GuarderiaPeluqueriaController {
         cargarDatos();
     }
 
-    private void configurarCalendario() {
+   private void configurarCalendario() {
+        // --- 1. FILTRO DE TEXTO PARA AMBOS DATEPICKERS (Solo números y barras) ---
+        UnaryOperator<TextFormatter.Change> filtroFecha = change -> {
+            if (change.getControlNewText().matches("[0-9/]*")) {
+                return change;
+            }
+            return null; // Si intentan poner letras, se bloquea
+        };
+        dpFecha.getEditor().setTextFormatter(new TextFormatter<>(filtroFecha));
+        dpFechaSalida.getEditor().setTextFormatter(new TextFormatter<>(filtroFecha));
+
+        // --- 2. FORMATEADOR VISUAL PARA AMBOS DATEPICKERS (dd/MM/yyyy) ---
+        StringConverter<LocalDate> convertidorFecha = new StringConverter<LocalDate>() {
+            private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            @Override public String toString(LocalDate date) { return date != null ? formatter.format(date) : ""; }
+            @Override public LocalDate fromString(String string) { return (string == null || string.isEmpty()) ? null : LocalDate.parse(string, formatter); }
+        };
+        dpFecha.setConverter(convertidorFecha);
+        dpFechaSalida.setConverter(convertidorFecha);
+
+        // --- 3. REGLAS VISUALES DEL CALENDARIO DE INGRESO ---
         dpFecha.setDayCellFactory(picker -> new DateCell() {
             @Override
             public void updateItem(LocalDate date, boolean empty) {
                 super.updateItem(date, empty);
-                // Bloquear las fechas pasadas
-                if (empty || date.isBefore(LocalDate.now().plusDays(1))) {
+                // Bloquear las fechas pasadas (no se puede agendar hacia atrás)
+                if (empty || date.isBefore(LocalDate.now())) {
                     setDisable(true);
                     setStyle("-fx-background-color: #f3f4f6; -fx-text-fill: #9ca3af;");
                 }
@@ -129,24 +150,48 @@ public class GuarderiaPeluqueriaController {
             }
         });
         
+        // Validación extra: Si el usuario tipea a mano una fecha pasada o un domingo en dpFecha
+        dpFecha.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                if (newVal.isBefore(LocalDate.now())) {
+                    dpFecha.setValue(oldVal);
+                    mostrarAlerta("Fecha Inválida", "La fecha de ingreso no puede ser en el pasado.", Alert.AlertType.WARNING);
+                } else if (newVal.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                    dpFecha.setValue(oldVal);
+                    mostrarAlerta("Día Inválido", "No se reciben mascotas los días domingo.", Alert.AlertType.WARNING);
+                }
+            }
+        });
+
+        // --- 4. REGLAS DEL CALENDARIO DE SALIDA (Depende de dpFecha) ---
         dpFecha.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 dpFechaSalida.setDayCellFactory(picker -> new DateCell() {
                     @Override
                     public void updateItem(LocalDate date, boolean empty) {
                         super.updateItem(date, empty);
-                        // Para la SALIDA de la guardería, solo bloqueamos los días previos al ingreso
-                        // (Aquí los sábados y domingos quedan habilitados para salir)
-                        if (empty || !date.isAfter(newVal)) {
+                        // Para la SALIDA de la guardería, bloqueamos los días previos al ingreso
+                        if (empty || date.isBefore(newVal)) {
                             setDisable(true);
                             setStyle("-fx-background-color: #f3f4f6; -fx-text-fill: #9ca3af;");
                         }
                     }
                 });
-                if (dpFechaSalida.getValue() != null && !dpFechaSalida.getValue().isAfter(newVal)) {
-                    dpFechaSalida.setValue(newVal.plusDays(1));
+
+                // Validación extra: Si el usuario tipea a mano una fecha de salida anterior a la entrada
+                if (dpFechaSalida.getValue() != null && dpFechaSalida.getValue().isBefore(newVal)) {
+                    dpFechaSalida.setValue(newVal); 
+                    mostrarAlerta("Fecha Inválida", "La fecha de salida no puede ser anterior a la de ingreso.", Alert.AlertType.WARNING);
                 }
             }
+        });
+        
+        // Validación extra por si tipea a mano en dpFechaSalida directamente
+        dpFechaSalida.valueProperty().addListener((obs, oldVal, newVal) -> {
+             if (newVal != null && dpFecha.getValue() != null && newVal.isBefore(dpFecha.getValue())) {
+                 dpFechaSalida.setValue(oldVal != null ? oldVal : dpFecha.getValue());
+                 mostrarAlerta("Fecha Inválida", "La fecha de salida no puede ser anterior a la de ingreso.", Alert.AlertType.WARNING);
+             }
         });
     }
 
@@ -329,6 +374,16 @@ public class GuarderiaPeluqueriaController {
         dpFechaSalida.setValue(LocalDate.now().plusDays(2));
         
         prepararFormulario("Nuevo Ingreso - Guardería", "JAULA ASIGNADA", jaulas);
+        
+        // BLOQUEO INTELIGENTE: Solo habilitar Guardar cuando los obligatorios estén llenos
+        btnConfirmar.disableProperty().bind(
+            cbCliente.valueProperty().isNull()
+            .or(cbMascota.valueProperty().isNull())
+            .or(dpFecha.valueProperty().isNull())
+            .or(dpFechaSalida.valueProperty().isNull())
+            .or(cbHora.valueProperty().isNull())
+            .or(cbTipoServicio.valueProperty().isNull())
+        );
     }
 
     @FXML
@@ -346,6 +401,15 @@ public class GuarderiaPeluqueriaController {
         boxGuarderiaExtras.setManaged(false);
         
         prepararFormulario("Nuevo Turno - Peluquería", "TIPO DE CORTE / SERVICIO", cortes);
+        
+        // BLOQUEO INTELIGENTE: (Igual que el anterior pero sin la fecha de salida, porque peluquería no lo usa)
+        btnConfirmar.disableProperty().bind(
+            cbCliente.valueProperty().isNull()
+            .or(cbMascota.valueProperty().isNull())
+            .or(dpFecha.valueProperty().isNull())
+            .or(cbHora.valueProperty().isNull())
+            .or(cbTipoServicio.valueProperty().isNull())
+        );
     }
 
     private void prepararFormulario(String titulo, String labelServicio, ObservableList<Object> opciones) {

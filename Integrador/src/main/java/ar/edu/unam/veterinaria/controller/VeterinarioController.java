@@ -13,15 +13,17 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public class VeterinarioController {
 
     // --- VARIABLES DE ESTADO ---
     private Long idVeterinarioEnEdicion = null;
-    private List<VeterinarioDTO> masterDataVeterinarios = new ArrayList<>(); // Caché para el buscador
+    private List<VeterinarioDTO> masterDataVeterinarios = new ArrayList<>(); 
 
     // Contenedores Principales
     @FXML private StackPane overlayEspecialidades;
@@ -57,18 +59,124 @@ public class VeterinarioController {
 
     @FXML
     public void initialize() {
+        // --- 1. FILTROS DE NOMBRES Y TELÉFONO ---
+        UnaryOperator<TextFormatter.Change> filtroNombres = change -> {
+            if (!change.getControlNewText().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s]*")) return null; 
+            if (change.isAdded()) {
+                String textoInsertado = change.getText(); 
+                String textoControl = change.getControlText(); 
+                int pos = change.getRangeStart(); 
+                StringBuilder modificado = new StringBuilder();
+                boolean hacerMayuscula = (pos == 0 || textoControl.charAt(pos - 1) == ' ');
+
+                for (char c : textoInsertado.toCharArray()) {
+                    if (c == ' ') {
+                        hacerMayuscula = true;
+                        modificado.append(c);
+                    } else if (hacerMayuscula) {
+                        modificado.append(Character.toUpperCase(c));
+                        hacerMayuscula = false; 
+                    } else {
+                        modificado.append(Character.toLowerCase(c));
+                    }
+                }
+                change.setText(modificado.toString());
+            }
+            return change;
+        };
+
+        UnaryOperator<TextFormatter.Change> filtroNumeros = change -> {
+            if (change.getControlNewText().matches("[0-9]*")) return change;
+            return null;
+        };
+
+        txtVetNombre.setTextFormatter(new TextFormatter<>(filtroNombres));
+        txtVetApellido.setTextFormatter(new TextFormatter<>(filtroNombres));
+        txtNuevaEspNombre.setTextFormatter(new TextFormatter<>(filtroNombres));
+        txtVetTelefono.setTextFormatter(new TextFormatter<>(filtroNumeros));
+
+        // --- 2. ASIGNACIÓN DE LA MÁSCARA INTELIGENTE A LOS HORARIOS ---
+        aplicarMascaraHora(txtHoraLun); aplicarMascaraHora(txtHoraMar);
+        aplicarMascaraHora(txtHoraMie); aplicarMascaraHora(txtHoraJue);
+        aplicarMascaraHora(txtHoraVie); aplicarMascaraHora(txtHoraSab);
+        aplicarMascaraHora(txtHoraDom);
+
+        // --- 3. BLOQUEO INTELIGENTE DEL BOTÓN "GUARDAR" ---
+        // Se bloquea si faltan datos obligatorios O si no hay NINGÚN DÍA seleccionado
+        btnGuardarFormulario.disableProperty().bind(
+            txtVetNombre.textProperty().isEmpty()
+            .or(txtVetApellido.textProperty().isEmpty())
+            .or(txtVetMatricula.textProperty().isEmpty())
+            .or(
+                chkLun.selectedProperty().not()
+                .and(chkMar.selectedProperty().not())
+                .and(chkMie.selectedProperty().not())
+                .and(chkJue.selectedProperty().not())
+                .and(chkVie.selectedProperty().not())
+                .and(chkSab.selectedProperty().not())
+                .and(chkDom.selectedProperty().not())
+            )
+        );
+
+        // Configuración de tabla y combo
         colEspNombre.setCellValueFactory(new PropertyValueFactory<>("nombreEspecialidad"));
         colEspDesc.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
         
-        // Activamos los Listeners (Si escriben o eligen una especialidad, se filtra automático)
         txtBuscar.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
         cbFiltroEspecialidad.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
 
         cargarDirectorio();
     }
 
+    // ==========================================
+    // MÉTODOS DE VALIDACIÓN Y MÁSCARAS DE HORA
+    // ==========================================
+    
+    private void aplicarMascaraHora(TextField txt) {
+        // Bloqueo estricto: Solo números, dos puntos, guión y máximo 11 caracteres.
+        txt.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getControlNewText().length() > 11) return null;
+            if (!change.getControlNewText().matches("[0-9:\\-]*")) return null;
+            return change;
+        }));
+
+        // Inserción automática de caracteres al tipear
+        txt.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.length() > oldVal.length()) { // Solo se activa si el usuario está agregando texto
+                if (newVal.length() == 2 && !newVal.contains(":")) {
+                    txt.setText(newVal + ":");
+                } else if (newVal.length() == 5 && !newVal.contains("-")) {
+                    txt.setText(newVal + "-");
+                } else if (newVal.length() == 8 && newVal.chars().filter(ch -> ch == ':').count() == 1) {
+                    txt.setText(newVal + ":");
+                }
+            }
+        });
+    }
+
+    private boolean esHorarioValido(String horario) {
+        if (horario == null || horario.length() != 11) return false;
+        
+        // Expresión Regular estricta que impide cosas como 90:78 o 26:88
+        if (!horario.matches("^([01][0-9]|2[0-3]):[0-5][0-9]-([01][0-9]|2[0-3]):[0-5][0-9]$")) {
+            return false;
+        }
+
+        try {
+            // Dividimos y comprobamos que la salida sea MAYOR a la entrada
+            String[] partes = horario.split("-");
+            LocalTime entrada = LocalTime.parse(partes[0]);
+            LocalTime salida = LocalTime.parse(partes[1]);
+            
+            return salida.isAfter(entrada);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ==========================================
+
     private void cargarDirectorio() {
-        // 1. Cargar el ComboBox de Filtros para matar el "cuadrado blanco"
         List<String> nombresEsp = new ArrayList<>();
         nombresEsp.add("Todas las especialidades");
         nombresEsp.addAll(espService.obtenerTodas().stream().map(EspecialidadDTO::getNombreEspecialidad).collect(Collectors.toList()));
@@ -81,14 +189,10 @@ public class VeterinarioController {
             cbFiltroEspecialidad.getSelectionModel().selectFirst();
         }
 
-        // 2. Traer los veterinarios
         masterDataVeterinarios = vetService.obtenerTodos();
-        
-        // 3. Aplicar filtros visuales
         aplicarFiltros();
     }
 
-    // --- MOTOR DE BÚSQUEDA ---
     private void aplicarFiltros() {
         gridVeterinarios.getChildren().clear();
         
@@ -117,7 +221,6 @@ public class VeterinarioController {
         }
     }
 
-    // --- MOTOR DE TARJETAS ---
     private VBox crearTarjeta(VeterinarioDTO vet) {
         VBox card = new VBox(15);
         card.getStyleClass().add("vet-card");
@@ -261,9 +364,24 @@ public class VeterinarioController {
 
     @FXML
     private void guardarVeterinario() {
-        if (txtVetNombre.getText().trim().isEmpty() || txtVetApellido.getText().trim().isEmpty() || txtVetMatricula.getText().trim().isEmpty()) {
-            mostrarAlerta("Campos Incompletos", "El Nombre, Apellido y Matrícula son obligatorios.");
-            return;
+        // Obtenemos los CheckBoxes y los TextFields en arreglos paralelos para validarlos más fácil
+        CheckBox[] chks = {chkLun, chkMar, chkMie, chkJue, chkVie, chkSab, chkDom};
+        TextField[] txts = {txtHoraLun, txtHoraMar, txtHoraMie, txtHoraJue, txtHoraVie, txtHoraSab, txtHoraDom};
+        String[] nombresDias = {"Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"};
+
+        List<String> horarios = new ArrayList<>();
+        
+        // Verificamos si los horarios que marcó son válidos
+        for (int i = 0; i < 7; i++) {
+            if (chks[i].isSelected()) {
+                String horaStr = txts[i].getText().trim();
+                
+                if (!esHorarioValido(horaStr)) {
+                    mostrarAlerta("Horario Inválido", "El horario del día " + nombresDias[i] + " es incorrecto.\nDebe ser en formato 24hs (ej. 09:00-17:00) y la salida debe ser posterior al ingreso.");
+                    return; // Aborta el guardado si hay un error en alguna hora
+                }
+                horarios.add(nombresDias[i] + ": " + horaStr);
+            }
         }
 
         List<Long> idsEspecialidadesSeleccionadas = new ArrayList<>();
@@ -279,22 +397,13 @@ public class VeterinarioController {
             return;
         }
 
-        List<String> horarios = new ArrayList<>();
-        if (chkLun != null && chkLun.isSelected() && !txtHoraLun.getText().trim().isEmpty()) horarios.add("Lun: " + txtHoraLun.getText().trim());
-        if (chkMar != null && chkMar.isSelected() && !txtHoraMar.getText().trim().isEmpty()) horarios.add("Mar: " + txtHoraMar.getText().trim());
-        if (chkMie != null && chkMie.isSelected() && !txtHoraMie.getText().trim().isEmpty()) horarios.add("Mié: " + txtHoraMie.getText().trim());
-        if (chkJue != null && chkJue.isSelected() && !txtHoraJue.getText().trim().isEmpty()) horarios.add("Jue: " + txtHoraJue.getText().trim());
-        if (chkVie != null && chkVie.isSelected() && !txtHoraVie.getText().trim().isEmpty()) horarios.add("Vie: " + txtHoraVie.getText().trim());
-        if (chkSab != null && chkSab.isSelected() && !txtHoraSab.getText().trim().isEmpty()) horarios.add("Sáb: " + txtHoraSab.getText().trim());
-        if (chkDom != null && chkDom.isSelected() && !txtHoraDom.getText().trim().isEmpty()) horarios.add("Dom: " + txtHoraDom.getText().trim());
-
         VeterinarioDTO dto = new VeterinarioDTO(
             idVeterinarioEnEdicion != null ? idVeterinarioEnEdicion : 0L, 
-            txtVetNombre.getText(), 
-            txtVetApellido.getText(), 
-            txtVetTelefono.getText(), 
-            txtVetEmail.getText(), 
-            txtVetMatricula.getText(), 
+            txtVetNombre.getText().trim(), 
+            txtVetApellido.getText().trim(), 
+            txtVetTelefono.getText().trim(), 
+            txtVetEmail.getText().trim(), 
+            txtVetMatricula.getText().trim(), 
             null,
             horarios
         );

@@ -101,14 +101,22 @@ public class TurnoController {
 
     @FXML
     public void initialize() {
-        UnaryOperator<TextFormatter.Change> filtroHora = change -> {
-            String textoFuturo = change.getControlNewText();
-            if (textoFuturo.matches("[0-9:]*") && textoFuturo.length() <= 5) {
-                return change;
-            }
-            return null; 
-        };
+        // --- 1. MÁSCARA INTELIGENTE PARA LA HORA (Autocompleta el ":" y bloquea basura) ---
+        txtHora.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getControlNewText().length() > 5) return null; // Máximo HH:mm
+            if (!change.getControlNewText().matches("[0-9:]*")) return null; // Solo num y dos puntos
+            return change;
+        }));
 
+        txtHora.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.length() > oldVal.length()) { // Solo si está agregando texto
+                if (newVal.length() == 2 && !newVal.contains(":")) {
+                    txtHora.setText(newVal + ":");
+                }
+            }
+        });
+
+        // --- 2. FILTRO Y BLOQUEO VISUAL DEL DATEPICKER ---
         UnaryOperator<TextFormatter.Change> filtroFecha = change -> {
             if (change.getControlNewText().matches("[0-9/]*")) return change;
             return null;
@@ -119,13 +127,22 @@ public class TurnoController {
             @Override
             public void updateItem(LocalDate date, boolean empty) {
                 super.updateItem(date, empty);
-                if (date != null && date.isAfter(LocalDate.now())) {
+                // En turnos, no se puede agendar hacia atrás
+                if (date != null && date.isBefore(LocalDate.now())) {
                     setDisable(true);
                     setStyle("-fx-background-color: #f3f4f6; -fx-text-fill: #9ca3af;");
                 }
             }
         });
-        txtHora.setTextFormatter(new TextFormatter<>(filtroHora));
+        
+        dpFecha.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal.isBefore(LocalDate.now())) {
+                dpFecha.setValue(oldVal); 
+                mostrarAlerta("Fecha Inválida", "Los turnos no pueden ser agendados en el pasado.", Alert.AlertType.WARNING);
+            }
+        });
+
+        // --- 3. BLOQUEO INTELIGENTE DEL BOTÓN GUARDAR ---
         btnGuardarFormulario.disableProperty().bind(
             cbCliente.valueProperty().isNull()
             .or(cbMascota.valueProperty().isNull())
@@ -133,42 +150,33 @@ public class TurnoController {
             .or(dpFecha.valueProperty().isNull())
             .or(txtHora.textProperty().isEmpty())
         );
+
+        // --- 4. CÓDIGO ORIGINAL DEL CONTROLADOR ---
         configurarColumnas();
         configurarConvertidoresComboBox();
         cargarDatosDesdeBD();
         configurarFiltroMascotas();
         generarCalendario();
         cargarTabla(); 
-        // --- SISTEMA DE PRE-CARGA DESDE VACUNACIONES ---
 
+        // --- SISTEMA DE PRE-CARGA DESDE VACUNACIONES ---
         if (preCargaClienteId != null) {
-            
             abrirPanelFormulario(); 
-            
-            // 1. Seleccionamos el Cliente (Usando == para comparar el long primitivo)
             for (int i = 0; i < cbCliente.getItems().size(); i++) {
                 if (cbCliente.getItems().get(i).getId() == preCargaClienteId) {
                     cbCliente.getSelectionModel().select(i);
                     break;
                 }
             }
-                
-            // Usamos runLater para darle tiempo al sistema de cargar las mascotas
             javafx.application.Platform.runLater(() -> {
-                
-                // 2. Seleccionamos la Mascota (Usando == también aquí)
                 for (int i = 0; i < cbMascota.getItems().size(); i++) {
                     if (cbMascota.getItems().get(i).getId() == preCargaMascotaId) {
                         cbMascota.getSelectionModel().select(i);
                         break;
                     }
                 }
-                    
-                // 3. Activamos la casilla de Vacunación
                 chkVacunacion.setSelected(true);
                 cbVacuna.setDisable(false); 
-                
-                // 4. Seleccionamos la Vacuna exacta (Aquí sí usamos .equals porque son Strings)
                 if (preCargaVacuna != null) {
                     for (int i = 0; i < cbVacuna.getItems().size(); i++) {
                         if (cbVacuna.getItems().get(i).getNombreComercial().equals(preCargaVacuna)) {
@@ -177,11 +185,7 @@ public class TurnoController {
                         }
                     }
                 }
-                
-                // 5. Limpiamos los datos de memoria
-                preCargaClienteId = null;
-                preCargaMascotaId = null;
-                preCargaVacuna = null;
+                preCargaClienteId = null; preCargaMascotaId = null; preCargaVacuna = null;
             });
         }
     }
@@ -387,12 +391,18 @@ public class TurnoController {
 
     @FXML
     public void guardarTurno(ActionEvent event) {
-        if (cbMascota.getValue() == null || cbVeterinario.getValue() == null || dpFecha.getValue() == null || txtHora.getText().isEmpty()) {
-            mostrarAlerta("Campos Incompletos", "Complete todos los datos obligatorios.", Alert.AlertType.WARNING); return;
-        }
-
+        // En este punto ya sabemos que cbMascota, cbVeterinario, dpFecha y txtHora tienen contenido por el bind()
+        
         LocalTime horaParsed;
-        try { horaParsed = LocalTime.parse(txtHora.getText().trim()); } catch (Exception e) { mostrarAlerta("Hora Inválida", "Formato de hora HH:mm (ej. 10:30).", Alert.AlertType.WARNING); return; }
+        try { 
+            // Control estricto de la hora
+            String horaStr = txtHora.getText().trim();
+            if(!horaStr.matches("^([01][0-9]|2[0-3]):[0-5][0-9]$")){
+               mostrarAlerta("Hora Inválida", "Formato incorrecto. Use HH:mm (ej: 09:30 o 14:00)", Alert.AlertType.WARNING);
+               return; 
+            }
+            horaParsed = LocalTime.parse(horaStr); 
+        } catch (Exception e) { mostrarAlerta("Hora Inválida", "La hora ingresada no es válida.", Alert.AlertType.WARNING); return; }
 
         List<String> serviciosSeleccionados = new ArrayList<>();
         if (chkConsulta.isSelected()) serviciosSeleccionados.add(chkConsulta.getText());

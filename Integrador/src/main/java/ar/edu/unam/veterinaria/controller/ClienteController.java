@@ -15,6 +15,8 @@ import javafx.scene.layout.*;
 import org.kordamp.ikonli.javafx.FontIcon;
 import javafx.scene.paint.Color;
 
+import java.time.LocalDate;
+import java.util.function.UnaryOperator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +28,8 @@ public class ClienteController {
     @FXML private TextField txtDniCliente;
     @FXML private TextField txtTelefonoCliente;
     @FXML private TextField txtEmailCliente;
-    
+    @FXML private Button btnGuardarMascota;
+
     @FXML private Label lblCantidadClientes;
     @FXML private Label lblCantidadMascotas;
     @FXML private Label lblNombrePerfil;
@@ -52,6 +55,88 @@ public class ClienteController {
 
     @FXML
     public void initialize() {
+        // --- 1. FILTRO PARA NÚMEROS (DNI, Teléfono, Ficha) ---
+        UnaryOperator<TextFormatter.Change> filtroNumeros = change -> {
+            if (change.getControlNewText().matches("[0-9]*")) return change;
+            return null; 
+        };
+
+        txtDniCliente.setTextFormatter(new TextFormatter<>(filtroNumeros));
+        txtTelefonoCliente.setTextFormatter(new TextFormatter<>(filtroNumeros));
+        txtNumeroFicha.setTextFormatter(new TextFormatter<>(filtroNumeros));
+        
+        // --- 2. FILTRO PARA NOMBRES (Letras y Autocapitalización) ---
+        UnaryOperator<TextFormatter.Change> filtroNombres = change -> {
+            if (!change.getControlNewText().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s]*")) return null; 
+            
+            if (change.isAdded()) {
+                String textoInsertado = change.getText(); 
+                String textoControl = change.getControlText(); 
+                int posicion = change.getRangeStart(); 
+                StringBuilder textoModificado = new StringBuilder();
+                boolean hacerMayuscula = (posicion == 0 || textoControl.charAt(posicion - 1) == ' ');
+
+                for (char c : textoInsertado.toCharArray()) {
+                    if (c == ' ') {
+                        hacerMayuscula = true;
+                        textoModificado.append(c);
+                    } else if (hacerMayuscula) {
+                        textoModificado.append(Character.toUpperCase(c));
+                        hacerMayuscula = false; 
+                    } else {
+                        textoModificado.append(Character.toLowerCase(c));
+                    }
+                }
+                change.setText(textoModificado.toString());
+            }
+            return change;
+        };
+        
+        txtNombreCliente.setTextFormatter(new TextFormatter<>(filtroNombres));
+        txtApellidoCliente.setTextFormatter(new TextFormatter<>(filtroNombres));
+        txtNombreMascota.setTextFormatter(new TextFormatter<>(filtroNombres));
+        txtRaza.setTextFormatter(new TextFormatter<>(filtroNombres));
+
+        // --- 3. FILTRO Y BLOQUEO PARA FECHAS ---
+        UnaryOperator<TextFormatter.Change> filtroFecha = change -> {
+            if (change.getControlNewText().matches("[0-9/]*")) return change;
+            return null;
+        };
+        dpFechaNacimiento.getEditor().setTextFormatter(new TextFormatter<>(filtroFecha));
+
+        dpFechaNacimiento.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                if (date != null && date.isAfter(LocalDate.now())) {
+                    setDisable(true);
+                    setStyle("-fx-background-color: #f3f4f6; -fx-text-fill: #9ca3af;");
+                }
+            }
+        });
+
+        dpFechaNacimiento.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal.isAfter(LocalDate.now())) {
+                dpFechaNacimiento.setValue(oldVal); 
+                mostrarAlerta("Fecha Inválida", "La fecha de nacimiento no puede ser futura.", Alert.AlertType.WARNING);
+            }
+        });
+
+        // Formateador visual del DatePicker a dd/MM/yyyy
+        dpFechaNacimiento.setConverter(new javafx.util.StringConverter<LocalDate>() {
+            private final java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            @Override public String toString(LocalDate date) { return date != null ? formatter.format(date) : ""; }
+            @Override public LocalDate fromString(String string) { return (string == null || string.isEmpty()) ? null : LocalDate.parse(string, formatter); }
+        });
+
+        btnGuardarMascota.disableProperty().bind(
+            txtNombreMascota.textProperty().isEmpty()
+            .or(txtEspecie.textProperty().isEmpty())
+            .or(txtRaza.textProperty().isEmpty()
+            .or(txtNumeroFicha.textProperty().isEmpty()))
+            .or(dpFechaNacimiento.valueProperty().isNull())
+        );
+        // 4. Ejecución normal de la pantalla
         configurarListaClientes();
         configurarListaMascotas();
         cargarDatosYFiltro();
@@ -80,12 +165,17 @@ public class ClienteController {
                     Label lblNombre = new Label(cliente.getNombre() + " " + cliente.getApellido());
                     lblNombre.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1E293B;");
                     
-                    // Contamos las mascotas rápido para la UI
+                    // Novedad: Agregamos el DNI y el Teléfono a la vista rápida de la tarjeta
+                    String dni = cliente.getDni() != null && !cliente.getDni().isEmpty() ? cliente.getDni() : "-";
+                    String tel = cliente.getTelefono() != null && !cliente.getTelefono().isEmpty() ? cliente.getTelefono() : "-";
+                    Label lblDatosInfo = new Label("DNI: " + dni + " | Tel: " + tel);
+                    lblDatosInfo.setStyle("-fx-text-fill: #64748B; -fx-font-size: 11px;");
+                    
                     long cantMascotas = mascotaService.obtenerTodas().stream().filter(m -> m.getIdCliente() != null && m.getIdCliente().equals(cliente.getId())).count();
                     Label lblMascotas = new Label(cantMascotas + (cantMascotas == 1 ? " mascota" : " mascotas"));
-                    lblMascotas.setStyle("-fx-text-fill: #64748B; -fx-font-size: 12px;");
+                    lblMascotas.setStyle("-fx-text-fill: #64748B; -fx-font-size: 12px; -fx-font-weight: bold;");
                     
-                    info.getChildren().addAll(lblNombre, lblMascotas);
+                    info.getChildren().addAll(lblNombre, lblDatosInfo, lblMascotas);
                     card.getChildren().addAll(avatar, info);
                     setGraphic(card);
                 }
@@ -121,7 +211,6 @@ public class ClienteController {
                     card.setAlignment(Pos.CENTER_LEFT);
                     card.getStyleClass().add("pet-list-card");
 
-                    // Avatar de mascota
                     StackPane avatar = new StackPane();
                     avatar.setStyle("-fx-background-color: #FFFBEB; -fx-background-radius: 50; -fx-min-width: 50; -fx-min-height: 50;");
                     FontIcon icon = new FontIcon(mascota.getEspecie().toLowerCase().contains("gato") ? "fas-cat" : "fas-dog");
@@ -152,7 +241,6 @@ public class ClienteController {
                     Region spacer = new Region();
                     HBox.setHgrow(spacer, Priority.ALWAYS);
 
-                    // Botones de acción directos en la tarjeta
                     Button btnEditar = new Button(" Editar");
                     btnEditar.getStyleClass().addAll("btn-outline", "btn-action-small");
                     btnEditar.setGraphic(new FontIcon("fas-pen"));
@@ -208,7 +296,7 @@ public class ClienteController {
                     .collect(Collectors.toList());
             listaMascotas.getItems().setAll(mascotas);
             lblCantidadMascotas.setText(String.valueOf(mascotas.size()));
-            listaClientes.refresh(); // Refresca la lista para actualizar el contador de "X mascotas" en la tarjeta
+            listaClientes.refresh(); 
         } catch (Exception e) { e.printStackTrace(); }
     }
 
@@ -230,37 +318,59 @@ public class ClienteController {
         lblCantidadMascotas.setText("0");
     }
 
+    // --- NUEVA LÓGICA DE GUARDADO INTELIGENTE (Crea o Edita según el contexto) ---
     @FXML 
     private void guardarCliente() {
-        ClienteDTO clienteDTO = new ClienteDTO(0L, txtNombreCliente.getText(), txtApellidoCliente.getText(), txtDniCliente.getText(), txtTelefonoCliente.getText(), txtEmailCliente.getText());
+        // 1. Validación de campos obligatorios
+        if (txtNombreCliente.getText().trim().isEmpty() || 
+            txtApellidoCliente.getText().trim().isEmpty() || 
+            txtDniCliente.getText().trim().isEmpty() || 
+            txtTelefonoCliente.getText().trim().isEmpty()) {
+            mostrarAlerta("Campos Incompletos", "Por favor, complete al menos Nombre, Apellido, DNI y Teléfono.", Alert.AlertType.WARNING);
+            return;
+        }
+
+        ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
+
         try {
-            ClienteDTO guardado = clienteService.guardarCliente(clienteDTO);
-            masterDataClientes.add(guardado);
-            actualizarContadorClientes();
-            listaClientes.getSelectionModel().select(guardado);
-            mostrarAlerta("Éxito", "Cliente registrado correctamente.", Alert.AlertType.INFORMATION);
-        } catch (IllegalArgumentException e) { mostrarAlerta("Atención", e.getMessage(), Alert.AlertType.WARNING);
-        } catch (Exception e) { mostrarAlerta("Error", "Ocurrió un error en la base de datos.", Alert.AlertType.ERROR); }
+            if (clienteSeleccionado == null) {
+                // --- MODO CREACIÓN NUEVA ---
+                ClienteDTO nuevoCliente = new ClienteDTO(0L, txtNombreCliente.getText().trim(), txtApellidoCliente.getText().trim(), txtDniCliente.getText().trim(), txtTelefonoCliente.getText().trim(), txtEmailCliente.getText().trim());
+                ClienteDTO guardado = clienteService.guardarCliente(nuevoCliente);
+                masterDataClientes.add(guardado);
+                actualizarContadorClientes();
+                listaClientes.getSelectionModel().select(guardado);
+                mostrarAlerta("Éxito", "Cliente registrado correctamente.", Alert.AlertType.INFORMATION);
+            } else {
+                // --- MODO EDICIÓN ---
+                clienteSeleccionado.setNombre(txtNombreCliente.getText().trim());
+                clienteSeleccionado.setApellido(txtApellidoCliente.getText().trim());
+                clienteSeleccionado.setDni(txtDniCliente.getText().trim());
+                clienteSeleccionado.setTelefono(txtTelefonoCliente.getText().trim());
+                clienteSeleccionado.setEmail(txtEmailCliente.getText().trim());
+
+                clienteService.actualizarCliente(clienteSeleccionado);
+                
+                listaClientes.refresh();
+                lblNombrePerfil.setText(clienteSeleccionado.getNombre() + " " + clienteSeleccionado.getApellido());
+                lblDniPerfil.setText("DNI: " + clienteSeleccionado.getDni());
+                mostrarAlerta("Éxito", "Cliente modificado correctamente.", Alert.AlertType.INFORMATION);
+            }
+        } catch (IllegalArgumentException e) { 
+            mostrarAlerta("Atención", e.getMessage(), Alert.AlertType.WARNING);
+        } catch (Exception e) { 
+            mostrarAlerta("Error", "Ocurrió un error en la base de datos.", Alert.AlertType.ERROR); 
+        }
     }
 
     @FXML 
     private void modificarCliente() {
-        ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
-        if (clienteSeleccionado == null) { mostrarAlerta("Atención", "Seleccione un cliente de la lista.", Alert.AlertType.WARNING); return; }
-        try {
-            clienteSeleccionado.setNombre(txtNombreCliente.getText());
-            clienteSeleccionado.setApellido(txtApellidoCliente.getText());
-            clienteSeleccionado.setDni(txtDniCliente.getText());
-            clienteSeleccionado.setTelefono(txtTelefonoCliente.getText());
-            clienteSeleccionado.setEmail(txtEmailCliente.getText());
-
-            clienteService.actualizarCliente(clienteSeleccionado);
-            listaClientes.refresh();
-            lblNombrePerfil.setText(clienteSeleccionado.getNombre() + " " + clienteSeleccionado.getApellido());
-            lblDniPerfil.setText("DNI: " + clienteSeleccionado.getDni());
-            mostrarAlerta("Éxito", "Cliente modificado.", Alert.AlertType.INFORMATION);
-        } catch (IllegalArgumentException e) { mostrarAlerta("Atención", e.getMessage(), Alert.AlertType.WARNING);
-        } catch (Exception e) { mostrarAlerta("Error", "No se pudo modificar el cliente.", Alert.AlertType.ERROR); }
+        // El botón "Editar" en la interfaz ahora solo hace Focus en la caja de texto para que el usuario escriba rápido
+        if(listaClientes.getSelectionModel().getSelectedItem() == null) {
+            mostrarAlerta("Atención", "Seleccione un cliente de la lista.", Alert.AlertType.WARNING);
+            return;
+        }
+        txtNombreCliente.requestFocus();
     }
 
     @FXML 
@@ -283,7 +393,7 @@ public class ClienteController {
     public void abrirModalMascota() {
         ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
         if (clienteSeleccionado == null) { 
-            mostrarAlerta("Atención", "Debe seleccionar un dueño de la lista izquierda primero.", Alert.AlertType.WARNING); 
+            mostrarAlerta("Atención", "Debe seleccionar o guardar un dueño en la lista primero.", Alert.AlertType.WARNING); 
             return; 
         }
         idMascotaEnEdicion = null;
@@ -312,6 +422,16 @@ public class ClienteController {
     @FXML 
     private void guardarMascota() {
         ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
+        
+        // Validación de campos obligatorios
+        if (txtNombreMascota.getText().trim().isEmpty() || 
+            txtEspecie.getText().trim().isEmpty() || 
+            txtRaza.getText().trim().isEmpty() || 
+            dpFechaNacimiento.getValue() == null) {
+            mostrarAlerta("Campos Incompletos", "Complete todos los campos obligatorios de la mascota.", Alert.AlertType.WARNING);
+            return;
+        }
+
         Long nroFicha = 0L;
         if (txtNumeroFicha.getText() != null && !txtNumeroFicha.getText().trim().isEmpty()) {
             try { nroFicha = Long.valueOf(txtNumeroFicha.getText()); 
@@ -320,7 +440,7 @@ public class ClienteController {
         
         MascotaDTO dto = new MascotaDTO(
             idMascotaEnEdicion != null ? idMascotaEnEdicion : 0L, 
-            txtNombreMascota.getText(), txtEspecie.getText(), txtRaza.getText(), 
+            txtNombreMascota.getText().trim(), txtEspecie.getText().trim(), txtRaza.getText().trim(), 
             dpFechaNacimiento.getValue(), clienteSeleccionado.getId(), "", nroFicha
         );
 

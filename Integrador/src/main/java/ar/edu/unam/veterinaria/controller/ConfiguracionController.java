@@ -8,6 +8,8 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.TextFormatter;
+import java.util.function.UnaryOperator;
 
 public class ConfiguracionController {
 
@@ -37,6 +39,53 @@ public class ConfiguracionController {
 
     @FXML
     public void initialize() {
+
+        UnaryOperator<TextFormatter.Change> filtroEnteros = change -> {
+            if (change.getControlNewText().matches("[0-9]*")) return change;
+            return null;
+        };
+
+        // --- 2. FILTRO PARA NÚMEROS DECIMALES (Precio y Duración) ---
+        UnaryOperator<TextFormatter.Change> filtroDecimales = change -> {
+            // Permite números y MÁXIMO un solo punto (.)
+            if (change.getControlNewText().matches("([0-9]*)?\\.?([0-9]*)?")) return change;
+            return null; 
+        };
+        UnaryOperator<TextFormatter.Change> filtroNombres = change -> {
+            if (!change.getControlNewText().matches("[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s]*")) return null; 
+            
+            if (change.isAdded()) {
+                String textoInsertado = change.getText(); 
+                String textoControl = change.getControlText(); 
+                int posicion = change.getRangeStart(); 
+                StringBuilder textoModificado = new StringBuilder();
+                boolean hacerMayuscula = (posicion == 0 || textoControl.charAt(posicion - 1) == ' ');
+
+                for (char c : textoInsertado.toCharArray()) {
+                    if (c == ' ') {
+                        hacerMayuscula = true;
+                        textoModificado.append(c);
+                    } else if (hacerMayuscula) {
+                        textoModificado.append(Character.toUpperCase(c));
+                        hacerMayuscula = false; 
+                    } else {
+                        textoModificado.append(Character.toLowerCase(c));
+                    }
+                }
+                change.setText(textoModificado.toString());
+            }
+            return change;
+        };
+        
+
+        // --- 3. APLICACIÓN DE LOS FILTROS A LAS CAJAS DE TEXTO ---
+        // Servicios
+        txtPrecio.setTextFormatter(new TextFormatter<>(filtroDecimales));
+        txtDuracion.setTextFormatter(new TextFormatter<>(filtroDecimales));
+        txtCupo.setTextFormatter(new TextFormatter<>(filtroEnteros));
+        txtNombre.setTextFormatter(new TextFormatter<>(filtroNombres));
+        // Vacunas
+        txtVacMeses.setTextFormatter(new TextFormatter<>(filtroEnteros));
         // Init Tabla Servicios
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombreDescriptivo"));
         colPrecio.setCellValueFactory(new PropertyValueFactory<>("precioBase"));

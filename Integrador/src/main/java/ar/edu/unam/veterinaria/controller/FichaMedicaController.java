@@ -72,40 +72,35 @@ public class FichaMedicaController {
             protected void updateItem(MascotaDTO mascota, boolean empty) {
                 super.updateItem(mascota, empty);
                 if (empty || mascota == null) {
-                    setText(null); setGraphic(null);
+                    setText(null); setGraphic(null); setStyle("-fx-background-color: transparent;");
                 } else {
                     HBox card = new HBox(15);
                     card.setAlignment(Pos.CENTER_LEFT);
-                    card.getStyleClass().add("client-list-card"); // Usamos la clase CSS de las tarjetas
-
-                    StackPane avatar = new StackPane();
-                    avatar.setStyle("-fx-background-color: " + (isSelected() ? "#D1FAE5" : "#F8FAFC") + "; -fx-background-radius: 12; -fx-min-width: 50; -fx-min-height: 50;");
-                    FontIcon icon = new FontIcon(mascota.getEspecie().toLowerCase().contains("gato") ? "fas-cat" : "fas-dog");
+                    card.setPadding(new Insets(10, 10, 10, 15));
+                    card.getStyleClass().add("patient-card");
+                    FontIcon icon = new FontIcon("fas-paw");
                     icon.setIconSize(24);
-                    icon.setIconColor(Color.web(isSelected() ? "#059669" : "#D2B48C"));
-                    avatar.getChildren().add(icon);
-
-                    VBox info = new VBox(3);
+                    icon.setIconColor(Color.web("#D2B48C"));
+                    VBox info = new VBox(2);
                     Label lblNombre = new Label(mascota.getNombreMascota());
-                    lblNombre.setStyle("-fx-font-weight: 900; -fx-font-size: 15px; -fx-text-fill: #1E293B;");
-                    
+                    lblNombre.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1E293B;");
                     String fichaStr = mascota.getNumeroFicha() != null && mascota.getNumeroFicha() > 0 
-                             ? "FCH-" + String.format("%03d", mascota.getNumeroFicha()) : "Sin Ficha";
+                             ? "FCH-" + String.format("%03d", mascota.getNumeroFicha()) 
+                             : "Sin Ficha";
                     Label lblFicha = new Label(fichaStr);
-                    lblFicha.setStyle("-fx-text-fill: #64748B; -fx-font-size: 12px;");
-                    
+                    lblFicha.setStyle("-fx-text-fill: #64748B; -fx-font-size: 11px;");
                     info.getChildren().addAll(lblNombre, lblFicha);
-                    card.getChildren().addAll(avatar, info);
-                    
+                    card.getChildren().addAll(icon, info);
                     if (isSelected()) {
-                        card.setStyle("-fx-background-color: #F0FDF4; -fx-border-color: #2CA871; -fx-border-width: 1 4 1 1;");
+                        card.setStyle("-fx-background-color: #ECFDF5; -fx-border-color: #2CA871; -fx-border-radius: 8; -fx-background-radius: 8;");
+                    } else {
+                        card.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; -fx-border-radius: 8; -fx-background-radius: 8;");
                     }
-                    
                     setGraphic(card);
+                    setStyle("-fx-background-color: transparent; -fx-padding: 5;");
                 }
             }
         });
-        
         listaPacientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) mostrarDetallesPaciente(newVal);
         });
@@ -115,15 +110,15 @@ public class FichaMedicaController {
         panelDetalle.setVisible(true);
         lblPerfilNombre.setText(mascota.getNombreMascota());
         String fichaStr = mascota.getNumeroFicha() != null && mascota.getNumeroFicha() > 0 
-                 ? "FCH-" + String.format("%03d", mascota.getNumeroFicha()) : "Sin Ficha";
+                 ? "FCH-" + String.format("%03d", mascota.getNumeroFicha()) 
+                 : "Sin Ficha";
         lblPerfilFicha.setText(fichaStr);
-        lblPerfilDetalles.setText(mascota.getRaza() + " · " + mascota.getEspecie() + " · " + mascota.getNombreDueno());
-        
+        lblPerfilDetalles.setText(mascota.getRaza() + " • " + mascota.getEspecie() + " • Dueño: " + mascota.getNombreDueno());
         if (mascota.getFechaNacimiento() != null) {
             int edad = Period.between(mascota.getFechaNacimiento(), LocalDate.now()).getYears();
-            lblPerfilEdad.setText("\uD83D\uDCC6 Edad: " + edad + " años"); // Emoji de calendario temporal
+            lblPerfilEdad.setText("Edad: " + edad + " años");
         } else {
-            lblPerfilEdad.setText("\uD83D\uDCC6 Edad: Desconocida");
+            lblPerfilEdad.setText("Edad: Desconocida");
         }
         cargarLineaTiempo(mascota.getId());
     }
@@ -135,8 +130,7 @@ public class FichaMedicaController {
                 .sorted((t1, t2) -> t2.getFecha().compareTo(t1.getFecha()))
                 .collect(Collectors.toList());
                 
-        lblPerfilRegistros.setText("\uD83D\uDCCE Registros: " + historial.size() + " entradas");
-        
+        lblPerfilRegistros.setText("Registros: " + historial.size() + " entradas");
         if (historial.isEmpty()) {
             Label vacio = new Label("No hay registros médicos para este paciente.");
             vacio.setStyle("-fx-text-fill: #94A3B8; -fx-font-style: italic; -fx-padding: 20;");
@@ -147,48 +141,45 @@ public class FichaMedicaController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
         for (TurnoDTO turno : historial) {
             HBox tarjeta = new HBox(15);
-            tarjeta.setPadding(new Insets(20));
-            tarjeta.getStyleClass().add("card");
+            tarjeta.setPadding(new Insets(15, 20, 15, 15));
+            tarjeta.getStyleClass().add("timeline-card");
             
             boolean esVacuna = turno.getDetallesServicios() != null && turno.getDetallesServicios().contains("Vacunación");
             
             StackPane iconContainer = new StackPane();
-            iconContainer.setPrefSize(50, 50);
+            iconContainer.setPrefSize(45, 45);
             iconContainer.setStyle("-fx-background-radius: 8; " + (esVacuna ? "-fx-background-color: #FFF7ED;" : "-fx-background-color: #ECFDF5;"));
             
             FontIcon icon = new FontIcon(esVacuna ? "fas-syringe" : "fas-stethoscope");
             icon.setIconColor(Color.web(esVacuna ? "#F97316" : "#10B981"));
-            icon.setIconSize(24);
+            icon.setIconSize(20);
             iconContainer.getChildren().add(icon);
 
-            VBox contenido = new VBox(8);
+            VBox contenido = new VBox(5);
             HBox.setHgrow(contenido, Priority.ALWAYS);
             
-            HBox header = new HBox(12);
+            HBox header = new HBox(10);
             header.setAlignment(Pos.CENTER_LEFT);
-            Label lblTitulo = new Label(esVacuna ? "Aplicación de Vacuna" : "Consulta");
-            lblTitulo.setStyle("-fx-font-weight: 900; -fx-font-size: 16px; -fx-text-fill: #1E293B;");
+            Label lblTitulo = new Label(esVacuna ? "Aplicación de Vacuna" : "Atención General");
+            lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #1E293B;");
             
-            Label lblPill = new Label(turno.getDetallesServicios() != null && !turno.getDetallesServicios().isEmpty() ? turno.getDetallesServicios() : "Atención General");
-            lblPill.setStyle(esVacuna ? "-fx-background-color: #FFEDD5; -fx-text-fill: #C2410C; -fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11px; -fx-font-weight: bold;"
-                                       : "-fx-background-color: #D1FAE5; -fx-text-fill: #047857; -fx-padding: 4 10; -fx-background-radius: 12; -fx-font-size: 11px; -fx-font-weight: bold;");
+            header.getChildren().add(lblTitulo);
             
-            header.getChildren().addAll(lblTitulo, lblPill);
-            
-            HBox metaInfo = new HBox(20);
+            HBox metaInfo = new HBox(15);
             Label lblFecha = new Label("\uD83D\uDCC5 " + turno.getFecha().format(formatter)); 
-            Label lblVet = new Label("\uD83D\uDC68\u200D\u2695\uFE0F Dr/a. " + turno.getNombreVeterinario());
-            lblFecha.setStyle("-fx-text-fill: #64748B; -fx-font-size: 13px;");
-            lblVet.setStyle("-fx-text-fill: #64748B; -fx-font-size: 13px;");
+            Label lblVet = new Label("\uD83D\uDC68\u200D\u2695\uFE0F " + turno.getNombreVeterinario());
+            lblFecha.setStyle("-fx-text-fill: #64748B; -fx-font-size: 12px;");
+            lblVet.setStyle("-fx-text-fill: #64748B; -fx-font-size: 12px;");
             metaInfo.getChildren().addAll(lblFecha, lblVet);
             
-            Label lblNotasClinicas = new Label(turno.getNotas() != null && !turno.getNotas().isEmpty() ? turno.getNotas() : "Diagnóstico guardado en el sistema.");
+            // ACÁ MOSTRAMOS EL DIAGNÓSTICO EN GRANDE
+            Label lblNotasClinicas = new Label(turno.getDetallesServicios() != null ? turno.getDetallesServicios() : "Sin especificaciones");
             lblNotasClinicas.setWrapText(true);
-            lblNotasClinicas.setStyle("-fx-text-fill: #334155; -fx-font-size: 14px; -fx-padding: 10 0 0 0;");
+            lblNotasClinicas.setStyle("-fx-text-fill: #475569; -fx-font-size: 13px; -fx-padding: 8 0 0 0;");
             
             contenido.getChildren().addAll(header, metaInfo, lblNotasClinicas);
             
-            tarjeta.setStyle("-fx-background-color: white; -fx-border-color: " + (esVacuna ? "#FDBA74;" : "#6EE7B7;") + " -fx-border-width: 0 0 0 5; -fx-background-radius: 8; -fx-border-radius: 8;");
+            tarjeta.setStyle("-fx-background-color: white; -fx-border-color: " + (esVacuna ? "#FDBA74;" : "#6EE7B7;") + " -fx-border-width: 0 0 0 4; -fx-background-radius: 4; -fx-border-radius: 4; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.03), 5, 0, 0, 2);");
             tarjeta.getChildren().addAll(iconContainer, contenido);
             contenedorLineaTiempo.getChildren().add(tarjeta);
         }
