@@ -50,4 +50,16 @@ public class TipoServicio {
             }
         }
     }
+    public void setDetalles(String nombreDescriptivo, Double precioBase, double duracion, Integer limiteCupoDiario) {
+        if (precioBase != null && precioBase < 0) {
+            throw new IllegalArgumentException("Regla de Integridad: El precio base no puede ser negativo.");
+        }
+        if (limiteCupoDiario != null && limiteCupoDiario < 0) {
+            throw new IllegalArgumentException("Regla de Integridad: El cupo diario no puede ser menor a cero.");
+        }
+        this.nombreDescriptivo = nombreDescriptivo;
+        this.precioBase = precioBase;
+        this.duracion = duracion;
+        this.limiteCupoDiario = limiteCupoDiario;
+    }
 }

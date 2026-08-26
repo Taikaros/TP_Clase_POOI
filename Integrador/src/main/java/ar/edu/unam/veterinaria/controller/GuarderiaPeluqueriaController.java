@@ -435,60 +435,67 @@ public class GuarderiaPeluqueriaController {
         overlayFormulario.setVisible(true);
     }
 
-    @FXML
-    public void guardarRegistro() {
+@FXML
+    private void guardarRegistro() {
+        // 1. Validaciones iniciales
         if (cbCliente.getValue() == null || cbMascota.getValue() == null || dpFecha.getValue() == null || cbHora.getValue() == null || cbTipoServicio.getValue() == null) {
-            mostrarAlerta("Campos Incompletos", "Complete todos los campos obligatorios.", Alert.AlertType.WARNING);
+            mostrarAlerta("Campos Incompletos", "Complete todos los campos obligatorios.", javafx.scene.control.Alert.AlertType.WARNING);
             return;
         }
 
+        boolean esGuarderia = cbTipoServicio.getValue() instanceof String;
+        if (esGuarderia && dpFechaSalida.getValue() == null) {
+            mostrarAlerta("Campos Incompletos", "Debe indicar la fecha de salida para la guardería.", javafx.scene.control.Alert.AlertType.WARNING);
+            return;
+        }
+
+        Long idCliente = cbCliente.getValue().getId();
+        Long idMascota = cbMascota.getValue().getId();
+        java.time.LocalDate fecha = dpFecha.getValue();
+        java.time.LocalDate salida = dpFechaSalida.getValue();
+        String horaStr = cbHora.getValue();
+        java.time.LocalTime horaParsed;
+
         try {
-            LocalTime horaParsed = LocalTime.parse(cbHora.getValue());
-            LocalDate fecha = dpFecha.getValue();
-            
-            // --- VALIDACIONES DE HORARIO DE INGRESO (FINES DE SEMANA) ---
-            if (fecha.getDayOfWeek() == DayOfWeek.SUNDAY) {
-                mostrarAlerta("Horario de Atención", "No se reciben mascotas (ingresos o turnos) los días domingo.", Alert.AlertType.WARNING);
-                return;
-            }
-            if (fecha.getDayOfWeek() == DayOfWeek.SATURDAY && horaParsed.isAfter(LocalTime.of(12, 0))) {
-                mostrarAlerta("Horario de Atención", "Los sábados solo se reciben mascotas hasta las 12:00 del mediodía.", Alert.AlertType.WARNING);
-                return;
-            }
+            horaParsed = java.time.LocalTime.parse(horaStr);
+        } catch (Exception e) {
+            mostrarAlerta("Hora Inválida", "La hora ingresada no es válida.", javafx.scene.control.Alert.AlertType.WARNING);
+            return;
+        }
 
-            Long idCliente = cbCliente.getValue().getId();
-            Long idMascota = cbMascota.getValue().getId();
-            String observaciones = txtObservaciones.getText();
+        if (esGuarderia && salida.isBefore(fecha)) {
+            mostrarAlerta("Atención", "La fecha de salida debe ser posterior a la de ingreso.", javafx.scene.control.Alert.AlertType.WARNING);
+            return;
+        }
 
-            if (modoFormulario.equals("GUARDERIA")) {
-                LocalDate salida = dpFechaSalida.getValue();
-                if (salida == null || !salida.isAfter(fecha)) {
-                    mostrarAlerta("Atención", "La fecha de salida debe ser posterior a la de ingreso.", Alert.AlertType.WARNING);
-                    return;
-                }
-                String jaula = (String) cbTipoServicio.getValue();
-                String alimentacion = txtAlimentacion.getText();
+        String observaciones = txtObservaciones.getText() != null ? txtObservaciones.getText() : "";
+
+        // 2. Bloque Try-Catch Defensivo
+        try {
+            if (esGuarderia) {
+                String jaula = cbTipoServicio.getValue().toString();
+                String alimentacion = txtAlimentacion.getText() != null ? txtAlimentacion.getText().trim() : "";
                 boolean actividad = chkActividad.isSelected();
                 
                 gpService.registrarGuarderia(idCliente, idMascota, fecha, horaParsed, salida, jaula, alimentacion, actividad, observaciones);
             } else {
-                // Validación estricta de las 24hs solo para peluquería (es opcional para guardería según necesidad, pero lo mantenemos igual)
-                LocalDateTime fechaHoraTurno = LocalDateTime.of(fecha, horaParsed);
-                if (fechaHoraTurno.isBefore(LocalDateTime.now().plusHours(24))) {
-                    mostrarAlerta("Fecha Inválida", "Los turnos deben programarse con al menos 24 horas de anticipación.", Alert.AlertType.WARNING);
-                    return;
-                }
+                ar.edu.unam.veterinaria.model.TipoServicio servicioElegido = (ar.edu.unam.veterinaria.model.TipoServicio) cbTipoServicio.getValue();
                 
-                TipoServicio servicioElegido = (TipoServicio) cbTipoServicio.getValue();
                 gpService.registrarPeluqueria(idCliente, idMascota, fecha, horaParsed, servicioElegido, observaciones);
             }
-
-            mostrarAlerta("Éxito", "Registro guardado correctamente.", Alert.AlertType.INFORMATION);
+            
+            mostrarAlerta("Éxito", "Registro guardado correctamente.", javafx.scene.control.Alert.AlertType.INFORMATION);
             cerrarModales();
             cargarDatos();
-
+            
+        } catch (ar.edu.unam.veterinaria.exception.CupoLLeno | ar.edu.unam.veterinaria.exception.JaulaNoDisponible e) {
+            // Atrapamos las excepciones de nuestro Modelo de Dominio
+            mostrarAlerta("Límite Alcanzado", e.getMessage(), javafx.scene.control.Alert.AlertType.WARNING);
+            
         } catch (Exception e) {
-            mostrarAlerta("Error", "Error al guardar en la base de datos.", Alert.AlertType.ERROR);
+            // Atrapamos cualquier otro error (ej. caída de base de datos)
+            mostrarAlerta("Error", "Error al guardar en la base de datos.", javafx.scene.control.Alert.AlertType.ERROR);
+            e.printStackTrace();
         }
     }
 

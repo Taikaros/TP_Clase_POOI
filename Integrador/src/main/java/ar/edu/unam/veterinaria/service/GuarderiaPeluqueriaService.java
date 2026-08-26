@@ -52,67 +52,98 @@ public class GuarderiaPeluqueriaService {
         return nuevoTS;
     }
 
-    public void registrarGuarderia(Long idCliente, Long idMascota, LocalDate fecha, LocalTime hora, LocalDate fechaSalida, String jaula, String alimentacion, boolean actividad, String obs) {
-        EntityManager em = AppVeterinaria.getEmf().createEntityManager();
+    public void registrarGuarderia(Long idCliente, Long idMascota, java.time.LocalDate fecha, java.time.LocalTime hora, java.time.LocalDate fechaSalida, String jaula, String alimentacion, boolean actividad, String observaciones) throws ar.edu.unam.veterinaria.exception.CupoLLeno, ar.edu.unam.veterinaria.exception.JaulaNoDisponible {
+        jakarta.persistence.EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
-            Cliente c = em.find(Cliente.class, idCliente);
-            Mascota m = em.find(Mascota.class, idMascota);
-            Veterinario v = em.createQuery("SELECT v FROM Veterinario v", Veterinario.class).setMaxResults(1).getSingleResult();
+            ar.edu.unam.veterinaria.model.Cliente cliente = em.find(ar.edu.unam.veterinaria.model.Cliente.class, idCliente);
+            ar.edu.unam.veterinaria.model.Mascota mascota = em.find(ar.edu.unam.veterinaria.model.Mascota.class, idMascota);
+            
+            // Asignamos a un veterinario de guardia genérico (el ID 1)
+            ar.edu.unam.veterinaria.model.Veterinario veterinario = em.find(ar.edu.unam.veterinaria.model.Veterinario.class, 1L);
 
-            Turno t = new Turno();
-            t.setCliente(c);
-            t.setMascota(m);
-            t.setVeterinario(v);
-            t.setFecha(fecha);
-            t.setHora(hora);
-            t.setEstado(EstadoTurno.CONFIRMADO); 
+            ar.edu.unam.veterinaria.model.TipoServicio tsBd = obtenerOCrearTipoServicio(em, "Guardería");
 
-            Guarderia g = new Guarderia();
-            g.setJaulaAsignada(jaula);
-            g.setObservaciones(obs);
-            g.setFechaSalida(fechaSalida);
-            g.setAlimentacionEspecifica(alimentacion);
-            g.setRequiereActividad(actividad);
-            g.setTipoServicio(obtenerOCrearTipoServicio(em, "Guardería"));
+            // ---> DEFENSA 1: Validar Cupos Diarios <---
+            Long ocupacionActual = em.createQuery("SELECT COUNT(s) FROM Servicio s JOIN s.turno t WHERE s.tipoServicio.id = :tsId AND t.fecha = :fecha AND t.estado != 'CANCELADO'", Long.class)
+                    .setParameter("tsId", tsBd.getId())
+                    .setParameter("fecha", fecha)
+                    .getSingleResult();
+            tsBd.validarCupo(fecha, ocupacionActual.intValue()); // El dominio evalúa y lanza CupoLLeno si hace falta
 
-            t.agregarServicio(g);
-            em.persist(t);
+            // ---> DEFENSA 2: Validar Disponibilidad de Jaulas <---
+            java.util.List<String> jaulasOcupadas = em.createQuery("SELECT g.jaulaAsignada FROM Guarderia g JOIN g.turno t WHERE t.fecha = :fecha AND t.estado != 'CANCELADO'", String.class)
+                    .setParameter("fecha", fecha)
+                    .getResultList();
+
+            ar.edu.unam.veterinaria.model.Guarderia guarderia = new ar.edu.unam.veterinaria.model.Guarderia();
+            guarderia.registrarReserva(mascota, fecha, jaula, jaulasOcupadas); // El dominio evalúa y lanza JaulaNoDisponible si hace falta
+
+            guarderia.setTipoServicio(tsBd);
+            guarderia.setFechaSalida(fechaSalida);
+            guarderia.setAlimentacionEspecifica(alimentacion);
+            guarderia.setRequiereActividad(actividad);
+            guarderia.setObservaciones(observaciones);
+
+            ar.edu.unam.veterinaria.model.Turno turno = new ar.edu.unam.veterinaria.model.Turno();
+            turno.setCliente(cliente);
+            turno.setMascota(mascota);
+            turno.setVeterinario(veterinario);
+            turno.setFecha(fecha);
+            turno.setHora(hora);
+            turno.setEstado(ar.edu.unam.veterinaria.model.EstadoTurno.CONFIRMADO);
+            turno.agregarServicio(guarderia);
+
+            em.persist(turno);
             em.getTransaction().commit();
-        } finally {
-            em.close();
-        }
+        } catch (ar.edu.unam.veterinaria.exception.CupoLLeno | ar.edu.unam.veterinaria.exception.JaulaNoDisponible e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e; // Repasamos la excepción al Controlador
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally { em.close(); }
     }
 
-    // Aquí aceptamos directamente el TipoServicio creado en BD
-    public void registrarPeluqueria(Long idCliente, Long idMascota, LocalDate fecha, LocalTime hora, TipoServicio tipoServicio, String obs) {
-        EntityManager em = AppVeterinaria.getEmf().createEntityManager();
+    public void registrarPeluqueria(Long idCliente, Long idMascota, java.time.LocalDate fecha, java.time.LocalTime hora, ar.edu.unam.veterinaria.model.TipoServicio tipoServicio, String observaciones) throws ar.edu.unam.veterinaria.exception.CupoLLeno {
+        jakarta.persistence.EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
-            Cliente c = em.find(Cliente.class, idCliente);
-            Mascota m = em.find(Mascota.class, idMascota);
-            Veterinario v = em.createQuery("SELECT v FROM Veterinario v", Veterinario.class).setMaxResults(1).getSingleResult();
-            
-            // Re-vincular el tipoServicio en este EntityManager
-            TipoServicio tsBd = em.find(TipoServicio.class, tipoServicio.getId());
+            ar.edu.unam.veterinaria.model.Cliente cliente = em.find(ar.edu.unam.veterinaria.model.Cliente.class, idCliente);
+            ar.edu.unam.veterinaria.model.Mascota mascota = em.find(ar.edu.unam.veterinaria.model.Mascota.class, idMascota);
+            ar.edu.unam.veterinaria.model.Veterinario veterinario = em.find(ar.edu.unam.veterinaria.model.Veterinario.class, 1L);
 
-            Turno t = new Turno();
-            t.setCliente(c);
-            t.setMascota(m);
-            t.setVeterinario(v);
-            t.setFecha(fecha);
-            t.setHora(hora);
-            t.setEstado(EstadoTurno.PENDIENTE);
+            ar.edu.unam.veterinaria.model.TipoServicio tsBd = obtenerOCrearTipoServicio(em, tipoServicio.getNombreDescriptivo());
 
-            Peluqueria p = new Peluqueria();
-            p.setObservaciones(obs);
-            p.setTipoServicio(tsBd); // Saca nombre descriptivo y precio base
+            // ---> DEFENSA 1: Validar Cupos Diarios <---
+            Long ocupacionActual = em.createQuery("SELECT COUNT(s) FROM Servicio s JOIN s.turno t WHERE s.tipoServicio.id = :tsId AND t.fecha = :fecha AND t.estado != 'CANCELADO'", Long.class)
+                    .setParameter("tsId", tsBd.getId())
+                    .setParameter("fecha", fecha)
+                    .getSingleResult();
+            tsBd.validarCupo(fecha, ocupacionActual.intValue()); // El dominio lanza CupoLLeno si no hay lugar
 
-            t.agregarServicio(p);
-            em.persist(t);
+            ar.edu.unam.veterinaria.model.Peluqueria peluqueria = new ar.edu.unam.veterinaria.model.Peluqueria();
+            peluqueria.setTipoServicio(tsBd);
+            peluqueria.setTipoCorte(tipoServicio.getNombreDescriptivo());
+            peluqueria.setObservaciones(observaciones);
+
+            ar.edu.unam.veterinaria.model.Turno turno = new ar.edu.unam.veterinaria.model.Turno();
+            turno.setCliente(cliente);
+            turno.setMascota(mascota);
+            turno.setVeterinario(veterinario);
+            turno.setFecha(fecha);
+            turno.setHora(hora);
+            turno.setEstado(ar.edu.unam.veterinaria.model.EstadoTurno.PENDIENTE);
+            turno.agregarServicio(peluqueria);
+
+            em.persist(turno);
             em.getTransaction().commit();
-        } finally {
-            em.close();
-        }
+        } catch (ar.edu.unam.veterinaria.exception.CupoLLeno e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw e;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            e.printStackTrace();
+        } finally { em.close(); }
     }
 }
