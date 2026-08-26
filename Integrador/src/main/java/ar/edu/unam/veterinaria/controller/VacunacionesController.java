@@ -33,7 +33,6 @@ public class VacunacionesController {
     private ObservableList<AlertaVacunaDTO> listaProximos = FXCollections.observableArrayList();
     private ObservableList<AlertaVacunaDTO> listaVencidas = FXCollections.observableArrayList();
 
-    // Servicios
     private TurnoService turnoService = new TurnoService();
     private VacunaService vacunaService = new VacunaService();
     private ClienteService clienteService = new ClienteService();
@@ -63,57 +62,51 @@ public class VacunacionesController {
         listaProximos.clear();
         listaVencidas.clear();
 
-        // 1. Obtener todos los turnos, vacunas y clientes de la base de datos
         List<TurnoDTO> todosLosTurnos = turnoService.obtenerTodos();
         Map<Long, Vacuna> mapaVacunas = vacunaService.obtenerTodas().stream()
                 .collect(Collectors.toMap(Vacuna::getId, v -> v));
         Map<Long, ClienteDTO> mapaClientes = clienteService.obtenerTodos().stream()
                 .collect(Collectors.toMap(ClienteDTO::getId, c -> c));
 
-        // 2. Agrupar para encontrar la ÚLTIMA aplicación de cada vacuna por mascota
-        // Estructura: Map<IdMascota, Map<IdVacuna, TurnoMasReciente>>
         Map<Long, Map<Long, TurnoDTO>> ultimasVacunas = new HashMap<>();
 
         for (TurnoDTO t : todosLosTurnos) {
-            // Filtramos SOLO los turnos ya Atendidos que contengan una Vacuna
             if ("ATENDIDO".equalsIgnoreCase(t.getEstado()) && t.getIdVacuna() != null) {
                 ultimasVacunas.putIfAbsent(t.getIdMascota(), new HashMap<>());
                 Map<Long, TurnoDTO> vacunasMascota = ultimasVacunas.get(t.getIdMascota());
                 
                 TurnoDTO existente = vacunasMascota.get(t.getIdVacuna());
-                // Si es la primera vez que vemos esta vacuna, o si la fecha es MÁS RECIENTE, la guardamos.
+                
                 if (existente == null || t.getFecha().isAfter(existente.getFecha())) {
                     vacunasMascota.put(t.getIdVacuna(), t);
                 }
             }
         }
 
-        // 3. Calcular los vencimientos
         for (Map<Long, TurnoDTO> vacunasMascota : ultimasVacunas.values()) {
             for (TurnoDTO turno : vacunasMascota.values()) {
                 Vacuna vac = mapaVacunas.get(turno.getIdVacuna());
                 
                 if (vac != null && vac.getPeriodicidad() != null) {
-                    // Sumamos los meses de periodicidad configurada a la fecha en la que se aplicó
                     LocalDate fechaVencimiento = turno.getFecha().plusMonths(vac.getPeriodicidad());
                     long diasRestantes = ChronoUnit.DAYS.between(LocalDate.now(), fechaVencimiento);
                     
-                    // Si faltan 30 días o menos (o ya es negativo, o sea, venció)
                     if (diasRestantes <= 30) {
                         ClienteDTO cliente = mapaClientes.get(turno.getIdCliente());
                         String telefono = (cliente != null && cliente.getTelefono() != null) ? cliente.getTelefono() : "Sin teléfono";
                         
                         AlertaVacunaDTO alerta = new AlertaVacunaDTO(
                             turno.getIdMascota(),
+                            turno.getIdCliente(),
                             turno.getNombreMascota(),
                             turno.getNombreCliente(),
                             telefono,
-                            vac.getNombreComercial() + " (" + vac.getEnfermedad() + ")",
+                            vac.getNombreComercial(),
+                            vac.getEnfermedad(),
                             fechaVencimiento,
                             diasRestantes
                         );
                         
-                        // Clasificamos en listas
                         if (diasRestantes < 0) {
                             listaVencidas.add(alerta);
                         } else {
@@ -124,7 +117,6 @@ public class VacunacionesController {
             }
         }
 
-        // Ordenamos las listas para que lo más urgente aparezca primero
         listaProximos.sort((a, b) -> a.getFechaVencimiento().compareTo(b.getFechaVencimiento()));
         listaVencidas.sort((a, b) -> a.getFechaVencimiento().compareTo(b.getFechaVencimiento()));
 
@@ -138,12 +130,9 @@ public class VacunacionesController {
     }
 
     private void configurarTabla(
-            TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colMas, 
-            TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colProp, 
-            TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colVac, 
-            TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colVenc, 
-            TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colAcc, 
-            boolean esVencida) {
+            TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colMas, TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colProp, 
+            TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colVac, TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colVenc, 
+            TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colAcc, boolean esVencida) {
         
         colMas.setCellValueFactory(param -> new javafx.beans.property.SimpleObjectProperty<>(param.getValue()));
         colProp.setCellValueFactory(param -> new javafx.beans.property.SimpleObjectProperty<>(param.getValue()));
@@ -152,8 +141,7 @@ public class VacunacionesController {
         colAcc.setCellValueFactory(param -> new javafx.beans.property.SimpleObjectProperty<>(param.getValue()));
 
         colMas.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(AlertaVacunaDTO item, boolean empty) {
+            @Override protected void updateItem(AlertaVacunaDTO item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) { setGraphic(null); } else {
                     HBox box = new HBox(8); box.setAlignment(Pos.CENTER_LEFT);
@@ -166,8 +154,7 @@ public class VacunacionesController {
         });
 
         colProp.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(AlertaVacunaDTO item, boolean empty) {
+            @Override protected void updateItem(AlertaVacunaDTO item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) { setGraphic(null); } else {
                     VBox box = new VBox(2);
@@ -184,21 +171,19 @@ public class VacunacionesController {
         });
 
         colVac.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(AlertaVacunaDTO item, boolean empty) {
+            @Override protected void updateItem(AlertaVacunaDTO item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) { setGraphic(null); } else {
                     HBox box = new HBox(8); box.setAlignment(Pos.CENTER_LEFT);
                     FontIcon icon = new FontIcon("fas-syringe"); icon.setIconColor(Color.web("#D2B48C"));
-                    Label lbl = new Label(item.getNombreVacuna());
+                    Label lbl = new Label(item.getNombreVacuna() + " (" + item.getEnfermedadVacuna() + ")");
                     box.getChildren().addAll(icon, lbl); setGraphic(box);
                 }
             }
         });
 
         colVenc.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(AlertaVacunaDTO item, boolean empty) {
+            @Override protected void updateItem(AlertaVacunaDTO item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) { setGraphic(null); } else {
                     VBox box = new VBox(2);
@@ -216,16 +201,32 @@ public class VacunacionesController {
         });
 
         colAcc.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(AlertaVacunaDTO item, boolean empty) {
+            @Override protected void updateItem(AlertaVacunaDTO item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) { setGraphic(null); } else {
-                    Button btn = new Button("+ Registrar");
+                    Button btn = new Button("+ Agendar");
                     btn.getStyleClass().add("btn-primary");
                     btn.setStyle("-fx-padding: 4 12; -fx-font-size: 11px; -fx-background-color: #2CA871;");
+                    
+                    // Asignamos la acción para precargar Turnos
+                    btn.setOnAction(e -> agendarTurno(item));
+                    
                     setGraphic(btn);
                 }
             }
         });
+    }
+
+    private void agendarTurno(AlertaVacunaDTO item) {
+        // 1. Cargamos los datos en la memoria estática de TurnoController
+        TurnoController.preCargaClienteId = item.getIdCliente();
+        TurnoController.preCargaMascotaId = item.getIdMascota();
+        TurnoController.preCargaVacuna = item.getNombreVacuna();
+
+        // 2. Buscamos el botón "Turnos" del menú lateral general y simulamos un clic
+        Button btnTurnos = (Button) tvProximos.getScene().lookup("#btnTurnos");
+        if (btnTurnos != null) {
+            btnTurnos.fire();
+        }
     }
 }

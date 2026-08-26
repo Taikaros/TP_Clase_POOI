@@ -31,6 +31,9 @@ import java.util.stream.Collectors;
 
 public class TurnoController {
 
+    public static Long preCargaClienteId = null;
+    public static Long preCargaMascotaId = null;
+    public static String preCargaVacuna = null;
     private Long idTurnoEnEdicion = null; 
     private Long idTurnoEnAtencion = null;
     private LocalDate fechaInicioCalendario = LocalDate.now();
@@ -103,6 +106,51 @@ public class TurnoController {
         configurarFiltroMascotas();
         generarCalendario();
         cargarTabla(); 
+        // --- SISTEMA DE PRE-CARGA DESDE VACUNACIONES ---
+
+        if (preCargaClienteId != null) {
+            
+            abrirPanelFormulario(); 
+            
+            // 1. Seleccionamos el Cliente (Usando == para comparar el long primitivo)
+            for (int i = 0; i < cbCliente.getItems().size(); i++) {
+                if (cbCliente.getItems().get(i).getId() == preCargaClienteId) {
+                    cbCliente.getSelectionModel().select(i);
+                    break;
+                }
+            }
+                
+            // Usamos runLater para darle tiempo al sistema de cargar las mascotas
+            javafx.application.Platform.runLater(() -> {
+                
+                // 2. Seleccionamos la Mascota (Usando == también aquí)
+                for (int i = 0; i < cbMascota.getItems().size(); i++) {
+                    if (cbMascota.getItems().get(i).getId() == preCargaMascotaId) {
+                        cbMascota.getSelectionModel().select(i);
+                        break;
+                    }
+                }
+                    
+                // 3. Activamos la casilla de Vacunación
+                chkVacunacion.setSelected(true);
+                cbVacuna.setDisable(false); 
+                
+                // 4. Seleccionamos la Vacuna exacta (Aquí sí usamos .equals porque son Strings)
+                if (preCargaVacuna != null) {
+                    for (int i = 0; i < cbVacuna.getItems().size(); i++) {
+                        if (cbVacuna.getItems().get(i).getNombreComercial().equals(preCargaVacuna)) {
+                            cbVacuna.getSelectionModel().select(i);
+                            break;
+                        }
+                    }
+                }
+                
+                // 5. Limpiamos los datos de memoria
+                preCargaClienteId = null;
+                preCargaMascotaId = null;
+                preCargaVacuna = null;
+            });
+        }
     }
 
     private void generarCalendario() {
