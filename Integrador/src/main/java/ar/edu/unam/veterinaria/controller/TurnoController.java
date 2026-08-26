@@ -20,6 +20,7 @@ import javafx.util.StringConverter;
 import org.kordamp.ikonli.javafx.FontIcon;
 import javafx.scene.paint.Color;
 
+import java.util.function.UnaryOperator;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -100,6 +101,38 @@ public class TurnoController {
 
     @FXML
     public void initialize() {
+        UnaryOperator<TextFormatter.Change> filtroHora = change -> {
+            String textoFuturo = change.getControlNewText();
+            if (textoFuturo.matches("[0-9:]*") && textoFuturo.length() <= 5) {
+                return change;
+            }
+            return null; 
+        };
+
+        UnaryOperator<TextFormatter.Change> filtroFecha = change -> {
+            if (change.getControlNewText().matches("[0-9/]*")) return change;
+            return null;
+        };
+        dpFecha.getEditor().setTextFormatter(new TextFormatter<>(filtroFecha));
+
+        dpFecha.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                if (date != null && date.isAfter(LocalDate.now())) {
+                    setDisable(true);
+                    setStyle("-fx-background-color: #f3f4f6; -fx-text-fill: #9ca3af;");
+                }
+            }
+        });
+        txtHora.setTextFormatter(new TextFormatter<>(filtroHora));
+        btnGuardarFormulario.disableProperty().bind(
+            cbCliente.valueProperty().isNull()
+            .or(cbMascota.valueProperty().isNull())
+            .or(cbVeterinario.valueProperty().isNull())
+            .or(dpFecha.valueProperty().isNull())
+            .or(txtHora.textProperty().isEmpty())
+        );
         configurarColumnas();
         configurarConvertidoresComboBox();
         cargarDatosDesdeBD();
