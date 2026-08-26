@@ -1,14 +1,6 @@
 package ar.edu.unam.veterinaria.model;
 
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,11 +8,9 @@ import java.util.List;
 @Table(name = "veterinarios")
 public class Veterinario extends Persona {
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String matricula;
 
-    // multiplicidad de 1 Veterinario tiene Muchas (*) Especialidades
-    // uso una tabla intermedia para mantener limpia la relacion unidireccional
     @ManyToMany
     @JoinTable(
         name = "veterinario_especialidad",
@@ -29,116 +19,82 @@ public class Veterinario extends Persona {
     )
     private List<Especialidad> especialidades = new ArrayList<>();
 
-    // mapeo 
     @ElementCollection
-    @CollectionTable(name = "veterinario_dias_disponibles", joinColumns = @JoinColumn(name = "veterinario_id"))
-    @Column(name = "dia")
+    @CollectionTable(name = "veterinario_dias_disponibles")
     private List<String> diasDisponibles = new ArrayList<>();
 
-    // Constructor vacio
-    public Veterinario() {
-        super();
-    }
+    public Veterinario() {}
 
-    // Constructor heredando de Persona
     public Veterinario(String nombre, String apellido, String telefono, String email, String matricula) {
         super(nombre, apellido, telefono, email);
-        this.matricula = matricula;
+        setMatricula(matricula);
     }
 
-    // Metodos del UML
-    public String getEspecialidad() {
-        if (especialidades.isEmpty()) {
-            return "Sin especialidades asignadas.";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (Especialidad e : especialidades) {
-            sb.append(e.getNombreEspecialidad()).append(", ");
-        }
-        return sb.substring(0, sb.length() - 2); // saca la ultima coma
-    }
-
-    public List<String> getDiasDisponibles() {
-        return this.diasDisponibles;
-    }
-
-    public void agregarEspecialidad(Especialidad especialidad) throws ar.edu.unam.veterinaria.exception.EspecialidadExistente {
-        if (especialidad != null) {
-            for (Especialidad e : this.especialidades) {
-                if (e.getNombreEspecialidad().equalsIgnoreCase(especialidad.getNombreEspecialidad())) {
-                    throw new ar.edu.unam.veterinaria.exception.EspecialidadExistente(
-                        "El veterinario ya posee la especialidad: " + especialidad.getNombreEspecialidad()
-                    );
-                }
-            }
-            this.especialidades.add(especialidad);
-        }
-    }
+    public String getMatricula() { return matricula; }
 
     public void setMatricula(String matricula) {
+        if (matricula == null || matricula.trim().isEmpty()) throw new IllegalArgumentException("La matrícula es obligatoria.");
         this.matricula = matricula;
     }
 
-    // Getters y Setters necesarios
-    public String getMatricula() {
-        return matricula;
-    }
-
-    public List<Especialidad> getEspecialidades() {
-        return especialidades;
-    }
+    public List<Especialidad> getEspecialidades() { return especialidades; }
 
     public void setEspecialidades(List<Especialidad> especialidades) {
+        if (especialidades == null) throw new IllegalArgumentException("La lista de especialidades no puede ser nula.");
         this.especialidades = especialidades;
     }
 
-    public void setDiasDisponibles(List<String> diasDisponibles) {
-        this.diasDisponibles = diasDisponibles;
-    }
-    
-    
-public boolean validarDisponibilidad(java.time.LocalDate fecha, java.time.LocalTime hora, double duracionMinutos) {
-        if (this.diasDisponibles == null || this.diasDisponibles.isEmpty()) {
-            return false;
-        }
-
-        // Traducimos la fecha actual al formato de texto que usamos en la vista (Lun, Mar, Mié, etc.)
-        String prefijoDia = "";
-        switch (fecha.getDayOfWeek()) {
-            case MONDAY: prefijoDia = "Lun"; break;
-            case TUESDAY: prefijoDia = "Mar"; break;
-            case WEDNESDAY: prefijoDia = "Mi"; break; // Buscamos por prefijo "Mi" para evitar problemas con la tilde
-            case THURSDAY: prefijoDia = "Jue"; break;
-            case FRIDAY: prefijoDia = "Vie"; break;
-            case SATURDAY: prefijoDia = "S"; break; // "Sáb" o "Sab"
-            case SUNDAY: prefijoDia = "Dom"; break;
-        }
-
-        for (String diaStr : this.diasDisponibles) {
-            if (diaStr.startsWith(prefijoDia)) {
-                try {
-                    // Extraemos el horario, ej: "Lun: 09:00-17:00" -> "09:00-17:00"
-                    String rangoHorario = diaStr.substring(diaStr.indexOf(":") + 1).trim();
-                    String[] limites = rangoHorario.split("-");
-                    
-                    if (limites.length == 2) {
-                        java.time.LocalTime inicioJornada = java.time.LocalTime.parse(limites[0].trim());
-                        java.time.LocalTime finJornada = java.time.LocalTime.parse(limites[1].trim());
-                        
-                        // Calculamos a qué hora terminará el turno
-                        java.time.LocalTime finTurno = hora.plusMinutes((long) duracionMinutos);
-
-                        // Verificamos que no empiece antes de que llegue, ni termine después de que se vaya
-                        if (!hora.isBefore(inicioJornada) && !finTurno.isAfter(finJornada)) {
-                            return true; // El horario es válido
-                        }
-                    }
-                } catch (Exception e) {
-                    // Si el horario se escribió mal en la BD (ej. 09 a 17), salta el error y no da disponibilidad
-                    System.out.println("Error parseando horario del veterinario: " + diaStr);
-                }
+    public void agregarEspecialidad(Especialidad especialidad) throws ar.edu.unam.veterinaria.exception.EspecialidadExistente {
+        if (especialidad == null) throw new IllegalArgumentException("La especialidad no puede ser nula.");
+        for (Especialidad e : this.especialidades) {
+            if (e.getNombreEspecialidad().equalsIgnoreCase(especialidad.getNombreEspecialidad())) {
+                throw new ar.edu.unam.veterinaria.exception.EspecialidadExistente("El veterinario ya posee esta especialidad.");
             }
         }
-        return false; // Si recorrió todo y no encontró un día válido, no está disponible
+        this.especialidades.add(especialidad);
+    }
+
+    public List<String> getDiasDisponibles() { return diasDisponibles; }
+
+    public void setDiasDisponibles(List<String> diasDisponibles) {
+        if (diasDisponibles == null) throw new IllegalArgumentException("Los días disponibles no pueden ser nulos.");
+        this.diasDisponibles = diasDisponibles;
+    }
+
+    public String getEspecialidad() {
+        if (this.especialidades == null || this.especialidades.isEmpty()) return "Sin especialidad";
+        return this.especialidades.get(0).getNombreEspecialidad(); // Simplificado para listados
+    }
+
+    public boolean validarDisponibilidad(java.time.LocalDate fecha, java.time.LocalTime hora, double duracionMinutos) {
+        if (fecha == null || hora == null) return false;
+        String diaStr = fecha.getDayOfWeek().toString().toLowerCase();
+        String prefijoDia = "";
+        switch (diaStr) {
+            case "monday": prefijoDia = "Lun:"; break;
+            case "tuesday": prefijoDia = "Mar:"; break;
+            case "wednesday": prefijoDia = "Mie:"; break;
+            case "thursday": prefijoDia = "Jue:"; break;
+            case "friday": prefijoDia = "Vie:"; break;
+            case "saturday": prefijoDia = "Sab:"; break;
+            case "sunday": prefijoDia = "Dom:"; break;
+        }
+
+        for (String horario : this.diasDisponibles) {
+            if (horario.startsWith(prefijoDia)) {
+                try {
+                    String rangoHorario = horario.substring(horario.indexOf(":") + 1).trim();
+                    String[] limites = rangoHorario.split("-");
+                    java.time.LocalTime inicioJornada = java.time.LocalTime.parse(limites[0]);
+                    java.time.LocalTime finJornada = java.time.LocalTime.parse(limites[1]);
+                    java.time.LocalTime finTurno = hora.plusMinutes((long) duracionMinutos);
+
+                    if (!hora.isBefore(inicioJornada) && !finTurno.isAfter(finJornada)) {
+                        return true;
+                    }
+                } catch (Exception e) { System.err.println("Error parseando horario."); }
+            }
+        }
+        return false;
     }
 }
