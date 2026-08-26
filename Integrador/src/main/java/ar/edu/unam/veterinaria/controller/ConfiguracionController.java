@@ -8,7 +8,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.TextFormatter;
+
 import java.util.function.UnaryOperator;
 
 public class ConfiguracionController {
@@ -150,31 +150,36 @@ public class ConfiguracionController {
     }
 
     @FXML
-    private void guardarServicio() {
-        if (txtNombre.getText().trim().isEmpty() || txtPrecio.getText().trim().isEmpty()) {
-            mostrarAlerta("Campos Obligatorios", "El nombre y el precio son obligatorios.", Alert.AlertType.WARNING);
-            return;
-        }
+    private void guardarServicio(javafx.event.ActionEvent event) {
         try {
-            String nombreFinal = chkEsPeluqueria.isSelected() ? "[PELUQUERÍA] " + txtNombre.getText().trim() : txtNombre.getText().trim();
-            Double precio = Double.parseDouble(txtPrecio.getText().trim());
-            Double duracion = txtDuracion.getText().trim().isEmpty() ? 30.0 : Double.parseDouble(txtDuracion.getText().trim());
-            Integer cupo = txtCupo.getText().trim().isEmpty() ? 10 : Integer.parseInt(txtCupo.getText().trim());
+            String nombreFinal = chkEsPeluqueria.isSelected() ? "[PELUQUERÍA] " + txtNombre.getText() : txtNombre.getText();
+            Double precio = txtPrecio.getText().trim().isEmpty() ? null : Double.valueOf(txtPrecio.getText().trim());
+            Double duracion = txtDuracion.getText().trim().isEmpty() ? 30.0 : Double.valueOf(txtDuracion.getText().trim());
+            Integer cupo = txtCupo.getText().trim().isEmpty() ? 0 : Integer.valueOf(txtCupo.getText().trim());
 
             if (servicioEnEdicion == null) {
-                service.guardar(new TipoServicio(nombreFinal, precio, duracion, cupo));
-                mostrarAlerta("Éxito", "Servicio creado.", Alert.AlertType.INFORMATION);
+                ar.edu.unam.veterinaria.model.TipoServicio nuevo = new ar.edu.unam.veterinaria.model.TipoServicio(nombreFinal, precio, duracion, cupo);
+                service.guardar(nuevo);
+                mostrarAlerta("Éxito", "Servicio creado.", javafx.scene.control.Alert.AlertType.INFORMATION);
             } else {
                 servicioEnEdicion.setNombreDescriptivo(nombreFinal);
                 servicioEnEdicion.setPrecioBase(precio);
                 servicioEnEdicion.setDuracion(duracion);
                 servicioEnEdicion.setLimiteCupoDiario(cupo);
                 service.actualizar(servicioEnEdicion);
+                mostrarAlerta("Éxito", "Servicio actualizado.", javafx.scene.control.Alert.AlertType.INFORMATION);
             }
             limpiarFormulario();
             cargarTablaServicios();
+
         } catch (NumberFormatException e) {
-            mostrarAlerta("Error", "Valores numéricos inválidos.", Alert.AlertType.ERROR);
+            mostrarAlerta("Error de Formato", "Los campos Precio, Duración y Cupo deben ser numéricos.", javafx.scene.control.Alert.AlertType.WARNING);
+        } catch (IllegalArgumentException e) {
+            // Atrapa el error del Modelo (Precio negativo, cupo menor a cero)
+            mostrarAlerta("Datos Inválidos", e.getMessage(), javafx.scene.control.Alert.AlertType.WARNING);
+        } catch (Exception e) {
+            mostrarAlerta("Error", "Ocurrió un problema al guardar el servicio.", javafx.scene.control.Alert.AlertType.ERROR);
+            e.printStackTrace();
         }
     }
 
@@ -211,28 +216,34 @@ public class ConfiguracionController {
     }
 
     @FXML
-    private void guardarVacuna() {
-        if (txtVacNombre.getText().trim().isEmpty() || txtVacMeses.getText().trim().isEmpty()) {
-            mostrarAlerta("Campos Obligatorios", "Nombre y Periodicidad son obligatorios.", Alert.AlertType.WARNING);
-            return;
-        }
+    private void guardarVacuna(javafx.event.ActionEvent event) {
         try {
-            String nombre = txtVacNombre.getText().trim();
-            String enfermedad = txtVacEnfermedad.getText().trim();
-            Integer meses = Integer.parseInt(txtVacMeses.getText().trim());
+            String nombre = txtVacNombre.getText();
+            String enfermedad = txtVacEnfermedad.getText();
+            Integer meses = txtVacMeses.getText().trim().isEmpty() ? null : Integer.valueOf(txtVacMeses.getText().trim());
 
             if (vacunaEnEdicion == null) {
-                vacunaService.guardar(new Vacuna(nombre, enfermedad, meses));
+                ar.edu.unam.veterinaria.model.Vacuna nueva = new ar.edu.unam.veterinaria.model.Vacuna(nombre, enfermedad, meses);
+                vacunaService.guardar(nueva);
+                mostrarAlerta("Éxito", "Vacuna creada.", javafx.scene.control.Alert.AlertType.INFORMATION);
             } else {
                 vacunaEnEdicion.setNombreComercial(nombre);
                 vacunaEnEdicion.setEnfermedad(enfermedad);
                 vacunaEnEdicion.setPeriodicidad(meses);
                 vacunaService.guardar(vacunaEnEdicion);
+                mostrarAlerta("Éxito", "Vacuna actualizada.", javafx.scene.control.Alert.AlertType.INFORMATION);
             }
             limpiarFormularioVacuna();
             cargarTablaVacunas();
+
         } catch (NumberFormatException e) {
-            mostrarAlerta("Error", "La periodicidad debe ser en meses (números enteros).", Alert.AlertType.ERROR);
+            mostrarAlerta("Error de Formato", "La periodicidad debe ser un número entero (meses).", javafx.scene.control.Alert.AlertType.WARNING);
+        } catch (IllegalArgumentException e) {
+            // Atrapa el error del Modelo (Periodicidad negativa)
+            mostrarAlerta("Datos Inválidos", e.getMessage(), javafx.scene.control.Alert.AlertType.WARNING);
+        } catch (Exception e) {
+            mostrarAlerta("Error", "Ocurrió un problema al guardar la vacuna.", javafx.scene.control.Alert.AlertType.ERROR);
+            e.printStackTrace();
         }
     }
 

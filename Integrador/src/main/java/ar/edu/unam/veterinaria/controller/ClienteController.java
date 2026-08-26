@@ -321,56 +321,56 @@ public class ClienteController {
     // --- NUEVA LÓGICA DE GUARDADO INTELIGENTE (Crea o Edita según el contexto) ---
     @FXML 
     private void guardarCliente() {
-        // 1. Validación de campos obligatorios
-        if (txtNombreCliente.getText().trim().isEmpty() || 
-            txtApellidoCliente.getText().trim().isEmpty() || 
-            txtDniCliente.getText().trim().isEmpty() || 
-            txtTelefonoCliente.getText().trim().isEmpty()) {
-            mostrarAlerta("Campos Incompletos", "Por favor, complete al menos Nombre, Apellido, DNI y Teléfono.", Alert.AlertType.WARNING);
-            return;
-        }
-
-        ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
-
         try {
-            if (clienteSeleccionado == null) {
-                // --- MODO CREACIÓN NUEVA ---
-                ClienteDTO nuevoCliente = new ClienteDTO(0L, txtNombreCliente.getText().trim(), txtApellidoCliente.getText().trim(), txtDniCliente.getText().trim(), txtTelefonoCliente.getText().trim(), txtEmailCliente.getText().trim());
-                ClienteDTO guardado = clienteService.guardarCliente(nuevoCliente);
-                masterDataClientes.add(guardado);
-                actualizarContadorClientes();
-                listaClientes.getSelectionModel().select(guardado);
-                mostrarAlerta("Éxito", "Cliente registrado correctamente.", Alert.AlertType.INFORMATION);
-            } else {
-                // --- MODO EDICIÓN ---
-                clienteSeleccionado.setNombre(txtNombreCliente.getText().trim());
-                clienteSeleccionado.setApellido(txtApellidoCliente.getText().trim());
-                clienteSeleccionado.setDni(txtDniCliente.getText().trim());
-                clienteSeleccionado.setTelefono(txtTelefonoCliente.getText().trim());
-                clienteSeleccionado.setEmail(txtEmailCliente.getText().trim());
+            ar.edu.unam.veterinaria.dto.ClienteDTO clienteDTO = new ar.edu.unam.veterinaria.dto.ClienteDTO();
+            clienteDTO.setId(0L);
+            clienteDTO.setNombre(txtNombreCliente.getText());
+            clienteDTO.setApellido(txtApellidoCliente.getText());
+            clienteDTO.setDni(txtDniCliente.getText());
+            clienteDTO.setTelefono(txtTelefonoCliente.getText());
+            clienteDTO.setEmail(txtEmailCliente.getText());
 
-                clienteService.actualizarCliente(clienteSeleccionado);
-                
-                listaClientes.refresh();
-                lblNombrePerfil.setText(clienteSeleccionado.getNombre() + " " + clienteSeleccionado.getApellido());
-                lblDniPerfil.setText("DNI: " + clienteSeleccionado.getDni());
-                mostrarAlerta("Éxito", "Cliente modificado correctamente.", Alert.AlertType.INFORMATION);
-            }
+            ar.edu.unam.veterinaria.dto.ClienteDTO guardado = clienteService.guardarCliente(clienteDTO);
+            masterDataClientes.add(guardado);
+            actualizarContadorClientes();
+            listaClientes.getSelectionModel().select(guardado);
+            mostrarAlerta("Éxito", "Cliente registrado correctamente.", javafx.scene.control.Alert.AlertType.INFORMATION);
+            
         } catch (IllegalArgumentException e) { 
-            mostrarAlerta("Atención", e.getMessage(), Alert.AlertType.WARNING);
+            // Atrapa el error del Modelo (DNI vacío, sin nombre, etc.)
+            mostrarAlerta("Datos Inválidos", e.getMessage(), javafx.scene.control.Alert.AlertType.WARNING);
         } catch (Exception e) { 
-            mostrarAlerta("Error", "Ocurrió un error en la base de datos.", Alert.AlertType.ERROR); 
+            mostrarAlerta("Error", "Ocurrió un error en la base de datos.", javafx.scene.control.Alert.AlertType.ERROR); 
+            e.printStackTrace();
         }
     }
 
     @FXML 
     private void modificarCliente() {
-        // El botón "Editar" en la interfaz ahora solo hace Focus en la caja de texto para que el usuario escriba rápido
-        if(listaClientes.getSelectionModel().getSelectedItem() == null) {
-            mostrarAlerta("Atención", "Seleccione un cliente de la lista.", Alert.AlertType.WARNING);
-            return;
+        ar.edu.unam.veterinaria.dto.ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
+        if (clienteSeleccionado == null) { 
+            mostrarAlerta("Atención", "Seleccione un cliente de la lista.", javafx.scene.control.Alert.AlertType.WARNING); 
+            return; 
         }
-        txtNombreCliente.requestFocus();
+        try {
+            clienteSeleccionado.setNombre(txtNombreCliente.getText());
+            clienteSeleccionado.setApellido(txtApellidoCliente.getText());
+            clienteSeleccionado.setDni(txtDniCliente.getText());
+            clienteSeleccionado.setTelefono(txtTelefonoCliente.getText());
+            clienteSeleccionado.setEmail(txtEmailCliente.getText());
+
+            clienteService.actualizarCliente(clienteSeleccionado);
+            listaClientes.refresh();
+            lblNombrePerfil.setText(clienteSeleccionado.getNombre() + " " + clienteSeleccionado.getApellido());
+            lblDniPerfil.setText("DNI: " + clienteSeleccionado.getDni());
+            mostrarAlerta("Éxito", "Cliente modificado correctamente.", javafx.scene.control.Alert.AlertType.INFORMATION);
+            
+        } catch (IllegalArgumentException e) { 
+            mostrarAlerta("Datos Inválidos", e.getMessage(), javafx.scene.control.Alert.AlertType.WARNING);
+        } catch (Exception e) { 
+            mostrarAlerta("Error", "No se pudo modificar el cliente.", javafx.scene.control.Alert.AlertType.ERROR); 
+            e.printStackTrace();
+        }
     }
 
     @FXML 
@@ -421,43 +421,44 @@ public class ClienteController {
 
     @FXML 
     private void guardarMascota() {
-        ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
-        
-        // Validación de campos obligatorios
-        if (txtNombreMascota.getText().trim().isEmpty() || 
-            txtEspecie.getText().trim().isEmpty() || 
-            txtRaza.getText().trim().isEmpty() || 
-            dpFechaNacimiento.getValue() == null) {
-            mostrarAlerta("Campos Incompletos", "Complete todos los campos obligatorios de la mascota.", Alert.AlertType.WARNING);
+        ar.edu.unam.veterinaria.dto.ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
+        if (clienteSeleccionado == null) {
+            mostrarAlerta("Atención", "Debe seleccionar un dueño de la lista primero.", javafx.scene.control.Alert.AlertType.WARNING);
             return;
         }
-
-        Long nroFicha = 0L;
-        if (txtNumeroFicha.getText() != null && !txtNumeroFicha.getText().trim().isEmpty()) {
-            try { nroFicha = Long.valueOf(txtNumeroFicha.getText()); 
-            } catch (NumberFormatException e) { mostrarAlerta("Error", "El número de ficha debe contener únicamente números.", Alert.AlertType.WARNING); return; }
-        }
         
-        MascotaDTO dto = new MascotaDTO(
-            idMascotaEnEdicion != null ? idMascotaEnEdicion : 0L, 
-            txtNombreMascota.getText().trim(), txtEspecie.getText().trim(), txtRaza.getText().trim(), 
-            dpFechaNacimiento.getValue(), clienteSeleccionado.getId(), "", nroFicha
-        );
-
         try {
+            Long nroFicha = null;
+            if (txtNumeroFicha.getText() != null && !txtNumeroFicha.getText().trim().isEmpty()) {
+                nroFicha = Long.valueOf(txtNumeroFicha.getText().trim()); 
+            }
+            
+            ar.edu.unam.veterinaria.dto.MascotaDTO dto = new ar.edu.unam.veterinaria.dto.MascotaDTO(
+                idMascotaEnEdicion != null ? idMascotaEnEdicion : 0L, 
+                txtNombreMascota.getText(), txtEspecie.getText(), txtRaza.getText(), 
+                dpFechaNacimiento.getValue(), clienteSeleccionado.getId(), "", nroFicha
+            );
+
             if (idMascotaEnEdicion == null) {
                 mascotaService.guardarMascota(dto);
-                mostrarAlerta("Éxito", "Mascota guardada correctamente.", Alert.AlertType.INFORMATION);
+                mostrarAlerta("Éxito", "Mascota guardada correctamente.", javafx.scene.control.Alert.AlertType.INFORMATION);
             } else {
                 mascotaService.actualizarMascota(dto);
-                mostrarAlerta("Éxito", "Mascota modificada correctamente.", Alert.AlertType.INFORMATION);
+                mostrarAlerta("Éxito", "Mascota modificada correctamente.", javafx.scene.control.Alert.AlertType.INFORMATION);
             }
             cargarMascotasDelCliente(clienteSeleccionado.getId());
             cerrarModalMascota();
-        } catch (IllegalArgumentException e) { mostrarAlerta("Atención", e.getMessage(), Alert.AlertType.WARNING);
-        } catch (Exception e) { mostrarAlerta("Error", "Ocurrió un error al guardar la mascota.", Alert.AlertType.ERROR); }
+            
+        } catch (NumberFormatException e) { 
+            mostrarAlerta("Error de Formato", "El número de ficha debe contener únicamente números.", javafx.scene.control.Alert.AlertType.WARNING); 
+        } catch (IllegalArgumentException e) { 
+            // Atrapa el error del Modelo (Fecha en el futuro, especie vacía, etc.)
+            mostrarAlerta("Datos Inválidos", e.getMessage(), javafx.scene.control.Alert.AlertType.WARNING);
+        } catch (Exception e) { 
+            mostrarAlerta("Error", "Ocurrió un error al guardar la mascota.", javafx.scene.control.Alert.AlertType.ERROR); 
+            e.printStackTrace();
+        }
     }
-
     private void eliminarMascotaEspecifica(MascotaDTO mascota) {
         try {
             mascotaService.eliminarMascota(mascota.getId());
