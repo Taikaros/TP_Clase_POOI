@@ -1,63 +1,108 @@
 package ar.edu.unam.veterinaria.model;
 
+import ar.edu.unam.veterinaria.exception.CancelacionFueradeTermino;
+import ar.edu.unam.veterinaria.exception.TurnoSinServiciosException;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "turnos")
 public class Turno {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(nullable = false)
     private LocalDate fecha;
-    
+
     @Column(nullable = false)
     private LocalTime hora;
-    
-    // LA NUEVA RELACIÓN
+
     @OneToMany(mappedBy = "turno", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Servicio> servicios = new ArrayList<>();
-    
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private EstadoTurno estado;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "mascota_id", nullable = false)
+    @JoinColumn(name = "mascota_id")
     private Mascota mascota;
-    
+
     @ManyToOne(optional = false)
-    @JoinColumn(name = "veterinario_id", nullable = false)
+    @JoinColumn(name = "veterinario_id")
     private Veterinario veterinario;
-    
+
     @ManyToOne(optional = false)
-    @JoinColumn(name = "cliente_id", nullable = false)
+    @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
-    public Turno() {}
-
-    public Turno(LocalDate fecha, LocalTime hora, Mascota mascota, Veterinario veterinario, Cliente cliente) {
-        this.fecha = fecha;
-        this.hora = hora;
-        this.mascota = mascota;
-        this.veterinario = veterinario;
-        this.cliente = cliente;
-        this.estado = EstadoTurno.PENDIENTE; 
+    public Turno() {
+        this.estado = EstadoTurno.PENDIENTE;
     }
 
-    // Métodos de negocio según UML
     public void agregarServicio(Servicio servicio) {
-        this.servicios.add(servicio);
-        servicio.setTurno(this); // Sincronizamos ambos lados de la relación
+        if (servicio != null && !this.servicios.contains(servicio)) {
+            this.servicios.add(servicio);
+            servicio.setTurno(this);
+        }
     }
 
     public Double calcularCostoTotal() {
-        return servicios.stream().mapToDouble(Servicio::calcularCosto).sum();
+        if (this.servicios == null || this.servicios.isEmpty()) {
+            return 0.0;
+        }
+        return this.servicios.stream()
+                .mapToDouble(Servicio::calcularCosto)
+                .sum();
+    }
+
+    public void validarServicios() throws TurnoSinServiciosException {
+        if (this.servicios == null || this.servicios.isEmpty()) {
+            throw new TurnoSinServiciosException(
+                "Regla de Dominio: Un turno no puede ser agendado sin al menos una práctica o servicio asociado."
+            );
+        }
+    }
+
+    // ---> MÁQUINA DE ESTADOS Y CANCELACIÓN EN EL DOMINIO <---
+
+    public void confirmar() {
+        if (this.estado == EstadoTurno.CANCELADO || this.estado == EstadoTurno.ATENDIDO) {
+            throw new IllegalStateException("No se puede confirmar un turno que ya fue atendido o cancelado.");
+        }
+        this.estado = EstadoTurno.CONFIRMADO;
+    }
+
+    public void atender() {
+        if (this.estado == EstadoTurno.CANCELADO) {
+            throw new IllegalStateException("No se puede atender un turno cancelado.");
+        }
+        if (this.estado == EstadoTurno.ATENDIDO) {
+            throw new IllegalStateException("El turno ya se encuentra atendido.");
+        }
+        this.estado = EstadoTurno.ATENDIDO;
+    }
+
+    public void cancelar(LocalDateTime fechaHoraActual) throws CancelacionFueradeTermino {
+        if (this.estado == EstadoTurno.ATENDIDO) {
+            throw new IllegalStateException("Un turno ya atendido no puede ser cancelado.");
+        }
+        if (this.estado == EstadoTurno.CANCELADO) {
+            return; 
+        }
+
+        LocalDateTime fechaHoraTurno = LocalDateTime.of(this.fecha, this.hora);
+        if (fechaHoraActual.plusHours(24).isAfter(fechaHoraTurno)) {
+            throw new CancelacionFueradeTermino(
+                "El turno solo puede cancelarse con al menos 24 horas de anticipación."
+            );
+        }
+        this.estado = EstadoTurno.CANCELADO;
     }
 
     // Getters y Setters
@@ -77,13 +122,4 @@ public class Turno {
     public void setVeterinario(Veterinario veterinario) { this.veterinario = veterinario; }
     public Cliente getCliente() { return cliente; }
     public void setCliente(Cliente cliente) { this.cliente = cliente; }
-
-    // ---> LA REGLA DE ORO DEL DOMINIO <---
-    public void validarServicios() throws ar.edu.unam.veterinaria.exception.TurnoSinServiciosException {
-        if (this.servicios == null || this.servicios.isEmpty()) {
-            throw new ar.edu.unam.veterinaria.exception.TurnoSinServiciosException(
-                "Regla de Dominio: Un turno no puede ser agendado sin al menos una práctica o servicio asociado."
-            );
-        }
-    }
 }

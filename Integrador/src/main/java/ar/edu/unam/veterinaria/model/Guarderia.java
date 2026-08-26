@@ -1,5 +1,6 @@
 package ar.edu.unam.veterinaria.model;
 
+import ar.edu.unam.veterinaria.exception.JaulaNoDisponible;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
@@ -38,4 +39,14 @@ public class Guarderia extends Servicio {
 
     public LocalDate getFechaSalida() { return fechaSalida; }
     public void setFechaSalida(LocalDate fechaSalida) { this.fechaSalida = fechaSalida; }
+
+    // ---> REGLA DE NEGOCIO: ASIGNACIÓN DE JAULAS <---
+    public void registrarReserva(Mascota mascota, java.time.LocalDate fechaIngreso, String jaulaDeseada, java.util.List<String> jaulasOcupadas) throws ar.edu.unam.veterinaria.exception.JaulaNoDisponible {
+        if (jaulasOcupadas != null && jaulasOcupadas.contains(jaulaDeseada)) {
+            throw new ar.edu.unam.veterinaria.exception.JaulaNoDisponible(
+                "La jaula '" + jaulaDeseada + "' ya se encuentra ocupada para la fecha " + fechaIngreso.toString() + "."
+            );
+        }
+        this.jaulaAsignada = jaulaDeseada;
+    }
 }

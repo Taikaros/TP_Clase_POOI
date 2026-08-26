@@ -35,4 +35,20 @@ public class Cliente extends Persona {
         mascotas.add(mascota);
         mascota.setDueno(this);
     }
+    // ---> REGLA DE NEGOCIO: BÚSQUEDA SEGURA <---
+    public Mascota obtenerMascotaPorFicha(Long numeroFicha) throws ar.edu.unam.veterinaria.exception.MascotaNoEncontrada {
+        if (this.mascotas == null || this.mascotas.isEmpty()) {
+            throw new ar.edu.unam.veterinaria.exception.MascotaNoEncontrada("El cliente " + this.getNombre() + " no tiene mascotas registradas.");
+        }
+        
+        for (Mascota m : this.mascotas) {
+            if (m.getNumeroFicha() != null && m.getNumeroFicha().equals(numeroFicha)) {
+                return m; // Mascota encontrada
+            }
+        }
+        
+        throw new ar.edu.unam.veterinaria.exception.MascotaNoEncontrada(
+            "No se encontró ninguna mascota con el número de ficha FCH-" + numeroFicha + " asociada a este cliente."
+        );
+    }
 }

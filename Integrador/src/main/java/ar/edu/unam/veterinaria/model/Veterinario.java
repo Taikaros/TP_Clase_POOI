@@ -62,8 +62,15 @@ public class Veterinario extends Persona {
         return this.diasDisponibles;
     }
 
-    public void agregarEspecialidad(Especialidad especialidad) {
-        if (especialidad != null && !this.especialidades.contains(especialidad)) {
+    public void agregarEspecialidad(Especialidad especialidad) throws ar.edu.unam.veterinaria.exception.EspecialidadExistente {
+        if (especialidad != null) {
+            for (Especialidad e : this.especialidades) {
+                if (e.getNombreEspecialidad().equalsIgnoreCase(especialidad.getNombreEspecialidad())) {
+                    throw new ar.edu.unam.veterinaria.exception.EspecialidadExistente(
+                        "El veterinario ya posee la especialidad: " + especialidad.getNombreEspecialidad()
+                    );
+                }
+            }
             this.especialidades.add(especialidad);
         }
     }

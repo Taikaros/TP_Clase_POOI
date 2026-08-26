@@ -38,4 +38,16 @@ public class TipoServicio {
 
     public Integer getLimiteCupoDiario() { return limiteCupoDiario; }
     public void setLimiteCupoDiario(Integer limiteCupoDiario) { this.limiteCupoDiario = limiteCupoDiario; }
+
+    // ---> REGLA DE NEGOCIO: CONTROL DE CUPOS <---
+    public void validarCupo(java.time.LocalDate fecha, int ocupacionActual) throws ar.edu.unam.veterinaria.exception.CupoLLeno {
+        if (this.limiteCupoDiario != null && this.limiteCupoDiario > 0) {
+            if (ocupacionActual >= this.limiteCupoDiario) {
+                throw new ar.edu.unam.veterinaria.exception.CupoLLeno(
+                    "El servicio '" + this.nombreDescriptivo + "' alcanzó su cupo máximo de " + 
+                    this.limiteCupoDiario + " reservas para el día " + fecha.toString() + "."
+                );
+            }
+        }
+    }
 }

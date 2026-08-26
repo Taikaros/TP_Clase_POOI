@@ -12,6 +12,7 @@ import ar.edu.unam.veterinaria.model.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -109,9 +110,7 @@ public class TurnoService {
                 }
             }
             
-            // LA REGLA DE ORO EN ACCIÓN ANTES DE GUARDAR
             turno.validarServicios();
-            
             em.persist(turno);
             em.getTransaction().commit();
             return TurnoMapper.toDTO(turno);
@@ -175,9 +174,7 @@ public class TurnoService {
                 }
             }
             
-            // LA REGLA DE ORO EN ACCIÓN ANTES DE ACTUALIZAR
             turno.validarServicios();
-            
             em.merge(turno);
             em.getTransaction().commit();
             return TurnoMapper.toDTO(turno);
@@ -191,18 +188,31 @@ public class TurnoService {
         } finally { em.close(); }
     }
 
+    // APLICAMOS LA REGLA DEL DOMINIO
     public void confirmarTurno(Long idTurno) {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
-        try { em.getTransaction().begin(); Turno turno = em.find(Turno.class, idTurno); if (turno != null) { turno.setEstado(EstadoTurno.CONFIRMADO); em.merge(turno); } em.getTransaction().commit(); } catch (Exception e) { if (em.getTransaction().isActive()) em.getTransaction().rollback(); e.printStackTrace(); } finally { em.close(); }
+        try { 
+            em.getTransaction().begin(); 
+            Turno turno = em.find(Turno.class, idTurno); 
+            if (turno != null) { 
+                turno.confirmar(); // La entidad controla el flujo de su propio estado
+                em.merge(turno); 
+            } 
+            em.getTransaction().commit(); 
+        } catch (Exception e) { 
+            if (em.getTransaction().isActive()) em.getTransaction().rollback(); 
+            e.printStackTrace(); 
+        } finally { em.close(); }
     }
 
+    // APLICAMOS LA REGLA DEL DOMINIO
     public void atenderTurno(Long idTurno, String diagnostico, String tratamiento) {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
             Turno turno = em.find(Turno.class, idTurno);
             if (turno != null) {
-                turno.setEstado(EstadoTurno.ATENDIDO);
+                turno.atender(); // La entidad verifica si realmente se lo puede atender
                 for (Servicio s : turno.getServicios()) {
                     if (s instanceof Consulta) {
                         Consulta c = (Consulta) s;
@@ -219,21 +229,18 @@ public class TurnoService {
         } finally { em.close(); }
     }
 
+    // APLICAMOS LA REGLA DEL DOMINIO
     public void cancelarTurno(Long idTurno) throws CancelacionFueradeTermino {
         EntityManager em = AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
             Turno turno = em.find(Turno.class, idTurno);
             if (turno != null) {
-                java.time.LocalDateTime fechaHoraTurno = java.time.LocalDateTime.of(turno.getFecha(), turno.getHora());
-                if (java.time.LocalDateTime.now().plusHours(24).isAfter(fechaHoraTurno)) {
-                    throw new CancelacionFueradeTermino("El turno solo puede cancelarse con al menos 24 horas de anticipación.");
-                }
-                turno.setEstado(EstadoTurno.CANCELADO);
+                turno.cancelar(LocalDateTime.now()); // Le pasamos el tiempo actual a la entidad
                 em.merge(turno);
             }
             em.getTransaction().commit();
-        } catch (CancelacionFueradeTermino e) {
+        } catch (CancelacionFueradeTermino | IllegalStateException e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e; 
         } catch (Exception e) {
