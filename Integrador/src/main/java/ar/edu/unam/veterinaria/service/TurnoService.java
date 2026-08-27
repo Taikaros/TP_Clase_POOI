@@ -146,8 +146,8 @@ public class TurnoService {
             turno.setMascota(mascota);
             turno.setVeterinario(veterinario);
             
+            // Limpiamos la lista SIN hacer em.flush() para evitar el Constraint Violation en la BD
             turno.getServicios().clear();
-            em.flush(); 
 
             if (dto.getServiciosSeleccionados() != null) {
                 for (String nombreServicio : dto.getServiciosSeleccionados()) {
@@ -184,7 +184,7 @@ public class TurnoService {
         } catch (Exception e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             e.printStackTrace();
-            return null;
+            throw new RuntimeException("Error al actualizar el turno.");
         } finally { em.close(); }
     }
 

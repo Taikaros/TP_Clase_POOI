@@ -66,22 +66,25 @@ public class Veterinario extends Persona {
         return this.especialidades.get(0).getNombreEspecialidad(); // Simplificado para listados
     }
 
-    public boolean validarDisponibilidad(java.time.LocalDate fecha, java.time.LocalTime hora, double duracionMinutos) {
+   public boolean validarDisponibilidad(java.time.LocalDate fecha, java.time.LocalTime hora, double duracionMinutos) {
         if (fecha == null || hora == null) return false;
         String diaStr = fecha.getDayOfWeek().toString().toLowerCase();
         String prefijoDia = "";
+        String prefijoDiaAlt = ""; // Agregamos prefijo alternativo para lidiar con tildes
+        
         switch (diaStr) {
             case "monday": prefijoDia = "Lun:"; break;
             case "tuesday": prefijoDia = "Mar:"; break;
-            case "wednesday": prefijoDia = "Mie:"; break;
+            case "wednesday": prefijoDia = "Mie:"; prefijoDiaAlt = "Mié:"; break;
             case "thursday": prefijoDia = "Jue:"; break;
             case "friday": prefijoDia = "Vie:"; break;
-            case "saturday": prefijoDia = "Sab:"; break;
+            case "saturday": prefijoDia = "Sab:"; prefijoDiaAlt = "Sáb:"; break;
             case "sunday": prefijoDia = "Dom:"; break;
         }
 
         for (String horario : this.diasDisponibles) {
-            if (horario.startsWith(prefijoDia)) {
+            // Verifica tanto la versión sin tilde como con tilde
+            if (horario.startsWith(prefijoDia) || (!prefijoDiaAlt.isEmpty() && horario.startsWith(prefijoDiaAlt))) {
                 try {
                     String rangoHorario = horario.substring(horario.indexOf(":") + 1).trim();
                     String[] limites = rangoHorario.split("-");
