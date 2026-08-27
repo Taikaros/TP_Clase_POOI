@@ -45,7 +45,6 @@ public class ClienteController {
     @FXML private TextField txtEspecie;
     @FXML private TextField txtRaza;
     @FXML private DatePicker dpFechaNacimiento;
-    @FXML private TextField txtNumeroFicha;
 
     private ClienteService clienteService = new ClienteService();
     private MascotaService mascotaService = new MascotaService();
@@ -63,7 +62,6 @@ public class ClienteController {
 
         txtDniCliente.setTextFormatter(new TextFormatter<>(filtroNumeros));
         txtTelefonoCliente.setTextFormatter(new TextFormatter<>(filtroNumeros));
-        txtNumeroFicha.setTextFormatter(new TextFormatter<>(filtroNumeros));
         
         // --- 2. FILTRO PARA NOMBRES (Letras y Autocapitalización) ---
         UnaryOperator<TextFormatter.Change> filtroNombres = change -> {
@@ -130,11 +128,10 @@ public class ClienteController {
         });
 
         btnGuardarMascota.disableProperty().bind(
-            txtNombreMascota.textProperty().isEmpty()
-            .or(txtEspecie.textProperty().isEmpty())
-            .or(txtRaza.textProperty().isEmpty()
-            .or(txtNumeroFicha.textProperty().isEmpty()))
-            .or(dpFechaNacimiento.valueProperty().isNull())
+        txtNombreMascota.textProperty().isEmpty()
+        .or(txtEspecie.textProperty().isEmpty())
+        .or(txtRaza.textProperty().isEmpty())
+        .or(dpFechaNacimiento.valueProperty().isNull())
         );
         // 4. Ejecución normal de la pantalla
         configurarListaClientes();
@@ -416,7 +413,7 @@ public class ClienteController {
         }
         idMascotaEnEdicion = null;
         lblTituloModalMascota.setText("Agregar Mascota");
-        txtNombreMascota.clear(); txtEspecie.clear(); txtRaza.clear(); dpFechaNacimiento.setValue(null); txtNumeroFicha.clear();
+        txtNombreMascota.clear(); txtEspecie.clear(); txtRaza.clear(); dpFechaNacimiento.setValue(null);
         overlayMascota.setVisible(true);
     }
 
@@ -427,7 +424,6 @@ public class ClienteController {
         txtEspecie.setText(mascota.getEspecie());
         txtRaza.setText(mascota.getRaza());
         dpFechaNacimiento.setValue(mascota.getFechaNacimiento());
-        txtNumeroFicha.setText(mascota.getNumeroFicha() != null && mascota.getNumeroFicha() > 0 ? String.valueOf(mascota.getNumeroFicha()) : "");
         overlayMascota.setVisible(true);
     }
 
@@ -446,12 +442,14 @@ public class ClienteController {
         }
         
         try {
-            Long nroFicha = null; // Iniciamos en null para activar la autogeneración
-            String textoFicha = txtNumeroFicha.getText();
+            Long nroFicha = null;
             
-            // Si el usuario escribió un número manualmente o está editando, lo usamos
-            if (textoFicha != null && !textoFicha.trim().isEmpty()) {
-                nroFicha = Long.valueOf(textoFicha.trim()); 
+            // Si estamos editando, rescatamos la ficha original para no pisarla
+            if (idMascotaEnEdicion != null) {
+                ar.edu.unam.veterinaria.dto.MascotaDTO mascotaEditada = listaMascotas.getSelectionModel().getSelectedItem();
+                if (mascotaEditada != null) {
+                    nroFicha = mascotaEditada.getNumeroFicha();
+                }
             }
             
             ar.edu.unam.veterinaria.dto.MascotaDTO dto = new ar.edu.unam.veterinaria.dto.MascotaDTO(
@@ -470,8 +468,6 @@ public class ClienteController {
             cargarMascotasDelCliente(clienteSeleccionado.getId());
             cerrarModalMascota();
             
-        } catch (NumberFormatException e) { 
-            mostrarAlerta("Error de Formato", "El número de ficha debe contener únicamente números.", javafx.scene.control.Alert.AlertType.WARNING); 
         } catch (IllegalArgumentException e) { 
             mostrarAlerta("Datos Inválidos", e.getMessage(), javafx.scene.control.Alert.AlertType.WARNING);
         } catch (Exception e) { 
