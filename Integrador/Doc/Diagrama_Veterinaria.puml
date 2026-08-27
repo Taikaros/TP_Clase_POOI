@@ -1,6 +1,6 @@
 @startuml Diagrama_Veterinaria
 
-!theme plain
+
 skinparam classAttributeIconSize 0
 
 package ar.edu.unam.veterinaria.model {
