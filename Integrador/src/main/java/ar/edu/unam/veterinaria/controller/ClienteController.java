@@ -437,7 +437,7 @@ public class ClienteController {
         idMascotaEnEdicion = null;
     }
 
-    @FXML 
+@FXML 
     private void guardarMascota() {
         ar.edu.unam.veterinaria.dto.ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
         if (clienteSeleccionado == null) {
@@ -446,9 +446,12 @@ public class ClienteController {
         }
         
         try {
-            Long nroFicha = null;
-            if (txtNumeroFicha.getText() != null && !txtNumeroFicha.getText().trim().isEmpty()) {
-                nroFicha = Long.valueOf(txtNumeroFicha.getText().trim()); 
+            Long nroFicha = null; // Iniciamos en null para activar la autogeneración
+            String textoFicha = txtNumeroFicha.getText();
+            
+            // Si el usuario escribió un número manualmente o está editando, lo usamos
+            if (textoFicha != null && !textoFicha.trim().isEmpty()) {
+                nroFicha = Long.valueOf(textoFicha.trim()); 
             }
             
             ar.edu.unam.veterinaria.dto.MascotaDTO dto = new ar.edu.unam.veterinaria.dto.MascotaDTO(
@@ -470,7 +473,6 @@ public class ClienteController {
         } catch (NumberFormatException e) { 
             mostrarAlerta("Error de Formato", "El número de ficha debe contener únicamente números.", javafx.scene.control.Alert.AlertType.WARNING); 
         } catch (IllegalArgumentException e) { 
-            // Atrapa el error del Modelo (Fecha en el futuro, especie vacía, etc.)
             mostrarAlerta("Datos Inválidos", e.getMessage(), javafx.scene.control.Alert.AlertType.WARNING);
         } catch (Exception e) { 
             mostrarAlerta("Error", "Ocurrió un error al guardar la mascota.", javafx.scene.control.Alert.AlertType.ERROR); 

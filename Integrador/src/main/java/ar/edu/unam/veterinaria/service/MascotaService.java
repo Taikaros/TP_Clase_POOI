@@ -19,35 +19,32 @@ public class MascotaService {
         if (dto.getFechaNacimiento() == null) throw new IllegalArgumentException("La fecha de nacimiento es obligatoria.");
     }
 
-    public MascotaDTO guardarMascota(MascotaDTO dto) {
+    public ar.edu.unam.veterinaria.dto.MascotaDTO guardarMascota(ar.edu.unam.veterinaria.dto.MascotaDTO dto) {
         validarDatosMascota(dto);
-        EntityManager em = AppVeterinaria.getEmf().createEntityManager();
+        jakarta.persistence.EntityManager em = ar.edu.unam.veterinaria.AppVeterinaria.getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
-            
-            Cliente dueno = em.find(Cliente.class, dto.getIdCliente());
+            ar.edu.unam.veterinaria.model.Cliente dueno = em.find(ar.edu.unam.veterinaria.model.Cliente.class, dto.getIdCliente());
             if (dueno == null) throw new IllegalArgumentException("El cliente dueño no existe.");
             
-            Mascota mascota = new Mascota();
+            ar.edu.unam.veterinaria.model.Mascota mascota = new ar.edu.unam.veterinaria.model.Mascota();
             mascota.setNombreMascota(dto.getNombreMascota());
             mascota.setEspecie(dto.getEspecie());
             mascota.setRaza(dto.getRaza());
             mascota.setFechaNacimiento(dto.getFechaNacimiento());
             mascota.setDueno(dueno);
-
-            // ---> AUTO-GENERADOR DE NÚMERO DE HISTORIA CLÍNICA <---
+            
+            // AUTOGESTIÓN DE FICHA
             Long nroFicha = dto.getNumeroFicha();
-            if (nroFicha == null || nroFicha == 0L) {
-                // Si el usuario dejó el casillero en blanco, buscamos el número más alto en la base de datos
+            if (nroFicha == null || nroFicha <= 0) {
                 Long maxFicha = em.createQuery("SELECT MAX(m.numeroFicha) FROM Mascota m", Long.class).getSingleResult();
-                nroFicha = (maxFicha != null) ? maxFicha + 1L : 1L; // Si no hay mascotas, arranca en 1
+                nroFicha = (maxFicha != null ? maxFicha : 0L) + 1L;
             }
             mascota.setNumeroFicha(nroFicha);
-
+            
             em.persist(mascota);
             em.getTransaction().commit();
-            return MascotaMapper.toDTO(mascota);
-            
+            return ar.edu.unam.veterinaria.mapper.MascotaMapper.toDTO(mascota);
         } catch (IllegalArgumentException e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e;
