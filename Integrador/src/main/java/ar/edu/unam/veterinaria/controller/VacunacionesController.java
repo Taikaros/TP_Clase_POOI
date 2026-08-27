@@ -5,6 +5,7 @@ import ar.edu.unam.veterinaria.model.Vacuna;
 import ar.edu.unam.veterinaria.service.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -23,6 +24,10 @@ import java.util.stream.Collectors;
 
 public class VacunacionesController {
 
+    // Nuevos controles de la interfaz
+    @FXML private TextField txtBuscar;
+    @FXML private ComboBox<String> cbFiltroVacuna;
+
     @FXML private Label lblContadorProximos, lblContadorVencidas;
     @FXML private Label lblBurbujaProximos, lblBurbujaVencidas;
     
@@ -30,8 +35,13 @@ public class VacunacionesController {
     @FXML private TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colProxMascota, colProxPropietario, colProxVacuna, colProxVencimiento, colProxAccion;
     @FXML private TableColumn<AlertaVacunaDTO, AlertaVacunaDTO> colVencMascota, colVencPropietario, colVencVacuna, colVencVencimiento, colVencAccion;
 
-    private ObservableList<AlertaVacunaDTO> listaProximos = FXCollections.observableArrayList();
-    private ObservableList<AlertaVacunaDTO> listaVencidas = FXCollections.observableArrayList();
+    // Listas Maestras (Guardan los datos originales)
+    private ObservableList<AlertaVacunaDTO> masterProximos = FXCollections.observableArrayList();
+    private ObservableList<AlertaVacunaDTO> masterVencidas = FXCollections.observableArrayList();
+    
+    // Listas Filtradas (Se vinculan a las tablas)
+    private FilteredList<AlertaVacunaDTO> filteredProximos;
+    private FilteredList<AlertaVacunaDTO> filteredVencidas;
 
     private TurnoService turnoService = new TurnoService();
     private VacunaService vacunaService = new VacunaService();
@@ -40,27 +50,86 @@ public class VacunacionesController {
     @FXML
     public void initialize() {
         configurarColumnas();
-        vincularContadores();
+        
+        // Enlazamos las listas filtradas a los datos maestros
+        filteredProximos = new FilteredList<>(masterProximos, p -> true);
+        filteredVencidas = new FilteredList<>(masterVencidas, p -> true);
+        
+        tvProximos.setItems(filteredProximos);
+        tvVencidas.setItems(filteredVencidas);
+        
         cargarDatosDesdeHistorialMedico();
+        configurarFiltros();
+        vincularContadores();
+    }
+
+    private void configurarFiltros() {
+        if (cbFiltroVacuna == null || txtBuscar == null) return; // Por seguridad si FXML falla
+        
+        // 1. Llenamos el ComboBox con los nombres de las vacunas reales
+        List<String> nombresVacunas = vacunaService.obtenerTodas().stream()
+                .map(Vacuna::getNombreComercial)
+                .collect(Collectors.toList());
+        nombresVacunas.add(0, "Todas"); // Agregamos la opción por defecto al inicio
+        
+        cbFiltroVacuna.setItems(FXCollections.observableArrayList(nombresVacunas));
+        cbFiltroVacuna.getSelectionModel().selectFirst();
+
+        // 2. Activamos los "escuchadores" en tiempo real
+        cbFiltroVacuna.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
+        txtBuscar.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltros());
+    }
+
+    private void aplicarFiltros() {
+        String busqueda = txtBuscar.getText() != null ? txtBuscar.getText().toLowerCase() : "";
+        String vacunaFiltro = cbFiltroVacuna.getValue() != null ? cbFiltroVacuna.getValue() : "Todas";
+
+        java.util.function.Predicate<AlertaVacunaDTO> reglaFiltro = alerta -> {
+            // A. Coincidencia de texto (Dueño o Mascota)
+            boolean coincideTexto = true;
+            if (!busqueda.isEmpty()) {
+                coincideTexto = alerta.getNombreMascota().toLowerCase().contains(busqueda) || 
+                                alerta.getNombrePropietario().toLowerCase().contains(busqueda);
+            }
+
+            // B. Coincidencia de vacuna
+            boolean coincideVacuna = true;
+            if (!vacunaFiltro.equals("Todas")) {
+                coincideVacuna = alerta.getNombreVacuna().equals(vacunaFiltro);
+            }
+
+            return coincideTexto && coincideVacuna;
+        };
+
+        // Aplicamos la misma regla a ambas tablas instantáneamente
+        filteredProximos.setPredicate(reglaFiltro);
+        filteredVencidas.setPredicate(reglaFiltro);
     }
 
     private void vincularContadores() {
-        listaProximos.addListener((javafx.collections.ListChangeListener.Change<? extends AlertaVacunaDTO> c) -> {
-            int size = listaProximos.size();
+        // Vinculamos los contadores a las listas filtradas, así los números cambian al buscar
+        filteredProximos.addListener((javafx.collections.ListChangeListener.Change<? extends AlertaVacunaDTO> c) -> {
+            int size = filteredProximos.size();
             lblContadorProximos.setText(size + " próximos a vencer");
             lblBurbujaProximos.setText(String.valueOf(size));
         });
 
-        listaVencidas.addListener((javafx.collections.ListChangeListener.Change<? extends AlertaVacunaDTO> c) -> {
-            int size = listaVencidas.size();
+        filteredVencidas.addListener((javafx.collections.ListChangeListener.Change<? extends AlertaVacunaDTO> c) -> {
+            int size = filteredVencidas.size();
             lblContadorVencidas.setText(size + " vacunas vencidas");
             lblBurbujaVencidas.setText(String.valueOf(size));
         });
+        
+        // Forzar actualización inicial
+        lblContadorProximos.setText(filteredProximos.size() + " próximos a vencer");
+        lblBurbujaProximos.setText(String.valueOf(filteredProximos.size()));
+        lblContadorVencidas.setText(filteredVencidas.size() + " vacunas vencidas");
+        lblBurbujaVencidas.setText(String.valueOf(filteredVencidas.size()));
     }
 
     private void cargarDatosDesdeHistorialMedico() {
-        listaProximos.clear();
-        listaVencidas.clear();
+        masterProximos.clear();
+        masterVencidas.clear();
 
         List<TurnoDTO> todosLosTurnos = turnoService.obtenerTodos();
         Map<Long, Vacuna> mapaVacunas = vacunaService.obtenerTodas().stream()
@@ -108,20 +177,17 @@ public class VacunacionesController {
                         );
                         
                         if (diasRestantes < 0) {
-                            listaVencidas.add(alerta);
+                            masterVencidas.add(alerta);
                         } else {
-                            listaProximos.add(alerta);
+                            masterProximos.add(alerta);
                         }
                     }
                 }
             }
         }
 
-        listaProximos.sort((a, b) -> a.getFechaVencimiento().compareTo(b.getFechaVencimiento()));
-        listaVencidas.sort((a, b) -> a.getFechaVencimiento().compareTo(b.getFechaVencimiento()));
-
-        tvProximos.setItems(listaProximos);
-        tvVencidas.setItems(listaVencidas);
+        masterProximos.sort((a, b) -> a.getFechaVencimiento().compareTo(b.getFechaVencimiento()));
+        masterVencidas.sort((a, b) -> a.getFechaVencimiento().compareTo(b.getFechaVencimiento()));
     }
 
     private void configurarColumnas() {
@@ -208,9 +274,7 @@ public class VacunacionesController {
                     btn.getStyleClass().add("btn-primary");
                     btn.setStyle("-fx-padding: 4 12; -fx-font-size: 11px; -fx-background-color: #2CA871;");
                     
-                    // Asignamos la acción para precargar Turnos
                     btn.setOnAction(e -> agendarTurno(item));
-                    
                     setGraphic(btn);
                 }
             }
@@ -218,12 +282,10 @@ public class VacunacionesController {
     }
 
     private void agendarTurno(AlertaVacunaDTO item) {
-        // 1. Cargamos los datos en la memoria estática de TurnoController
         TurnoController.preCargaClienteId = item.getIdCliente();
         TurnoController.preCargaMascotaId = item.getIdMascota();
         TurnoController.preCargaVacuna = item.getNombreVacuna();
 
-        // 2. Buscamos el botón "Turnos" del menú lateral general y simulamos un clic
         Button btnTurnos = (Button) tvProximos.getScene().lookup("#btnTurnos");
         if (btnTurnos != null) {
             btnTurnos.fire();

@@ -4,6 +4,16 @@ import ar.edu.unam.veterinaria.dto.MascotaDTO;
 import ar.edu.unam.veterinaria.dto.TurnoDTO;
 import ar.edu.unam.veterinaria.service.MascotaService;
 import ar.edu.unam.veterinaria.service.TurnoService;
+
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -12,13 +22,18 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import org.kordamp.ikonli.javafx.FontIcon;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
+import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FichaMedicaController {
@@ -36,6 +51,13 @@ public class FichaMedicaController {
     private MascotaService mascotaService = new MascotaService();
     private TurnoService turnoService = new TurnoService();
     private ObservableList<MascotaDTO> masterDataMascotas = FXCollections.observableArrayList();
+
+    // --- VARIABLES DE ESTADO PARA FILTROS ---
+    private MascotaDTO mascotaActual = null;
+    private LocalDate filtroFechaInicio = null;
+    private LocalDate filtroFechaFin = null;
+    private String filtroServicio = "Todos";
+    private List<TurnoDTO> historialFiltradoActual = FXCollections.observableArrayList(); // Guarda la lista actual para el PDF
 
     @FXML
     public void initialize() {
@@ -84,9 +106,9 @@ public class FichaMedicaController {
                     VBox info = new VBox(2);
                     Label lblNombre = new Label(mascota.getNombreMascota());
                     lblNombre.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #1E293B;");
-                    String fichaStr = mascota.getNumeroFicha() != null && mascota.getNumeroFicha() > 0 
-                             ? "FCH-" + String.format("%03d", mascota.getNumeroFicha()) 
-                             : "Sin Ficha";
+                    String fichaStr = mascota.getNumeroFicha() != null && mascota.getNumeroFicha() > 0
+                              ? "FCH-" + String.format("%03d", mascota.getNumeroFicha())
+                              : "Sin Ficha";
                     Label lblFicha = new Label(fichaStr);
                     lblFicha.setStyle("-fx-text-fill: #64748B; -fx-font-size: 11px;");
                     info.getChildren().addAll(lblNombre, lblFicha);
@@ -101,19 +123,22 @@ public class FichaMedicaController {
                 }
             }
         });
+
         listaPacientes.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) mostrarDetallesPaciente(newVal);
         });
     }
 
     private void mostrarDetallesPaciente(MascotaDTO mascota) {
+        this.mascotaActual = mascota;
         panelDetalle.setVisible(true);
         lblPerfilNombre.setText(mascota.getNombreMascota());
-        String fichaStr = mascota.getNumeroFicha() != null && mascota.getNumeroFicha() > 0 
-                 ? "FCH-" + String.format("%03d", mascota.getNumeroFicha()) 
-                 : "Sin Ficha";
+        String fichaStr = mascota.getNumeroFicha() != null && mascota.getNumeroFicha() > 0
+                  ? "FCH-" + String.format("%03d", mascota.getNumeroFicha())
+                  : "Sin Ficha";
         lblPerfilFicha.setText(fichaStr);
-        lblPerfilDetalles.setText(mascota.getRaza() + " • " + mascota.getEspecie() + " • Dueño: " + mascota.getNombreDueno());
+        lblPerfilDetalles.setText(mascota.getRaza() + " · " + mascota.getEspecie() + " · Dueño: " + mascota.getNombreDueno());
+        
         if (mascota.getFechaNacimiento() != null) {
             int edad = Period.between(mascota.getFechaNacimiento(), LocalDate.now()).getYears();
             lblPerfilEdad.setText("Edad: " + edad + " años");
@@ -125,21 +150,38 @@ public class FichaMedicaController {
 
     private void cargarLineaTiempo(Long idMascota) {
         contenedorLineaTiempo.getChildren().clear();
-        List<TurnoDTO> historial = turnoService.obtenerTodos().stream()
+        
+        // Obtenemos todos y aplicamos los filtros
+        historialFiltradoActual = turnoService.obtenerTodos().stream()
                 .filter(t -> t.getIdMascota().equals(idMascota) && t.getEstado().equalsIgnoreCase("ATENDIDO"))
+                .filter(t -> {
+                    // Filtro por Fechas
+                    if (filtroFechaInicio != null && t.getFecha().isBefore(filtroFechaInicio)) return false;
+                    if (filtroFechaFin != null && t.getFecha().isAfter(filtroFechaFin)) return false;
+                    
+                    // Filtro por Servicio
+                    if (!filtroServicio.equals("Todos")) {
+                        boolean esVacuna = t.getDetallesServicios() != null && t.getDetallesServicios().contains("Vacunación");
+                        if (filtroServicio.equals("Vacunación") && !esVacuna) return false;
+                        if (filtroServicio.equals("Consultas") && esVacuna) return false;
+                    }
+                    return true;
+                })
                 .sorted((t1, t2) -> t2.getFecha().compareTo(t1.getFecha()))
                 .collect(Collectors.toList());
-                
-        lblPerfilRegistros.setText("Registros: " + historial.size() + " entradas");
-        if (historial.isEmpty()) {
-            Label vacio = new Label("No hay registros médicos para este paciente.");
+                         
+        lblPerfilRegistros.setText("Registros: " + historialFiltradoActual.size() + " entradas");
+
+        if (historialFiltradoActual.isEmpty()) {
+            Label vacio = new Label("No hay registros médicos que coincidan con los filtros.");
             vacio.setStyle("-fx-text-fill: #94A3B8; -fx-font-style: italic; -fx-padding: 20;");
             contenedorLineaTiempo.getChildren().add(vacio);
             return;
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
-        for (TurnoDTO turno : historial) {
+
+        for (TurnoDTO turno : historialFiltradoActual) {
             HBox tarjeta = new HBox(15);
             tarjeta.setPadding(new Insets(15, 20, 15, 15));
             tarjeta.getStyleClass().add("timeline-card");
@@ -162,7 +204,6 @@ public class FichaMedicaController {
             header.setAlignment(Pos.CENTER_LEFT);
             Label lblTitulo = new Label(esVacuna ? "Aplicación de Vacuna" : "Atención General");
             lblTitulo.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #1E293B;");
-            
             header.getChildren().add(lblTitulo);
             
             HBox metaInfo = new HBox(15);
@@ -172,7 +213,6 @@ public class FichaMedicaController {
             lblVet.setStyle("-fx-text-fill: #64748B; -fx-font-size: 12px;");
             metaInfo.getChildren().addAll(lblFecha, lblVet);
             
-            // ACÁ MOSTRAMOS EL DIAGNÓSTICO EN GRANDE
             Label lblNotasClinicas = new Label(turno.getDetallesServicios() != null ? turno.getDetallesServicios() : "Sin especificaciones");
             lblNotasClinicas.setWrapText(true);
             lblNotasClinicas.setStyle("-fx-text-fill: #475569; -fx-font-size: 13px; -fx-padding: 8 0 0 0;");
@@ -185,9 +225,123 @@ public class FichaMedicaController {
         }
     }
 
-    @FXML public void filtrarPorFecha() { mostrarAlerta("Próximamente", "El filtro por rango de fechas estará disponible en la próxima actualización."); }
-    @FXML public void filtrarPorServicio() { mostrarAlerta("Próximamente", "El filtro por tipo de servicio estará disponible en la próxima actualización."); }
-    @FXML public void exportarPDF() { mostrarAlerta("Próximamente", "El módulo de exportación a PDF se encuentra en desarrollo."); }
+    // ==========================================
+    // MÉTODOS DE BOTONES SUPERIORES
+    // ==========================================
+
+    @FXML 
+    public void filtrarPorFecha() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Filtrar por Fechas");
+        dialog.setHeaderText("Seleccione el rango de fechas para el historial:");
+
+        DatePicker dpInicio = new DatePicker(filtroFechaInicio);
+        DatePicker dpFin = new DatePicker(filtroFechaFin);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+        grid.add(new Label("Desde:"), 0, 0); grid.add(dpInicio, 1, 0);
+        grid.add(new Label("Hasta:"), 0, 1); grid.add(dpFin, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            filtroFechaInicio = dpInicio.getValue();
+            filtroFechaFin = dpFin.getValue();
+            if (mascotaActual != null) cargarLineaTiempo(mascotaActual.getId());
+        }
+    }
+
+    @FXML 
+    public void filtrarPorServicio() {
+        List<String> opciones = List.of("Todos", "Consultas", "Vacunación");
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(filtroServicio, opciones);
+        dialog.setTitle("Filtrar por Servicio");
+        dialog.setHeaderText("Seleccione el tipo de atención médica:");
+        dialog.setContentText("Tipo:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            filtroServicio = result.get();
+            if (mascotaActual != null) cargarLineaTiempo(mascotaActual.getId());
+        }
+    }
+
+    @FXML 
+    public void exportarPDF() {
+        if (mascotaActual == null) {
+            mostrarAlerta("Atención", "Debe seleccionar un paciente primero para exportar su historial.");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Guardar Historial Clínico");
+        fileChooser.setInitialFileName("Historial_" + mascotaActual.getNombreMascota().replace(" ", "_") + ".pdf");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos PDF", "*.pdf"));
+        
+        File file = fileChooser.showSaveDialog(lblPerfilNombre.getScene().getWindow());
+        if (file != null) {
+            generarDocumentoPDF(file);
+        }
+    }
+
+    private void generarDocumentoPDF(File file) {
+        Document document = new Document();
+        try {
+            PdfWriter.getInstance(document, new FileOutputStream(file));
+            document.open();
+
+            // Título
+            Font fontTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, Color.BLACK.hashCode());
+            Paragraph titulo = new Paragraph("Historial Clínico - Huellas & Salud", fontTitulo);
+            titulo.setAlignment(Element.ALIGN_CENTER);
+            titulo.setSpacingAfter(20);
+            document.add(titulo);
+
+            // Datos del Paciente
+            Font fontSub = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.BLACK.hashCode());
+            Font fontNormal = FontFactory.getFont(FontFactory.HELVETICA, 12, Color.BLACK.hashCode());
+            
+            document.add(new Paragraph("Datos del Paciente:", fontSub));
+            document.add(new Paragraph("Nombre: " + mascotaActual.getNombreMascota(), fontNormal));
+            document.add(new Paragraph("Especie/Raza: " + mascotaActual.getEspecie() + " - " + mascotaActual.getRaza(), fontNormal));
+            document.add(new Paragraph("Propietario: " + mascotaActual.getNombreDueno(), fontNormal));
+            document.add(new Paragraph("Nº Ficha: " + (mascotaActual.getNumeroFicha() != null ? mascotaActual.getNumeroFicha() : "Sin ficha"), fontNormal));
+            document.add(new Paragraph(" ")); // Espacio
+
+            // Tabla de Registros
+            PdfPTable table = new PdfPTable(3);
+            table.setWidthPercentage(100);
+            table.setWidths(new float[]{2f, 3f, 5f});
+
+            // Encabezados
+            PdfPCell cell = new PdfPCell(new Paragraph("Fecha", fontSub));
+            table.addCell(cell);
+            cell = new PdfPCell(new Paragraph("Veterinario", fontSub));
+            table.addCell(cell);
+            cell = new PdfPCell(new Paragraph("Prácticas / Diagnóstico", fontSub));
+            table.addCell(cell);
+
+            // Filas
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            for (TurnoDTO t : historialFiltradoActual) {
+                table.addCell(new Paragraph(t.getFecha().format(fmt), fontNormal));
+                table.addCell(new Paragraph(t.getNombreVeterinario(), fontNormal));
+                table.addCell(new Paragraph(t.getDetallesServicios() != null ? t.getDetallesServicios() : "-", fontNormal));
+            }
+
+            document.add(table);
+            document.close();
+            mostrarAlerta("Éxito", "El archivo PDF ha sido generado y guardado correctamente.");
+
+        } catch (Exception e) {
+            mostrarAlerta("Error", "No se pudo generar el archivo PDF.");
+            e.printStackTrace();
+        }
+    }
 
     private void mostrarAlerta(String titulo, String mensaje) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);

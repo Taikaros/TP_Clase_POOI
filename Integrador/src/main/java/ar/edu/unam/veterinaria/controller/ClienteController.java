@@ -321,37 +321,55 @@ public class ClienteController {
     // --- NUEVA LÓGICA DE GUARDADO INTELIGENTE (Crea o Edita según el contexto) ---
     @FXML 
     private void guardarCliente() {
-        try {
-            ar.edu.unam.veterinaria.dto.ClienteDTO clienteDTO = new ar.edu.unam.veterinaria.dto.ClienteDTO();
-            clienteDTO.setId(0L);
-            clienteDTO.setNombre(txtNombreCliente.getText());
-            clienteDTO.setApellido(txtApellidoCliente.getText());
-            clienteDTO.setDni(txtDniCliente.getText());
-            clienteDTO.setTelefono(txtTelefonoCliente.getText());
-            clienteDTO.setEmail(txtEmailCliente.getText());
+        if (txtNombreCliente.getText().trim().isEmpty() || 
+            txtApellidoCliente.getText().trim().isEmpty() || 
+            txtDniCliente.getText().trim().isEmpty() || 
+            txtTelefonoCliente.getText().trim().isEmpty()) {
+            mostrarAlerta("Campos Incompletos", "Por favor, complete al menos Nombre, Apellido, DNI y Teléfono.", Alert.AlertType.WARNING);
+            return;
+        }
+        ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
 
-            ar.edu.unam.veterinaria.dto.ClienteDTO guardado = clienteService.guardarCliente(clienteDTO);
-            masterDataClientes.add(guardado);
-            actualizarContadorClientes();
-            listaClientes.getSelectionModel().select(guardado);
-            mostrarAlerta("Éxito", "Cliente registrado correctamente.", javafx.scene.control.Alert.AlertType.INFORMATION);
-            
+        try {
+            if (clienteSeleccionado == null) {
+                // --- MODO CREACIÓN ---
+                ClienteDTO nuevoCliente = new ClienteDTO(0L, txtNombreCliente.getText().trim(), txtApellidoCliente.getText().trim(), txtDniCliente.getText().trim(), txtTelefonoCliente.getText().trim(), txtEmailCliente.getText().trim());
+                ClienteDTO guardado = clienteService.guardarCliente(nuevoCliente);
+                masterDataClientes.add(guardado);
+                actualizarContadorClientes();
+                listaClientes.getSelectionModel().select(guardado);
+                mostrarAlerta("Éxito", "Cliente registrado correctamente.", Alert.AlertType.INFORMATION);
+            } else {
+                // --- MODO EDICIÓN ---
+                clienteSeleccionado.setNombre(txtNombreCliente.getText().trim());
+                clienteSeleccionado.setApellido(txtApellidoCliente.getText().trim());
+                clienteSeleccionado.setDni(txtDniCliente.getText().trim());
+                clienteSeleccionado.setTelefono(txtTelefonoCliente.getText().trim());
+                clienteSeleccionado.setEmail(txtEmailCliente.getText().trim());
+
+                clienteService.actualizarCliente(clienteSeleccionado);
+                
+                listaClientes.refresh();
+                lblNombrePerfil.setText(clienteSeleccionado.getNombre() + " " + clienteSeleccionado.getApellido());
+                lblDniPerfil.setText("DNI: " + clienteSeleccionado.getDni());
+                mostrarAlerta("Éxito", "Cliente modificado correctamente.", Alert.AlertType.INFORMATION);
+            }
         } catch (IllegalArgumentException e) { 
-            // Atrapa el error del Modelo (DNI vacío, sin nombre, etc.)
-            mostrarAlerta("Datos Inválidos", e.getMessage(), javafx.scene.control.Alert.AlertType.WARNING);
+            mostrarAlerta("Datos Inválidos", e.getMessage(), Alert.AlertType.WARNING);
         } catch (Exception e) { 
-            mostrarAlerta("Error", "Ocurrió un error en la base de datos.", javafx.scene.control.Alert.AlertType.ERROR); 
-            e.printStackTrace();
+            mostrarAlerta("Error", "Ocurrió un error en la base de datos.", Alert.AlertType.ERROR); 
         }
     }
 
     @FXML 
     private void modificarCliente() {
         ar.edu.unam.veterinaria.dto.ClienteDTO clienteSeleccionado = listaClientes.getSelectionModel().getSelectedItem();
-        if (clienteSeleccionado == null) { 
-            mostrarAlerta("Atención", "Seleccione un cliente de la lista.", javafx.scene.control.Alert.AlertType.WARNING); 
-            return; 
+        if(listaClientes.getSelectionModel().getSelectedItem() == null) {
+            mostrarAlerta("Atención", "Seleccione un cliente de la lista.", Alert.AlertType.WARNING);
+            return;
         }
+        txtNombreCliente.requestFocus();
+        
         try {
             clienteSeleccionado.setNombre(txtNombreCliente.getText());
             clienteSeleccionado.setApellido(txtApellidoCliente.getText());

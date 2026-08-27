@@ -19,9 +19,9 @@ public class ClienteMapper {
         Cliente cliente = new Cliente(
             dto.getNombre(), 
             dto.getApellido(), 
-            dto.getDni(),
             dto.getTelefono(), 
-            dto.getEmail()
+            dto.getEmail(),
+            dto.getDni()
         );
         return cliente;
     }

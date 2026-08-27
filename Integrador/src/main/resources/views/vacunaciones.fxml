@@ -14,7 +14,14 @@
             <Label text="Dashboard de alertas operativas · Vencimientos próximos y atrasados" style="-fx-text-fill: #64748B; -fx-font-size: 14px;" />
         </VBox>
         <Region HBox.hgrow="ALWAYS" />
-        <HBox spacing="15.0">
+        <HBox spacing="15.0" alignment="CENTER_RIGHT" style="-fx-padding: 0 20 0 0;">
+            <HBox alignment="CENTER_LEFT" styleClass="search-box">
+                <FontIcon iconLiteral="fas-search" iconColor="#94A3B8" iconSize="16"/>
+                <TextField fx:id="txtBuscar" promptText="Mascota o dueño..." styleClass="search-field" prefWidth="180.0" />
+            </HBox>
+            <ComboBox fx:id="cbFiltroVacuna" promptText="Todas las vacunas" prefWidth="170.0" styleClass="combo-filtro" />
+        </HBox>
+        <HBox spacing="15.0">   
             <!-- Labels dinámicos vinculados a las listas -->
             <Label fx:id="lblContadorProximos" text="0 próximos a vencer" style="-fx-border-color: #F59E0B; -fx-text-fill: #D97706; -fx-border-radius: 8; -fx-padding: 8 16; -fx-font-weight: bold; -fx-background-color: #FEF3C7;">
                 <graphic><FontIcon iconLiteral="fas-clock" iconColor="#D97706"/></graphic>
