@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.GuarderiaPeluqueriaController">
+         
+    <!-- CAPA 0: DASHBOARD PRINCIPAL -->
+    <VBox spacing="25.0" style="-fx-background-color: -color-fondo-main;">
+        <padding><Insets top="40.0" right="40.0" bottom="40.0" left="40.0" /></padding>
+                 
+        <HBox alignment="CENTER_LEFT">
+            <VBox spacing="5.0">
+                <Label text="Dashboard Operativo" style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: -color-texto-oscuro;" />
+                <Label text="Guardería &amp; Peluquería" style="-fx-text-fill: -color-texto-gris; -fx-font-size: 14px;" />
+            </VBox>
+        </HBox>
+
+        <HBox spacing="30.0" VBox.vgrow="ALWAYS">
+                         
+            <!-- COLUMNA IZQUIERDA: GUARDERÍA -->
+            <VBox spacing="20.0" styleClass="card" HBox.hgrow="ALWAYS" prefWidth="550.0">
+                <HBox alignment="CENTER_LEFT">
+                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                        <FontIcon iconLiteral="fas-home" iconColor="#2CA871" iconSize="20"/>
+                        <Label text="Guardería" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    </HBox>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button text=" Nuevo ingreso" onAction="#abrirFormularioGuarderia" styleClass="btn-primary">
+                        <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" iconSize="14"/></graphic>
+                    </Button>
+                </HBox>
+                                 
+                <HBox spacing="20.0" alignment="CENTER_LEFT">
+                    <VBox spacing="5.0" alignment="CENTER_LEFT">
+                        <Label fx:id="lblCuposTotales" text="0/12" style="-fx-font-size: 24px; -fx-font-weight: 900; -fx-text-fill: #1E293B;" />
+                        <Label text="cupos ocupados hoy" style="-fx-text-fill: #64748B; -fx-font-size: 12px;" />
+                        <HBox spacing="15.0">
+                            <Label fx:id="lblJaulasOcupadas" text="  0 jaulas ocupadas" style="-fx-text-fill: #2CA871; -fx-font-weight: bold; -fx-font-size: 12px;" />
+                            <Label fx:id="lblJaulasLibres" text="  12 jaulas libres" style="-fx-text-fill: #94A3B8; -fx-font-weight: bold; -fx-font-size: 12px;" />
+                        </HBox>
+                    </VBox>
+                </HBox>
+                                 
+                <VBox spacing="5.0" VBox.vgrow="ALWAYS">
+                    <Label text="Mascotas internadas" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    <Label text="Estado actual de la guardería" style="-fx-text-fill: #64748B; -fx-font-size: 12px;" />
+                                         
+                    <TableView fx:id="tvGuarderia" styleClass="table-as-list" VBox.vgrow="ALWAYS" onMouseClicked="#seleccionarMascotaGuarderia">
+                        <!-- Esta propiedad fuerza a que las columnas ocupen el 100% del ancho prudencialmente -->
+                        <columnResizePolicy>
+                            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                        </columnResizePolicy>
+                        <columns>
+                            <TableColumn fx:id="colGuarderiaMascota" text="MASCOTA" prefWidth="130.0" />
+                            <TableColumn fx:id="colGuarderiaIngreso" text="INGRESO" prefWidth="85.0" />
+                            <TableColumn fx:id="colGuarderiaHora" text="HORA" prefWidth="65.0" />
+                            <TableColumn fx:id="colGuarderiaTiempo" text="SALIDA / DÍAS" prefWidth="120.0" />
+                            <TableColumn fx:id="colGuarderiaObs" text="OBSERVACIONES" prefWidth="130.0" />
+                        </columns>
+                    </TableView>
+                </VBox>
+            </VBox>
+
+            <!-- COLUMNA DERECHA: PELUQUERÍA -->
+            <VBox spacing="20.0" styleClass="card" HBox.hgrow="ALWAYS" prefWidth="550.0">
+                <HBox alignment="CENTER_LEFT">
+                    <HBox alignment="CENTER_LEFT" spacing="10.0">
+                        <StackPane style="-fx-background-color: #F3E8FF; -fx-background-radius: 8; -fx-padding: 8;">
+                            <FontIcon iconLiteral="fas-cut" iconColor="#D2B48C" iconSize="16"/>
+                        </StackPane>
+                        <VBox>
+                            <Label text="Peluquería" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                            <Label text="Turnos del día - Baño &amp; Estética" style="-fx-text-fill: #64748B; -fx-font-size: 12px;" />
+                        </VBox>
+                    </HBox>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button text=" Turno" onAction="#abrirFormularioPeluqueria" styleClass="btn-primary" style="-fx-background-color: #D2B48C;">
+                        <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" iconSize="14"/></graphic>
+                    </Button>
+                </HBox>
+                                 
+                <TableView fx:id="tvPeluqueria" styleClass="table-as-list" VBox.vgrow="ALWAYS" onMouseClicked="#seleccionarMascotaPeluqueria">
+                    <!-- Esta propiedad fuerza a que las columnas ocupen el 100% del ancho prudencialmente -->
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                    </columnResizePolicy>
+                    <columns>
+                        <TableColumn fx:id="colPeluqueriaMascota" text="MASCOTA" prefWidth="130.0" />
+                        <TableColumn fx:id="colPeluqueriaServicio" text="TRATAMIENTO" prefWidth="130.0" />
+                        <TableColumn fx:id="colPeluqueriaHora" text="HORA" prefWidth="65.0" />
+                        <TableColumn fx:id="colPeluqueriaEstado" text="ESTADO" prefWidth="90.0" />
+                        <TableColumn fx:id="colPeluqueriaObs" text="OBSERVACIONES" prefWidth="115.0" />
+                    </columns>
+                </TableView>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- CAPA 1: MODAL NUEVO REGISTRO -->
+    <HBox fx:id="overlayFormulario" styleClass="modal-overlay" visible="false" alignment="TOP_RIGHT">
+        <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModales" />
+        <VBox styleClass="slide-panel" prefWidth="480.0" spacing="20.0">
+            <HBox alignment="CENTER_LEFT">
+                <VBox>
+                    <Label fx:id="lblTituloFormulario" text="Registrar Turno / Ingreso" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    <Label text="Seleccione el cliente y luego la mascota" style="-fx-text-fill: #64748B; -fx-font-size: 12px;" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#cerrarModales" styleClass="btn-close-modal">
+                    <graphic><FontIcon iconLiteral="fas-times" iconSize="18"/></graphic>
+                </Button>
+            </HBox>
+            <Separator />
+            <ScrollPane fitToWidth="true" styleClass="scroll-invisible" VBox.vgrow="ALWAYS">
+                <VBox spacing="15.0">
+                    <padding><Insets right="10.0" /></padding>
+                                         
+                    <VBox spacing="5.0">
+                        <Label text="CLIENTE (Propietario)" styleClass="label-form" />
+                        <ComboBox fx:id="cbCliente" promptText="Buscar cliente..." styleClass="input-field" maxWidth="Infinity" />
+                    </VBox>
+                                         
+                    <VBox spacing="5.0">
+                        <Label text="MASCOTA ASOCIADA" styleClass="label-form" />
+                        <ComboBox fx:id="cbMascota" promptText="Seleccione una mascota..." styleClass="input-field" maxWidth="Infinity" disable="true" />
+                    </VBox>
+                                         
+                    <HBox spacing="15.0">
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                            <Label text="FECHA INGRESO" styleClass="label-form" />
+                            <DatePicker fx:id="dpFecha" styleClass="date-field" maxWidth="Infinity"/>
+                        </VBox>
+                        <VBox fx:id="boxFechaSalida" spacing="5.0" HBox.hgrow="ALWAYS" managed="false" visible="false">
+                            <Label text="FECHA SALIDA" styleClass="label-form" />
+                            <DatePicker fx:id="dpFechaSalida" styleClass="date-field" maxWidth="Infinity"/>
+                        </VBox>
+                        <VBox spacing="5.0" prefWidth="110.0">
+                            <Label text="HORA" styleClass="label-form" />
+                            <ComboBox fx:id="cbHora" promptText="10:00" styleClass="input-field" maxWidth="Infinity" />
+                        </VBox>
+                    </HBox>
+                                         
+                    <VBox spacing="5.0">
+                        <Label fx:id="lblTipoServicio" text="DETALLES (Servicio o Jaula)" styleClass="label-form" />
+                        <!-- Solo usamos un Combo. Si es Peluquería, seteamos objetos TipoServicio. Si es Guardería, seteamos Strings. Lo maneja el Controller. -->
+                        <ComboBox fx:id="cbTipoServicio" promptText="Seleccione opción..." styleClass="input-field" maxWidth="Infinity"/>
+                    </VBox>
+                    
+                    <!-- CAMPOS ADICIONALES DE GUARDERÍA -->
+                    <VBox fx:id="boxGuarderiaExtras" spacing="10.0" managed="false" visible="false">
+                        <VBox spacing="5.0">
+                            <Label text="ALIMENTACIÓN ESPECÍFICA (Opcional)" styleClass="label-form" />
+                            <TextField fx:id="txtAlimentacion" styleClass="input-field" promptText="Ej: Purina Pro Plan Gastrointestinal"/>
+                        </VBox>
+                        <CheckBox fx:id="chkActividad" text="Requiere actividad física y paseos" style="-fx-text-fill: #1E293B;" />
+                    </VBox>
+
+                    <VBox spacing="5.0">
+                        <Label text="OBSERVACIONES" styleClass="label-form" />
+                        <TextArea fx:id="txtObservaciones" promptText="Notas adicionales, alergias, etc." styleClass="input-field" wrapText="true" prefRowCount="3"/>
+                    </VBox>
+                </VBox>
+            </ScrollPane>
+            <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                <Button text="Volver" onAction="#cerrarModales" styleClass="btn-outline" />
+                <Button text="Guardar" onAction="#guardarRegistro" styleClass="btn-primary" />
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <!-- CAPA 2: MODAL DETALLES -->
+    <HBox fx:id="overlayDetalles" styleClass="modal-overlay" visible="false" alignment="TOP_RIGHT">
+        <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModales" />
+        <VBox styleClass="slide-panel" prefWidth="440.0" spacing="25.0">
+            <HBox alignment="CENTER_LEFT">
+                <VBox>
+                    <Label text="Detalles de la Mascota" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    <Label text="Información completa del animal y servicio" style="-fx-text-fill: #64748B; -fx-font-size: 12px;" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#cerrarModales" styleClass="btn-close-modal">
+                    <graphic><FontIcon iconLiteral="fas-times" iconSize="18"/></graphic>
+                </Button>
+            </HBox>
+            <Separator />
+            <VBox spacing="15.0">
+                <HBox alignment="CENTER_LEFT" spacing="15.0">
+                    <StackPane styleClass="avatar-circle">
+                        <FontIcon iconLiteral="fas-paw" iconSize="24" styleClass="avatar-icon"/>
+                    </StackPane>
+                    <VBox spacing="2.0">
+                        <Label fx:id="lblDetalleNombre" text="Nombre Mascota" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                        <Label fx:id="lblDetalleDueno" text="Dueño: " style="-fx-text-fill: #64748B; -fx-font-size: 13px;" />
+                    </VBox>
+                </HBox>
+                                 
+                <GridPane hgap="20.0" vgap="15.0">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50" />
+                        <ColumnConstraints percentWidth="50" />
+                    </columnConstraints>
+                    
+                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="5.0">
+                        <Label text="ESPECIE" styleClass="label-form" />
+                        <Label fx:id="lblDetalleEspecie" text="-" style="-fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    </VBox>
+                    <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" spacing="5.0">
+                        <Label text="RAZA" styleClass="label-form" />
+                        <Label fx:id="lblDetalleRaza" text="-" style="-fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    </VBox>
+                    
+                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" spacing="5.0">
+                        <Label text="EDAD / NACIMIENTO" styleClass="label-form" />
+                        <Label fx:id="lblDetalleEdad" text="-" style="-fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    </VBox>
+                    <VBox GridPane.columnIndex="1" GridPane.rowIndex="1" spacing="5.0">
+                        <Label text="N° FICHA" styleClass="label-form" />
+                        <Label fx:id="lblDetalleFicha" text="-" style="-fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    </VBox>
+                    
+                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="2" spacing="5.0">
+                        <Label text="FECHA DEL TURNO" styleClass="label-form" />
+                        <Label fx:id="lblDetalleTurnoFecha" text="-" style="-fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    </VBox>
+                    <VBox GridPane.columnIndex="1" GridPane.rowIndex="2" spacing="5.0">
+                        <Label text="HORA DEL TURNO" styleClass="label-form" />
+                        <Label fx:id="lblDetalleTurnoHora" text="-" style="-fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    </VBox>
+
+                    <!-- FILA 3: COSTO ESTIMADO y EXTRAS GUARDERÍA -->
+                    <VBox GridPane.columnIndex="0" GridPane.rowIndex="3" spacing="5.0">
+                        <Label text="PRECIO EST." styleClass="label-form" />
+                        <Label fx:id="lblDetallePrecio" text="-" style="-fx-font-weight: bold; -fx-text-fill: #2CA871; -fx-font-size: 16px;" />
+                    </VBox>
+                    <VBox fx:id="boxDetallesExtras" GridPane.columnIndex="1" GridPane.rowIndex="3" spacing="5.0" managed="false" visible="false">
+                        <Label text="EXTRAS GUARDERÍA" styleClass="label-form" />
+                        <Label fx:id="lblDetalleActividad" text="Sin Actividad" style="-fx-text-fill: #1E293B;" />
+                    </VBox>
+                </GridPane>
+                
+                <!-- SECCIÓN COMIDA GUARDERÍA (Se oculta si no es guardería) -->
+                <VBox fx:id="boxDetallesAlimentacion" spacing="5.0" managed="false" visible="false">
+                    <Label text="ALIMENTACIÓN ESPECÍFICA" styleClass="label-form" />
+                    <Label fx:id="lblDetalleAlimentacion" text="No definida." wrapText="true" style="-fx-text-fill: #64748B;" />
+                </VBox>
+                
+                <Separator />
+                <VBox spacing="5.0">
+                    <Label text="DATOS DEL SERVICIO ACTUAL" styleClass="label-form" />
+                    <Label fx:id="lblDetalleServicioEstado" text="-" wrapText="true" style="-fx-text-fill: #1E293B; -fx-font-weight: bold;" />
+                </VBox>
+                <VBox spacing="5.0">
+                    <Label text="OBSERVACIONES" styleClass="label-form" />
+                    <Label fx:id="lblDetalleObservaciones" text="Sin observaciones." wrapText="true" style="-fx-text-fill: #64748B;" />
+                </VBox>
+            </VBox>
+                         
+            <Region VBox.vgrow="ALWAYS" />
+                         
+            <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                <Button fx:id="btnConfirmar" text="Confirmar Turno" onAction="#confirmarTurno" styleClass="btn-primary" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                <Button fx:id="btnCancelar" text="Cancelar Turno" onAction="#cancelarTurno" styleClass="btn-outline" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+                <Button fx:id="btnEliminar" text="Eliminar Registro" onAction="#darDeBajaRegistro" styleClass="btn-danger-text" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+            </HBox>
+        </VBox>
+    </HBox>
+</StackPane>

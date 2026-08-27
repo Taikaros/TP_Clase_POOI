@@ -1,188 +1,147 @@
-@startuml Veterinaria
-skinparam classAttributeIconSize 1
-Package "Excepciones" <<Rectangle>>{
-    class TurnoSolapado <<Exception>>{
-        + turnoSolapado(message: String)
+@startuml Diagrama_Veterinaria
+
+
+skinparam classAttributeIconSize 0
+
+package ar.edu.unam.veterinaria.model {
+    
+    abstract class Persona <<MappedSuperclass>> {
+        - id : Long
+        - nombre : String
+        - apellido : String
+        - telefono : String
+        - email : String
+        - activo : boolean
     }
-    class CancelacionFueradeTermino <<Exception>>{
-        + cancelacionFueradeTermino(message: String)
+
+    class Cliente {
+        - mascotas : List<Mascota>
     }
-    class CupoLLeno <<Exception>>{
-        + cupoLleno(message: String)
+
+    class Veterinario {
+        - matricula : String
+        - especialidades : List<Especialidad>
+        - diasDisponibles : List<String>
     }
-    class VacunaVigente <<Exception>>{
-        + vacunaVigente(message: String)
+
+    class Mascota {
+        - id : Long
+        - nombreMascota : String
+        - especie : String
+        - raza : String
+        - fechaNacimiento : LocalDate
+        - numeroFicha : Long
+        - dueno : Cliente
+        - historialTurnos : List<Turno>
     }
-    class MascotaNoEncontrada <<Exception>>{
-        + mascotaNoEncontrada(message: String)
+
+    class Especialidad {
+        - id : Long
+        - nombreEspecialidad : String
+        - descripcion : String
     }
-    class VeterinarioNoDisponible <<Exception>>{
-        + veterinarioNoDisponible(message: String)
+
+    class Turno {
+        - id : Long
+        - fecha : LocalDate
+        - hora : LocalTime
+        - estado : EstadoTurno
+        - mascota : Mascota
+        - veterinario : Veterinario
+        - cliente : Cliente
+        - servicios : List<Servicio>
     }
-    class JaulaNoDisponible <<Exception>>{
-        + jaulaNoDisponible(message: String)
+
+    enum EstadoTurno {
+        PENDIENTE
+        CONFIRMADO
+        ATENDIDO
+        CANCELADO
     }
-    class EspecialidadExistente <<Exception>>{
-        + especialidadExistente(message: String)
+
+    class TipoServicio {
+        - id : Long
+        - nombreDescriptivo : String
+        - precioBase : Double
+        - duracion : Double
+        - limiteCupoDiario : Integer
     }
+
+    abstract class Servicio {
+        - id : Long
+        - turno : Turno
+        - tipoServicio : TipoServicio
+        - precioHistorico : Double
+    }
+
+    class Consulta {
+        - motivoConsulta : String
+        - diagnostico : String
+        - tratamiento : String
+    }
+
+    class Guarderia {
+        - jaulaAsignada : String
+        - alimentacionEspecifica : String
+        - requiereActividad : boolean
+        - observaciones : String
+        - fechaSalida : LocalDate
+    }
+
+    class Peluqueria {
+        - tipoCorte : String
+        - observaciones : String
+    }
+
+    class Vacunacion {
+        - vacunaAplicada : Vacuna
+    }
+
+    class Vacuna {
+        - id : Long
+        - nombreComercial : String
+        - enfermedad : String
+        - periodicidad : Integer
+    }
+
+    ' Relaciones de Herencia
+    Persona <|-- Cliente
+    Persona <|-- Veterinario
+    
+    Servicio <|-- Consulta
+    Servicio <|-- Guarderia
+    Servicio <|-- Peluqueria
+    Servicio <|-- Vacunacion
+
+    ' Asociaciones
+    Cliente "1" -- "0..*" Mascota : "tiene >"
+    Mascota "1" -- "0..*" Turno : "registra historial en >"
+    
+    Turno "1" *-- "1..*" Servicio : "contiene >"
+    Turno "1" -- "1" EstadoTurno : "estado actual"
+    Turno "1" -- "1" Cliente : "solicitado por >"
+    Turno "1" -- "1" Veterinario : "atendido por >"
+    
+    Veterinario "1..*" -- "0..*" Especialidad : "posee >"
+    
+    Servicio "1" -- "1" TipoServicio : "definido como >"
+    
+    Vacunacion "0..*" -- "1" Vacuna : "aplica >"
 }
 
-class Persona{
-    # id: Long
-    # nombre: String
-    # apellido: String
-    # telefono: String
-    # email: String
-    + getNombre(): String
-    + getContacto(): String
-    + setContacto(telefono: String, email: String): void
-    + setDatosPersonales(nombre: String, apellido: String): void
+package ar.edu.unam.veterinaria.exception {
+    class CancelacionFueradeTermino <<Exception>>
+    class CupoLLeno <<Exception>>
+    class EspecialidadExistente <<Exception>>
+    class JaulaNoDisponible <<Exception>>
+    class MascotaNoEncontrada <<Exception>>
+    class TurnoSinServiciosException <<Exception>>
+    class TurnoSolapado <<Exception>>
+    class VacunaVigenteException <<Exception>>
+    class VeterinarioNoDisponible <<Exception>>
 }
 
-class Cliente{
-    + getMascotas(): List<Mascota>
-    + registrarMascota(mascota: Mascota): void
-
-}
-class Veterinario{
-    - matricula: String 
-    - especialidades: List<Especialidad>
-    - diasDisponibles: List<String>
-    + getEspecialidad(): String
-    + getDiasDisponibles(): List<String>
-    + agregarEspecialidad(especialidad: Especialidad): void
-    + validarDisponibilidad(fecha: LocalDate, hora: LocalTime, duracion: double): boolean
-    + setMatricula(matricula: String): void
-
-}
-class Especialidad{
-    - nombreEspecialidad: String
-    - descripcion: String
-    + getDetalles(): String
-    + setDetalles(nombreEspecialidad: String, descripcion: String): void
-    + registrarEspecialidad(veterinario: Veterinario): void
-}
-
-class Mascota{
-    - id: Long
-    - nombreMascota : String
-    - especie : String
-    - raza : String
-    - fechaNacimiento : LocalDate
-    - dueno: Cliente
-    - numeroFicha: Long
-    + Mascota(nombreMascota: String, especie: String, raza: String, fechaNacimiento: LocalDate, dueno: Cliente)
-    + getDetallesMascota(): String
-    + obtenerEdad(): int
-    + obtenerProximaVacunacion(): Vacuna
-    + agregarTurno(turno: Turno): void 
-    + obtenerHistoriaClinica():List<Turno>
-    + getDueno(): Cliente
-    + setDatosMascota(nombreMascota: String, especie: String, raza: String, fechaNacimiento: LocalDate): void
-    + registrarAplicacion(vacun: Vacuna, fechaAplicacion: LocalDate): void
-    + validarAplicacion(vacuna: Vacuna, fechaAplicacion: LocalDate): boolean
-
-}
-
-class Turno{
-    - id: Long
-    - fecha: LocalDate
-    - hora: LocalTime
-    - servicios: List<Servicio>
-    - veterinario: Veterinario
-    - mascota: Mascota
-    - estado: EstadoTurno
-    + getDetalles(): String
-    + getEstado(): EstadoTurno
-    + actualizarEstado(nuevoEstado: EstadoTurno): void
-    + agregarServicio(servicio: Servicio): void
-    + calcularCostoTotal(): Double
-    + cancelarTurno(fechahoraCancelacion: LocalDateTime) throws CancelacionFueradeTermino
-    + confirmarTurno(): void
-    + atenderTurno(): void
-
-}
-
-enum EstadoTurno{
-    PENDIENTE(0, "Pendiente"),
-    CONFIRMADO(1, "Confirmado"),
-    ATENDIDO(2, "Atendido"),
-    CANCELADO(3, "Cancelado")
-}
-
-class Vacuna{
-    - id: Long
-    - nombreComercial: String 
-    - enfermedad: String
-    - periodicidad: int
-    + getDetallesVacuna(): String
-    + calcularProximaAplicacion(): LocalDate
-
-}
-
-class Vacunacion{
-    - vacunaAplicada: Vacuna
-    + getDetallesVacunacion(): String
-    + setfechaAplicacion(fechaAplicacion: LocalDate): void
-
-}
-
-abstract class Servicio{
-    # id: Long
-    # turno: Turno 
-    # tipoServicio: TipoServicio
-    # precioHistorico: Double
-    + getDetallesServicio(): String
-    + calcularCosto(): Double 
-}
-
-class TipoServicio{
-    - nombreDescriptivo: String
-    - precioBase: Double
-    - duracion: double  
-    - limiteCupoDiario: Integer
-    + validarCupo(fecha: LocalDate, ocupacionActual: int): boolean
-    + setDetalles(nombreDescriptivo: String, precioBase: Double, duracion: double, limiteCupoDiario: Integer): void
-    + calcularCosto(): Double
-    + getDetallesTipoServicio(): String
-
-}
-class Consulta{
-    - motivoConsulta: String
-    - diagnostico: String
-    - tratamiento: String
-    + getDetallesConsulta(): String
-}
-class Peluqueria{
-    - tipoCorte: String
-    - observaciones: String
-    + getDetallesPeluqueria(): String
-}
-class Guarderia{
-    - jaulaAsignada: String
-    - alimentacionEspecifica: String
-    - requiereActividad: boolean
-    - observaciones: String 
-    + getDetallesGuarderia(): String
-    + registrarReserva(mascota: Mascota, fechaIngreso: LocalDate, jaulaAsignada: String): void
-}
-
-
-'Relaciones
-Persona <|-- Cliente :  es un <
-Persona <|-- Veterinario : es un <
-Servicio <|-- Vacunacion : es un <
-Servicio <|-- Consulta : es un <
-Servicio <|-- Peluqueria : es un <
-Servicio <|-- Guarderia : es un <
-
-Especialidad "*" <--- "1" Veterinario: tiene una <
-Veterinario "1" ---> "*" Turno: atiende >
-Cliente "1"---> "*" Mascota: tiene un >
-Mascota "1"---> "*" Turno: tiene un >
-Turno "1" ---> "1" EstadoTurno: tiene un >
-Turno "1" <--- "*" Servicio:  se incluye <
-Vacunacion "*" ---> "1" Vacuna: se aplica >
-TipoServicio "1" ---> "*" Servicio: se incluye >
+' Relación de dependencia conceptual (opcional, para no cruzar tantas líneas, indicamos que los servicios usan estas excepciones)
+ar.edu.unam.veterinaria.model ..> ar.edu.unam.veterinaria.exception : "Lanza >"
 
 @enduml

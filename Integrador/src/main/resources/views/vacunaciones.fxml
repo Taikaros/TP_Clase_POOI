@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox spacing="25.0" style="-fx-background-color: #F8FAFC;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.VacunacionesController">
+    <padding><Insets top="40.0" right="40.0" bottom="40.0" left="40.0" /></padding>
+
+    <!-- HEADER Y CONTADORES -->
+    <HBox alignment="CENTER_LEFT">
+        <VBox spacing="5.0">
+            <Label text="Control de Vacunaciones" style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #1E293B;" />
+            <Label text="Dashboard de alertas operativas · Vencimientos próximos y atrasados" style="-fx-text-fill: #64748B; -fx-font-size: 14px;" />
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" />
+        <HBox spacing="15.0" alignment="CENTER_RIGHT" style="-fx-padding: 0 20 0 0;">
+            <HBox alignment="CENTER_LEFT" styleClass="search-box">
+                <FontIcon iconLiteral="fas-search" iconColor="#94A3B8" iconSize="16"/>
+                <TextField fx:id="txtBuscar" promptText="Mascota o dueño..." styleClass="search-field" prefWidth="180.0" />
+            </HBox>
+            <ComboBox fx:id="cbFiltroVacuna" promptText="Todas las vacunas" prefWidth="170.0" styleClass="combo-filtro" />
+        </HBox>
+        <HBox spacing="15.0">   
+            <!-- Labels dinámicos vinculados a las listas -->
+            <Label fx:id="lblContadorProximos" text="0 próximos a vencer" style="-fx-border-color: #F59E0B; -fx-text-fill: #D97706; -fx-border-radius: 8; -fx-padding: 8 16; -fx-font-weight: bold; -fx-background-color: #FEF3C7;">
+                <graphic><FontIcon iconLiteral="fas-clock" iconColor="#D97706"/></graphic>
+            </Label>
+            <Label fx:id="lblContadorVencidas" text="0 vacunas vencidas" style="-fx-border-color: #EF4444; -fx-text-fill: #DC2626; -fx-border-radius: 8; -fx-padding: 8 16; -fx-font-weight: bold; -fx-background-color: #FEE2E2;">
+                <graphic><FontIcon iconLiteral="fas-exclamation-triangle" iconColor="#DC2626"/></graphic>
+            </Label>
+        </HBox>
+    </HBox>
+
+    <ScrollPane fitToWidth="true" styleClass="scroll-invisible" VBox.vgrow="ALWAYS">
+        <VBox spacing="25.0">
+            <!-- TARJETA: PRÓXIMOS VENCIMIENTOS -->
+            <VBox styleClass="card" spacing="15.0" style="-fx-border-color: #F59E0B; -fx-border-width: 1px; -fx-border-radius: 12px;">
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <StackPane style="-fx-background-color: #F59E0B; -fx-background-radius: 8; -fx-padding: 8;">
+                        <FontIcon iconLiteral="fas-clock" iconColor="white" iconSize="16"/>
+                    </StackPane>
+                    <VBox>
+                        <Label text="Próximos Vencimientos — 30 días" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #78350F;" />
+                        <Label text="Contactar a los propietarios para agendar la aplicación" style="-fx-text-fill: #B45309; -fx-font-size: 12px;" />
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane style="-fx-background-color: #F59E0B; -fx-background-radius: 50; -fx-min-width: 30; -fx-min-height: 30;">
+                        <Label fx:id="lblBurbujaProximos" text="0" style="-fx-text-fill: white; -fx-font-weight: bold;" />
+                    </StackPane>
+                </HBox>
+                <TableView fx:id="tvProximos" VBox.vgrow="ALWAYS" styleClass="table-as-list" prefHeight="250.0">
+                    <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
+                    <columns>
+                        <TableColumn fx:id="colProxMascota" text="MASCOTA" prefWidth="120.0" />
+                        <TableColumn fx:id="colProxPropietario" text="PROPIETARIO / CONTACTO" prefWidth="200.0" />
+                        <TableColumn fx:id="colProxVacuna" text="VACUNA" prefWidth="150.0" />
+                        <TableColumn fx:id="colProxVencimiento" text="VENCIMIENTO" prefWidth="150.0" />
+                        <TableColumn fx:id="colProxAccion" text="ACCIÓN" prefWidth="100.0" />
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <!-- TARJETA: VACUNAS VENCIDAS -->
+            <VBox styleClass="card" spacing="15.0" style="-fx-border-color: #EF4444; -fx-border-width: 1px; -fx-border-radius: 12px; -fx-background-color: #FEF2F2;">
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <StackPane style="-fx-background-color: #EF4444; -fx-background-radius: 8; -fx-padding: 8;">
+                        <FontIcon iconLiteral="fas-exclamation-triangle" iconColor="white" iconSize="16"/>
+                    </StackPane>
+                    <VBox>
+                        <Label text="Vacunas Vencidas — Atención urgente" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #7F1D1D;" />
+                        <Label text="Estos pacientes requieren aplicación inmediata" style="-fx-text-fill: #B91C1C; -fx-font-size: 12px;" />
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <StackPane style="-fx-background-color: #EF4444; -fx-background-radius: 50; -fx-min-width: 30; -fx-min-height: 30;">
+                        <Label fx:id="lblBurbujaVencidas" text="0" style="-fx-text-fill: white; -fx-font-weight: bold;" />
+                    </StackPane>
+                </HBox>
+                <TableView fx:id="tvVencidas" VBox.vgrow="ALWAYS" styleClass="table-as-list" prefHeight="250.0" style="-fx-background-color: transparent;">
+                    <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /></columnResizePolicy>
+                    <columns>
+                        <TableColumn fx:id="colVencMascota" text="MASCOTA" prefWidth="120.0" />
+                        <TableColumn fx:id="colVencPropietario" text="PROPIETARIO / CONTACTO" prefWidth="200.0" />
+                        <TableColumn fx:id="colVencVacuna" text="VACUNA" prefWidth="150.0" />
+                        <TableColumn fx:id="colVencVencimiento" text="VENCIÓ EL" prefWidth="150.0" />
+                        <TableColumn fx:id="colVencAccion" text="ACCIÓN" prefWidth="100.0" />
+                    </columns>
+                </TableView>
+            </VBox>
+        </VBox>
+    </ScrollPane>
+</VBox>

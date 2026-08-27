@@ -1,79 +1,80 @@
 package ar.edu.unam.veterinaria.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 
-//@MappedSuperclass le indica a JPA que esta clase no tendra un tabla propia, sino que la heredara sus columnas a las tabalas hijas(cliente y veterinario)
 @MappedSuperclass
 public abstract class Persona {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
+
     @Column(nullable = false)
     protected String nombre;
+
     @Column(nullable = false)
     protected String apellido;
-    protected String telefono;
-    protected String email;
+
     @Column(nullable = false)
-    protected boolean activo = true; 
-    protected Persona() {
-        // Constructor vacío requerido por JPA
-    }
-    protected Persona(String nombre, String apellido, String telefono, String email) {
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.telefono = telefono;
-        this.email = email;
-    }
-    // Getters y Setters
-    public Long getId() {
-        return this.id;
-    }
-    public String getNombre() {
-        return this.nombre;
-    }
-    public String getApellido() {
-        return this.apellido;
-    }
-    public String getTelefono() {
-        return this.telefono;
+    protected String telefono;
 
+    protected String email;
+
+    protected boolean activo = true;
+
+    public Persona() {}
+
+    public Persona(String nombre, String apellido, String telefono, String email) {
+        setNombre(nombre);
+        setApellido(apellido);
+        setTelefono(telefono);
+        setEmail(email);
     }
 
-    public String getEmail() {
-        return this.email;
-    }
-    public String getContacto() {
-        return "Teléfono: " + this.telefono + ", Email: " + this.email;
-    }
-    public void setContacto(String telefono, String email) {
-        this.telefono = telefono;
-        this.email = email;
-    } 
-    public void setDatosPersonales(String nombre, String apellido) {
+    // Getters
+    public Long getId() { return id; }
+    public String getNombre() { return nombre; }
+    public String getApellido() { return apellido; }
+    public String getTelefono() { return telefono; }
+    public String getEmail() { return email; }
+    public boolean isActivo() { return activo; }
 
-        this.nombre = nombre;
-    }
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
-    }
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
-    }
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    public boolean isActivo() {
-        return activo;
-    }
-    public void setActivo(boolean activo) {
-        this.activo = activo;
-    }
+    // Setters Defensivos
+    public void setId(Long id) { this.id = id; }
+
     public void setNombre(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) throw new IllegalArgumentException("El nombre es obligatorio.");
         this.nombre = nombre;
+    }
+
+    public void setApellido(String apellido) {
+        if (apellido == null || apellido.trim().isEmpty()) throw new IllegalArgumentException("El apellido es obligatorio.");
+        this.apellido = apellido;
+    }
+
+    public void setTelefono(String telefono) {
+        if (telefono == null || telefono.trim().isEmpty()) throw new IllegalArgumentException("El teléfono es obligatorio.");
+        this.telefono = telefono;
+    }
+
+    public void setEmail(String email) {
+        this.email = email; // El email puede ser opcional en algunos casos
+    }
+
+    public void setActivo(boolean activo) { this.activo = activo; }
+
+    // Métodos utilitarios legacy
+    public void setDatosPersonales(String nombre, String apellido) {
+        setNombre(nombre);
+        setApellido(apellido);
+    }
+
+    public void setContacto(String telefono, String email) {
+        setTelefono(telefono);
+        setEmail(email);
+    }
+    
+    public String getContacto() {
+        return "Teléfono: " + this.telefono + ", Email: " + (this.email != null ? this.email : "Sin email");
     }
 }

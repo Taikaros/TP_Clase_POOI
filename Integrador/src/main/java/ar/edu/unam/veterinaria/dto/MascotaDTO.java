@@ -12,6 +12,7 @@ public class MascotaDTO {
     private Long idCliente; 
     private String nombreDueno; 
 
+
     public MascotaDTO() {
     }
 

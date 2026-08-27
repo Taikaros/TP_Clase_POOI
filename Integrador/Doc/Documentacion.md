@@ -25,3 +25,17 @@ Algunos ejemplos podrían ser:
 
 
 ## Funcionalidades implementadas y pendientes:
+
+### Decisiones de Diseño Justificadas (Requisitos del TP)
+
+**1. Modelado de los servicios: ¿Herencia o clase única con Enum?**
+Optamos por la **herencia** (clase abstracta `Servicio` con subclases `Consulta`, `Vacunacion`, `Guarderia`, etc.) utilizando la estrategia de mapeo de JPA `@Inheritance(strategy = InheritanceType.JOINED)`. Esta decisión se fundamenta en que cada servicio posee atributos y reglas de negocio radicalmente distintas (ej. la Guardería maneja cupos diarios y asignación de jaulas, mientras que la Vacunación maneja catálogos de periodicidad). Una única clase con un Enum nos hubiera forzado a tener una tabla con múltiples columnas nulas dependiendo del tipo de servicio, violando la cohesión y las formas normales de base de datos.
+
+**2. Precios históricos: ¿Cómo se conservan?**
+Para garantizar la inmutabilidad contable de los reportes históricos, implementamos el atributo `precioHistorico` directamente en la clase abstracta `Servicio`. Al momento de asociar un servicio a un `Turno`, la entidad copia el `precioBase` actual desde el catálogo (`TipoServicio`) y lo "congela" en la instancia del servicio brindado. De esta manera, si el catálogo muta sus precios en el futuro, las instancias persistidas en turnos pasados mantienen intacto su valor original. Además, el costo total del turno se calcula delegando la responsabilidad a la entidad mediante `servicios.stream().mapToDouble(Servicio::calcularCosto).sum()`.
+
+**3. Cancelación de turnos: ¿Borrado físico o lógico?**
+Optamos por un **cambio de estado (Borrado Lógico)**. Físicamente, el registro permanece en la base de datos de PostgreSQL, pero su atributo `estado` transiciona a `CANCELADO`. Esto es crucial para mantener estadísticas de ausentismo de clientes y auditorías. Respecto al historial médico, al realizarse la búsqueda de la historia clínica de una mascota, el sistema filtra a nivel de base de datos para omitir los turnos en estado cancelado, garantizando que el historial médico solo refleje las prácticas que llegaron al estado `ATENDIDO`.
+
+**4. Asociaciones complejas (Turnos, Servicios, Mascotas y Veterinarios)**
+La clase `Turno` actúa como la *Raíz del Agregado (Aggregate Root)*. Posee asociaciones de cardinalidad múltiple (`@ManyToOne`) hacia `Mascota` y `Veterinario`, lo que refleja que un turno agrupa a un único médico y a un único paciente, previniendo solapamientos directamente desde la capa de servicio. A su vez, `Turno` posee una colección `@OneToMany` hacia la clase abstracta `Servicio` con `CascadeType.ALL`. Esto permite que un solo turno pueda englobar múltiples prácticas independientes (ej. Consulta General + Vacunación) que comparten la misma fecha, horario e identificador de cita.

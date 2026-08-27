@@ -1,64 +1,194 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" 
-            fx:controller="ar.edu.unam.veterinaria.controller.TurnoController">
+<StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ar.edu.unam.veterinaria.controller.TurnoController">
+    
+    <VBox spacing="20.0" style="-fx-background-color: #F8FAFC;">
+        <padding><Insets top="40.0" right="40.0" bottom="40.0" left="40.0" /></padding>
+        
+        <HBox alignment="CENTER_LEFT">
+            <VBox spacing="2.0">
+                <Label text="Gestión de Turnos" style="-fx-font-size: 28px; -fx-font-weight: 900; -fx-text-fill: #1E293B;" />
+                <Label fx:id="lblTurnosActivos" text="Cargando fecha..." style="-fx-text-fill: #64748B; -fx-font-size: 14px;" />
+            </VBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text=" Nuevo Turno" onAction="#abrirPanelFormulario" styleClass="btn-primary">
+                <graphic><FontIcon iconLiteral="fas-plus" iconColor="white" iconSize="14"/></graphic>
+            </Button>
+        </HBox>
 
-    <!-- PANEL IZQUIERDO: Formulario y Botones -->
-    <left>
-        <VBox spacing="15" BorderPane.alignment="CENTER">
-            <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
-            </padding>
+        <HBox styleClass="timeline-container" alignment="CENTER" spacing="20.0">
+            <Button onAction="#semanaAnterior" styleClass="timeline-btn"><graphic><FontIcon iconLiteral="fas-chevron-left" iconColor="#94A3B8"/></graphic></Button>
+            <Label fx:id="lblMesAnio" text="MES AÑO" style="-fx-font-weight: bold; -fx-text-fill: #64748B; -fx-padding: 0 15 0 0;" />
+            <HBox fx:id="hboxCalendario" alignment="CENTER" spacing="10.0" HBox.hgrow="ALWAYS" />
+            <Button onAction="#semanaSiguiente" styleClass="timeline-btn"><graphic><FontIcon iconLiteral="fas-chevron-right" iconColor="#94A3B8"/></graphic></Button>
+        </HBox>
 
-            <Label text="Gestión de Turnos" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+        <HBox spacing="15.0">
+            <HBox styleClass="card" spacing="15" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS" style="-fx-padding: 10 20;">
+                <Label fx:id="lblCountPendiente" text="0" style="-fx-background-color: #FEF08A; -fx-text-fill: #854D0E; -fx-padding: 6 12; -fx-background-radius: 8; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+                <Label text="Pendiente" style="-fx-text-fill: #64748B; -fx-font-size: 14px;"/>
+            </HBox>
+            <HBox styleClass="card" spacing="15" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS" style="-fx-padding: 10 20;">
+                <Label fx:id="lblCountConfirmado" text="0" style="-fx-background-color: #BFDBFE; -fx-text-fill: #1E3A8A; -fx-padding: 6 12; -fx-background-radius: 8; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+                <Label text="Confirmado" style="-fx-text-fill: #64748B; -fx-font-size: 14px;"/>
+            </HBox>
+            <HBox styleClass="card" spacing="15" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS" style="-fx-padding: 10 20;">
+                <Label fx:id="lblCountAsistio" text="0" style="-fx-background-color: #D1FAE5; -fx-text-fill: #065F46; -fx-padding: 6 12; -fx-background-radius: 8; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+                <Label text="Atendido" style="-fx-text-fill: #64748B; -fx-font-size: 14px;"/>
+            </HBox>
+            <HBox styleClass="card" spacing="15" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS" style="-fx-padding: 10 20;">
+                <Label fx:id="lblCountCancelado" text="0" style="-fx-background-color: #FEE2E2; -fx-text-fill: #991B1B; -fx-padding: 6 12; -fx-background-radius: 8; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+                <Label text="Cancelado" style="-fx-text-fill: #64748B; -fx-font-size: 14px;"/>
+            </HBox>
+        </HBox>
 
-            <!-- Formulario -->
-            <GridPane vgap="10" hgap="10">
-                <!-- DatePicker para la fecha -->
-                <Label text="Fecha:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-                <DatePicker fx:id="dpFecha" promptText="Seleccione fecha" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        <TableView fx:id="tvTurnos" VBox.vgrow="ALWAYS" styleClass="table-as-list">
+            <columns>
+                <TableColumn fx:id="colHora" text="HORA" prefWidth="80.0" />
+                <TableColumn fx:id="colMascota" text="MASCOTA" prefWidth="230.0" />
+                <TableColumn fx:id="colVeterinario" text="VETERINARIO" prefWidth="180.0" />
+                <TableColumn fx:id="colServicios" text="SERVICIOS" prefWidth="200.0" />
+                <TableColumn fx:id="colEstado" text="ESTADO" prefWidth="120.0" />
+                <TableColumn fx:id="colAcciones" text="ACCIONES" prefWidth="300.0" /> 
+            </columns>
+        </TableView>
+    </VBox>
 
-                <!-- ComboBox para Cliente/Mascota -->
-                <Label text="Mascota/Cliente:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-                <ComboBox fx:id="cbClienteMascota" promptText="Seleccionar..." GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="Infinity"/>
+    <HBox fx:id="overlayFormulario" styleClass="modal-overlay" visible="false" alignment="TOP_RIGHT">
+        <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModal" />
+        <VBox styleClass="slide-panel" prefWidth="480.0" spacing="20.0">
+            <HBox alignment="CENTER_LEFT">
+                <VBox>
+                    <Label fx:id="lblTituloFormulario" text="Crear Nuevo Turno" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    <Label text="Complete los datos para agendar" style="-fx-text-fill: #64748B; -fx-font-size: 12px;" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#cerrarModal" styleClass="btn-close-modal">
+                    <graphic><FontIcon iconLiteral="fas-times" iconSize="18"/></graphic>
+                </Button>
+            </HBox>
+            <Separator />
+            <ScrollPane fitToWidth="true" styleClass="scroll-invisible" VBox.vgrow="ALWAYS">
+                <VBox spacing="15.0">
+                    <padding><Insets right="10.0" /></padding>
+                    <VBox spacing="5.0">
+                        <Label text="CLIENTE" styleClass="label-form" />
+                        <ComboBox fx:id="cbCliente" promptText="Seleccione un cliente..." styleClass="input-field" maxWidth="Infinity"/>
+                    </VBox>
+                    <VBox spacing="5.0">
+                        <Label text="MASCOTA" styleClass="label-form" />
+                        <ComboBox fx:id="cbMascota" promptText="Seleccione una mascota..." styleClass="input-field" maxWidth="Infinity" disable="true"/>
+                    </VBox>
+                    <VBox spacing="5.0">
+                        <Label text="VETERINARIO" styleClass="label-form" />
+                        <ComboBox fx:id="cbVeterinario" promptText="Seleccione un profesional..." styleClass="input-field" maxWidth="Infinity"/>
+                    </VBox>
+                    <HBox spacing="15.0">
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS">
+                            <Label text="FECHA" styleClass="label-form" />
+                            <DatePicker fx:id="dpFecha" promptText="dd/mm/aaaa" styleClass="date-field" maxWidth="Infinity"/>
+                        </VBox>
+                        <VBox spacing="5.0" prefWidth="120.0">
+                            <Label text="HORA" styleClass="label-form" />
+                            <TextField fx:id="txtHora" promptText="10:00" styleClass="input-field" />
+                        </VBox>
+                    </HBox>
+                    
+                    <VBox spacing="10.0">
+                        <Label text="SERVICIOS" styleClass="label-form" />
+                        <GridPane hgap="10" vgap="10">
+                            <CheckBox fx:id="chkConsulta" text="Consulta General" GridPane.columnIndex="0" GridPane.rowIndex="0" textFill="#64748b"/>
+                            
+                            <HBox spacing="10" alignment="CENTER_LEFT" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <CheckBox fx:id="chkVacunacion" text="Vacunación" textFill="#64748b" onAction="#toggleVacuna"/>
+                                <ComboBox fx:id="cbVacuna" promptText="Elija vacuna..." disable="true" prefWidth="130"/>
+                            </HBox>
+                            
+                            <CheckBox fx:id="chkDesparasitacion" text="Desparasitación" GridPane.columnIndex="0" GridPane.rowIndex="1" textFill="#64748b"/>
+                            <CheckBox fx:id="chkCirugia" text="Cirugía Menor" GridPane.columnIndex="1" GridPane.rowIndex="1" textFill="#64748b"/>
+                            <CheckBox fx:id="chkEcografia" text="Ecografía" GridPane.columnIndex="0" GridPane.rowIndex="2" textFill="#64748b"/>
+                            <CheckBox fx:id="chkAnalisis" text="Análisis Sangre" GridPane.columnIndex="1" GridPane.rowIndex="2" textFill="#64748b"/>
+                        </GridPane>
+                    </VBox>
 
-                <!-- ComboBox para Profesional -->
-                <Label text="Profesional:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-                <ComboBox fx:id="cbProfesional" promptText="Seleccionar vet..." GridPane.rowIndex="2" GridPane.columnIndex="1" maxWidth="Infinity"/>
-            </GridPane>
-
-            <Region VBox.vgrow="ALWAYS" />
-
-            <!-- Botones "Agendar" y "Cancelar" -->
-            <HBox spacing="10" alignment="CENTER">
-                <Button fx:id="btnAgendar" text="Agendar Turno" onAction="#guardarTurno" style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
-            <Button fx:id="btnCancelar" text="Cancelar Turno" onAction="#cancelarTurno" style="-fx-background-color: #F44336; -fx-text-fill: white;"/>
+                    <VBox spacing="5.0">
+                        <Label text="NOTAS ADICIONALES" styleClass="label-form" />
+                        <TextArea fx:id="txtNotas" promptText="Observaciones, motivos adicionales, etc." styleClass="input-field" wrapText="true" prefRowCount="3"/>
+                    </VBox>
+                </VBox>
+            </ScrollPane>
+            <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                <Button text="Cancelar" onAction="#cerrarModal" styleClass="btn-outline" />
+                <Button fx:id="btnGuardarFormulario" text="Confirmar Turno" onAction="#guardarTurno" styleClass="btn-primary" />
             </HBox>
         </VBox>
-    </left>
+    </HBox>
 
-    <!-- PANEL CENTRAL: TableView con los turnos del día -->
-    <center>
-        <VBox spacing="10">
-            <padding>
-                <Insets top="20" right="20" bottom="20" left="0"/>
-            </padding>
-            
-            <Label text="Turnos del Día" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
-            
-            <TableView fx:id="tvTurnos" VBox.vgrow="ALWAYS">
-                <columns>
-                    <TableColumn fx:id="colHora" text="Hora" prefWidth="100"/>
-                    <TableColumn fx:id="colMascota" text="Mascota/Cliente" prefWidth="200"/>
-                    <TableColumn fx:id="colProfesional" text="Profesional" prefWidth="200"/>
-                    <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
-                </columns>
-            </TableView>
+    <HBox fx:id="overlayDetalles" styleClass="modal-overlay" visible="false" alignment="TOP_RIGHT">
+        <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModal" />
+        <VBox styleClass="slide-panel" prefWidth="400.0" spacing="25.0">
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Detalles del Turno" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#cerrarModal" styleClass="btn-close-modal">
+                    <graphic><FontIcon iconLiteral="fas-times" iconSize="18"/></graphic>
+                </Button>
+            </HBox>
+            <Separator />
+            <VBox spacing="15.0">
+                <Label fx:id="lblDetalleEstado" text="ESTADO" styleClass="pill-outline" />
+                <Label fx:id="lblDetalleMascota" text="Nombre Mascota" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                <Label fx:id="lblDetalleCliente" text="Dueño: " style="-fx-text-fill: #64748B;" />
+                <Separator />
+                <Label fx:id="lblDetalleFecha" text="Fecha: " style="-fx-text-fill: #1E293B;" />
+                <Label fx:id="lblDetalleHora" text="Hora: " style="-fx-text-fill: #1E293B;" />
+                <Label fx:id="lblDetalleVet" text="Veterinario: " style="-fx-text-fill: #1E293B;" />
+                <Separator />
+                <Label text="PRÁCTICAS Y SERVICIOS" styleClass="label-form" />
+                <Label fx:id="lblDetalleMotivo" text="..." wrapText="true" style="-fx-text-fill: #64748B;" />
+                <Separator />
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="COSTO TOTAL ESTIMADO:" styleClass="label-form" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="lblDetalleCosto" text="0.00" style="-fx-font-size: 18px; -fx-font-weight: 900; -fx-text-fill: -color-primario;" />
+                </HBox>
+            </VBox>
         </VBox>
-    </center>
+    </HBox>
 
-</BorderPane>
+    <HBox fx:id="overlayAtencion" styleClass="modal-overlay" visible="false" alignment="CENTER">
+        <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModal" />
+        <VBox styleClass="slide-panel" prefWidth="500.0" spacing="20.0" maxHeight="450.0" style="-fx-background-radius: 12; -fx-padding: 30;">
+            <HBox alignment="CENTER_LEFT">
+                <VBox>
+                    <Label text="Atención Médica" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1E293B;" />
+                    <Label fx:id="lblAtencionMascota" text="Registrando historial clínico" style="-fx-text-fill: #64748B; -fx-font-size: 12px;" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#cerrarModal" styleClass="btn-close-modal">
+                    <graphic><FontIcon iconLiteral="fas-times" iconSize="18"/></graphic>
+                </Button>
+            </HBox>
+            <Separator />
+            <VBox spacing="10.0">
+                <Label text="DIAGNÓSTICO *" styleClass="label-form" />
+                <TextArea fx:id="txtDiagnostico" promptText="Describa el cuadro clínico encontrado..." wrapText="true" prefRowCount="4" styleClass="input-field" />
+            </VBox>
+            <VBox spacing="10.0">
+                <Label text="TRATAMIENTO" styleClass="label-form" />
+                <TextArea fx:id="txtTratamiento" promptText="Indique la medicación o pasos a seguir..." wrapText="true" prefRowCount="4" styleClass="input-field" />
+            </VBox>
+            <Region VBox.vgrow="ALWAYS" />
+            <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                <Button text="Cancelar" onAction="#cerrarModal" styleClass="btn-outline" />
+                <Button text="Finalizar Atención" onAction="#confirmarAtencion" styleClass="btn-primary" style="-fx-background-color: #10B981;" />
+            </HBox>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS" onMouseClicked="#cerrarModal" />
+    </HBox>
+
+</StackPane>
