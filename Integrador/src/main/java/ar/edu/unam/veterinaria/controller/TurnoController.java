@@ -121,6 +121,7 @@ public class TurnoController {
             if (change.getControlNewText().matches("[0-9/]*")) return change;
             return null;
         };
+        /* 
         dpFecha.getEditor().setTextFormatter(new TextFormatter<>(filtroFecha));
 
         dpFecha.setDayCellFactory(picker -> new DateCell() {
@@ -134,13 +135,17 @@ public class TurnoController {
                 }
             }
         });
+        */
         
+        // MODIFICACIÓN: Comentamos el listener que bloquea guardar fechas anteriores a hoy.
+        /*
         dpFecha.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null && newVal.isBefore(LocalDate.now())) {
                 dpFecha.setValue(oldVal); 
                 mostrarAlerta("Fecha Inválida", "Los turnos no pueden ser agendados en el pasado.", Alert.AlertType.WARNING);
             }
         });
+        */
 
         // --- 3. BLOQUEO INTELIGENTE DEL BOTÓN GUARDAR ---
         btnGuardarFormulario.disableProperty().bind(

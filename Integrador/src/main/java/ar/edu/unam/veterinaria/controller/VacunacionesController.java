@@ -138,6 +138,7 @@ public class VacunacionesController {
                 .collect(Collectors.toMap(ClienteDTO::getId, c -> c));
 
         Map<Long, Map<Long, TurnoDTO>> ultimasVacunas = new HashMap<>();
+        java.util.Set<String> vacunasProgramadas = new java.util.HashSet<>();
 
         for (TurnoDTO t : todosLosTurnos) {
             if ("ATENDIDO".equalsIgnoreCase(t.getEstado()) && t.getIdVacuna() != null) {
@@ -150,10 +151,20 @@ public class VacunacionesController {
                     vacunasMascota.put(t.getIdVacuna(), t);
                 }
             }
+            
+            // Detectar si ya hay un turno a futuro (PENDIENTE o CONFIRMADO) para esa vacuna
+            if (("PENDIENTE".equalsIgnoreCase(t.getEstado()) || "CONFIRMADO".equalsIgnoreCase(t.getEstado())) && t.getIdVacuna() != null) {
+                vacunasProgramadas.add(t.getIdMascota() + "_" + t.getIdVacuna());
+            }
         }
 
         for (Map<Long, TurnoDTO> vacunasMascota : ultimasVacunas.values()) {
             for (TurnoDTO turno : vacunasMascota.values()) {
+                // Si la vacuna ya está programada a futuro para esta mascota, omitimos la alerta
+                if (vacunasProgramadas.contains(turno.getIdMascota() + "_" + turno.getIdVacuna())) {
+                    continue;
+                }
+                
                 Vacuna vac = mapaVacunas.get(turno.getIdVacuna());
                 
                 if (vac != null && vac.getPeriodicidad() != null) {
