@@ -1,41 +1,38 @@
-# Introducción
-El Presente Documento detalla las decisiones arquitectonicas y de modelado tomadas para el desarrollo del sistema de gestion Veterinaria. El diseño se centro en construir un **modelo de dominio rico**, asegurando que la logica de negocio resida en las entidades correspondientes y facilitando la persistencia mediante **JPA**.
+# Documentación del Sistema de Gestión Veterinaria "Huellas & Salud"
 
-## Justificación de Decisiones de Diseño Específicas
-*  Se optó por utilizar herencia, creando una clase abstracta `Servicio` de la cual extienden subclases específicas como `Consulta`, `Peluqueria`, `Guarderia` y `Vacunacion`, porque cada servicio tiene sus `atributos` y `comportamientos` radicalmente distintos. Por ello no se utilizó la estructura `enum` dado que forzaría a tener atributos nulos en la base de datos dependiendo del tipo de servicio, rompiendo la cohesión.
-*  Para el precio histórico se resolvió incluyendo `precioHistorico` directamente en la clase abstracta `Servicio`. Al momento de instanciar un servicio y agregarlo a un `Turno`, se copia el `precioBase` actual desde `TipoServicio` hacia `precioHistorico`. De esta manera, si el catálogo de precios cambia en el futuro, los reportes históricos leerán el valor inmutable guardado en la instancia del servicio ya brindado
-*  Asociaciones Complejas: El `Turno`actúa como la entidad central(raiz del agregado). Tiene una relacion *Many-To-One* con `Mascota` como con `Veterinario`(un turno pertenece a una mascota y a un veterinario, pero ellos pueden tener multiples turnos). A su vez, el `Turno` contiene una coleccion de `Servicios`, lo que permite que una sola cita incluya mas de un solo sericion
-*  Separación del Control de Vacunaciones: Se decidió separar el concepto en dos clases distintas. Por un lado, la clase `Vacuna` funciona como un catálogo inmutable que guarda los datos necesarios para la validación y el cálculo de vencimientos (enfermedad que previene y periodicidad en meses). Por otro lado, la clase `Vacunacion` hereda de Servicio y se encarga de representar la acción física dentro de un turno, asociándose al catálogo para su utilización. Esto evita la duplicación de datos de referencia cada vez que se aplica una dosis.
+## 1. Introducción
+El presente documento detalla las decisiones arquitectónicas y de modelado tomadas para el desarrollo del sistema de gestión Veterinaria. El diseño se centró en construir un **modelo de dominio rico**, asegurando que la lógica de negocio resida en las entidades correspondientes y facilitando la persistencia mediante **JPA**.
 
-## Ubicacion de las Reglas de Negocio
-Según los puntos del integrador, las reglas no están en los controladores sino en el modelo de dominio.
-Algunos ejemplos podrían ser:
-* Dueño obligatorio: Se aplica en el constructor de `Mascota`, exigiendo un objeto de tipo `Cliente` para su instanciación y evitando mascotas sin dueño en el sistema.
-* Límites de cancelación (24 hs antes): Se implementó el método `cancelarTurno(ahora: LocalDateTime)` de la clase `Turno`. Este método compara la hora actual con la hora programada y lanza una excepción propia si no se cumple el plazo de aviso previo.
-* Validacion de Solapamiento de Turnos: Se tomo la decision de que la clase `Veterinario` seria la encargada de revisar su propia disponibilidad, esto en base al metodo `valudarDisponibilidad(fecha, hora, duracion)`, la cual itera sobre su propia lista de turnos para prevenir cruces de horarios, evitando delegar esta regla a algun controlador anemico
+## 2. Decisiones de Diseño y Modelado
+* **Polimorfismo en Servicios:** Se optó por utilizar herencia, creando una clase abstracta `Servicio` de la cual extienden subclases específicas como `Consulta`, `Peluqueria`, `Guarderia` y `Vacunacion`. Cada servicio tiene sus atributos y comportamientos radicalmente distintos. Evitamos la estructura `enum` para no forzar columnas nulas en la base de datos, garantizando la cohesión.
+* **Inmutabilidad de Precios Históricos:** Se incluyó el atributo `precioHistorico` directamente en la clase `Servicio`. Al instanciar un servicio y agregarlo a un `Turno`, se copia el `precioBase` actual desde `TipoServicio`. Si el catálogo de precios muta en el futuro, los reportes históricos leerán el valor inmutable del servicio ya brindado, protegiendo la integridad contable.
+* **Turno como Raíz del Agregado:** El `Turno` actúa como la entidad central. Mantiene relaciones *Many-To-One* con `Mascota` y `Veterinario` (previniendo solapamientos lógicos), y contiene una colección `@OneToMany` de `Servicios` con `CascadeType.ALL`, permitiendo agrupar múltiples prácticas (ej. Consulta + Vacunación) en una misma cita.
+* **Separación de Vacunas y Vacunación:** La clase `Vacuna` funciona como un catálogo inmutable para la validación y el cálculo de vencimientos (enfermedad que previene y periodicidad en meses). La clase `Vacunacion` hereda de `Servicio` y representa el acto físico de aplicar la dosis dentro de un turno, evitando la duplicación de datos de referencia.
+* **Borrado Lógico:** Para la cancelación de turnos, se optó por un cambio de estado en lugar de un borrado físico. El atributo `estado` transiciona a `CANCELADO`, lo cual es vital para mantener estadísticas de ausentismo y auditorías. El historial médico se genera filtrando a nivel de base de datos para omitir estas cancelaciones.
 
-## Decisiones de Infraestructura y Persistencia
-* Arquitectura de Base de Datos y Persistencia: Para la persistencia de datos mediante JPA/Hibernate, se optó por utilizar PostgreSQL en lugar de la opción embebida H2. Adicionalmente, se decidió desplegar la base de datos en un entorno en la nube utilizando el servicio Neon. Esta decisión se fundamenta en dos motivos principales:
-  * Desarrollo Colaborativo: Al contar con un servidor en línea, todos los desarrolladores del equipo pueden conectarse a la misma instancia de la base de datos de manera simultánea. Esto elimina los conflictos de sincronización de datos locales y facilita enormemente las pruebas de integración durante nuestro flujo de trabajo.
-  * Resiliencia y Respaldo: Operar con una base de datos remota actúa como un método de respaldo natural. Ante cualquier falla catastrófica en el entorno de ejecución local (la máquina remota) o un problema crítico en la aplicación de escritorio, la integridad histórica de los datos del sistema (clientes, mascotas, turnos y facturación) permanece asegurada en la nube.
-> Para ejecutar el proyecto y conectar con la base de datos en la nube, las credenciales y la URL de conexion a Neon se encuntrar preconfiguradas en el archivo `persistence.xml`, requiriendo unicamente conexion a internet activa para utilizarla
+## 3. Ubicación de las Reglas de Negocio
+Las reglas de negocio fueron extraídas de los servicios (evitando el anti-patrón de Modelo Anémico) y encapsuladas directamente en el Dominio:
+* **Dueño y Ficha Obligatorios:** En el constructor de `Mascota`, se exige un objeto `Cliente` para su instanciación. La autogeneración del número de ficha se controla lógicamente garantizando correlatividad.
+* **Límites de Cancelación:** El método `cancelar(ahora: LocalDateTime)` de la clase `Turno` compara la hora actual con la hora programada. Lanza una excepción propia (`CancelacionFueradeTermino`) si no se cumple el plazo de 24 horas de aviso previo.
+* **Disponibilidad y Solapamiento:** La clase `Veterinario` es la encargada de revisar su propia disponibilidad mediante el método `validarDisponibilidad(fecha, hora, duracion)`. Analiza su lista de horarios y cruza los días (manejando correctamente formatos con y sin tildes lógicos) para prevenir colisiones de agenda.
+* **Validación Clínica de Inmunidad:** La clase `Mascota` utiliza el método `tieneVacunaVigente` para escanear su propio historial de turnos atendidos, evaluar la periodicidad de la vacuna solicitada y bloquear aplicaciones prematuras lanzando `VacunaVigenteException`.
 
-> Por temas de seguridad se excluyo el `Password` hacia la base de datos, en caso de necesitar por favor contacte al equipo desarrollador.
-## Dificultades Encontradas y Resolucion de Ellas:
+## 4. Decisiones de Infraestructura y Persistencia
+* **PostgreSQL en la Nube (Neon):** Para la persistencia de datos mediante Hibernate, se utilizó PostgreSQL remoto en lugar de H2 local. Esto facilitó el desarrollo colaborativo del equipo (evitando desincronización de bases de datos locales) y proporcionó un entorno de pruebas robusto y tolerante a fallos.
+* **Generación de DDL:** Se utilizó la propiedad `hibernate.hbm2ddl.auto` seteada en `update` para mapear de forma transparente las entidades a tablas, y se recurrió a scripts de DDL puros únicamente para el reseteo limpio del esquema durante el ciclo de pruebas.
 
+## 5. Dificultades Encontradas y su Resolución
+1. **Desincronización del Esquema Relacional:** Durante las iteraciones del modelo (cambio de nombres de entidades al plural), se generaron "tablas fantasma" en PostgreSQL que rompieron las claves foráneas (ej. `turno` vs `turnos`). Se resolvió ejecutando un `DROP SCHEMA public CASCADE` directamente en el motor y permitiendo a Hibernate reconstruir la topología limpia.
+2. **Conflictos Transaccionales (Foreign Key Violations):** Al editar un turno y reemplazar su lista de servicios, Hibernate lanzaba errores de violación de integridad al intentar borrar registros atados prematuramente. Se solucionó eliminando instrucciones `flush()` manuales de los controladores/servicios, delegando la resolución del estado transaccional íntegramente al `commit()` de JPA.
+3. **Bloqueos de Interfaz por Validaciones de Dominio:** Al blindar los modelos para que no acepten datos nulos o vacíos, la interfaz bloqueaba la autogeneración de campos (como el número de ficha). La solución fue desacoplar el `disableProperty` en JavaFX y manejar el valor híbrido (`null` o escrito) mediante lógica autoincremental en el bloque `try-catch` del Servicio.
 
-## Funcionalidades implementadas y pendientes:
+## 6. Funcionalidades
+**Implementadas:**
+* ABM completo de Clientes, Mascotas, Veterinarios y Especialidades.
+* Configuración de Tipos de Servicio (prácticas, precios, duración y cupos) y Catálogo de Vacunas.
+* Motor de Agendamiento de Turnos con máquina de estados restrictiva (Pendiente -> Confirmado -> Atendido -> Cancelado).
+* Dashboard Operativo de Guardería (control de jaulas) y Peluquería (turnos diarios).
+* Dashboard de Vacunaciones con detección algorítmica de próximos vencimientos (30 días) y dosis atrasadas.
+* Historial Médico interactivo con generación y exportación automática a formato PDF (librería iText).
+* Arquitectura Defensiva por Capas: Validaciones estrictas en el dominio interceptadas y presentadas amigablemente en la UI.
 
-### Decisiones de Diseño Justificadas (Requisitos del TP)
-
-**1. Modelado de los servicios: ¿Herencia o clase única con Enum?**
-Optamos por la **herencia** (clase abstracta `Servicio` con subclases `Consulta`, `Vacunacion`, `Guarderia`, etc.) utilizando la estrategia de mapeo de JPA `@Inheritance(strategy = InheritanceType.JOINED)`. Esta decisión se fundamenta en que cada servicio posee atributos y reglas de negocio radicalmente distintas (ej. la Guardería maneja cupos diarios y asignación de jaulas, mientras que la Vacunación maneja catálogos de periodicidad). Una única clase con un Enum nos hubiera forzado a tener una tabla con múltiples columnas nulas dependiendo del tipo de servicio, violando la cohesión y las formas normales de base de datos.
-
-**2. Precios históricos: ¿Cómo se conservan?**
-Para garantizar la inmutabilidad contable de los reportes históricos, implementamos el atributo `precioHistorico` directamente en la clase abstracta `Servicio`. Al momento de asociar un servicio a un `Turno`, la entidad copia el `precioBase` actual desde el catálogo (`TipoServicio`) y lo "congela" en la instancia del servicio brindado. De esta manera, si el catálogo muta sus precios en el futuro, las instancias persistidas en turnos pasados mantienen intacto su valor original. Además, el costo total del turno se calcula delegando la responsabilidad a la entidad mediante `servicios.stream().mapToDouble(Servicio::calcularCosto).sum()`.
-
-**3. Cancelación de turnos: ¿Borrado físico o lógico?**
-Optamos por un **cambio de estado (Borrado Lógico)**. Físicamente, el registro permanece en la base de datos de PostgreSQL, pero su atributo `estado` transiciona a `CANCELADO`. Esto es crucial para mantener estadísticas de ausentismo de clientes y auditorías. Respecto al historial médico, al realizarse la búsqueda de la historia clínica de una mascota, el sistema filtra a nivel de base de datos para omitir los turnos en estado cancelado, garantizando que el historial médico solo refleje las prácticas que llegaron al estado `ATENDIDO`.
-
-**4. Asociaciones complejas (Turnos, Servicios, Mascotas y Veterinarios)**
-La clase `Turno` actúa como la *Raíz del Agregado (Aggregate Root)*. Posee asociaciones de cardinalidad múltiple (`@ManyToOne`) hacia `Mascota` y `Veterinario`, lo que refleja que un turno agrupa a un único médico y a un único paciente, previniendo solapamientos directamente desde la capa de servicio. A su vez, `Turno` posee una colección `@OneToMany` hacia la clase abstracta `Servicio` con `CascadeType.ALL`. Esto permite que un solo turno pueda englobar múltiples prácticas independientes (ej. Consulta General + Vacunación) que comparten la misma fecha, horario e identificador de cita.
